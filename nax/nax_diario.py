@@ -80,8 +80,41 @@ nax.messagebox = _Avisos
 
 HIST = os.path.join(AQUI, "historico_actual.csv")
 HIST_ANT = nax.RUTA_HISTORICO_CAMPANA_ANTERIOR  # historico_campana_anterior.csv (misma carpeta)
+RETENIDO = os.path.join(AQUI, "historico_retenido.csv")  # dato más cercano por pieza e índice, antes del rango
+ESTADO = os.path.join(AQUI, "estado_robot.txt")            # campaña con la que se armó el retenido
 VENTANA = int(os.environ.get("VENTANA_DIAS") or 35)
+DIAS_INICIALES = int(os.environ.get("DIAS_INICIALES") or 180)  # primera vez: llenar el retenido
 RECIENTES = int(os.environ.get("DIAS_RECIENTES") or 7)
+
+
+ES_INDICE = ("ndvi", "biomass", "moisture", "humid", "tsh", "yield_sugarcane", "lai")
+
+
+def actualizar_retenido(desde):
+    """Guarda en historico_retenido.csv, por pieza y por cada índice, la lectura más
+    reciente ANTERIOR a 'desde' (el inicio del rango del informe). Combina lo que ya
+    estaba guardado con el histórico recién descargado, así ninguna pieza que haya
+    tenido imagen alguna vez en la zafra se queda sin su dato más cercano."""
+    partes = [pd.read_csv(p, low_memory=False) for p in (RETENIDO, HIST) if os.path.exists(p) and os.path.getsize(p)]
+    if not partes:
+        return
+    df = pd.concat(partes, ignore_index=True, sort=False)
+    if "timestamp" not in df.columns or "name" not in df.columns:
+        return
+    t = pd.to_datetime(df["timestamp"], errors="coerce", utc=True).dt.tz_localize(None)
+    df = df[t < pd.Timestamp(desde)].copy()
+    df["_t"] = t[df.index]
+    cols = [c for c in df.columns if any(k in c.lower() for k in ES_INDICE)]
+    guardar = set()
+    for c in cols:
+        v = pd.to_numeric(df[c], errors="coerce")
+        sub = df[v.notna()]
+        if len(sub):
+            guardar.update(sub.sort_values("_t").groupby("name").tail(1).index)
+    out = df.loc[sorted(guardar)].drop(columns="_t").drop_duplicates()
+    out.to_csv(RETENIDO, index=False)
+    print(f"Histórico retenido (dato más cercano antes del {desde}): {len(out)} filas, "
+          f"{out['name'].nunique() if len(out) else 0} piezas · índices: {cols}")
 
 
 def recortar(ruta, desde):
@@ -115,10 +148,21 @@ def main():
     print(f"Campaña usada: '{campana}'")
 
     hoy = date.today()
+    previa = open(ESTADO).read().strip() if os.path.exists(ESTADO) else ""
+    if previa and previa != campana:
+        print(f"Cambió la campaña ('{previa}' → '{campana}'): se empieza el histórico de cero.")
+        for p in (HIST, RETENIDO, HIST_ANT):
+            if os.path.exists(p):
+                os.remove(p)
+    with open(ESTADO, "w") as f:
+        f.write(campana)
     hay_hist = os.path.exists(HIST) and os.path.getsize(HIST) > 0
-    inicio = hoy - timedelta(days=(RECIENTES if hay_hist else VENTANA))
+    hay_ret = os.path.exists(RETENIDO)
+    dias = RECIENTES if (hay_hist and hay_ret) else DIAS_INICIALES
+    inicio = hoy - timedelta(days=dias)
     fin = hoy
-    print(f"Histórico previo: {'sí' if hay_hist else 'no'} · se descargan imágenes del {inicio} al {fin}")
+    txt_ret = "sí" if hay_ret else f"no (primera vez: se llena con {DIAS_INICIALES} días)"
+    print(f"Histórico previo: {'sí' if hay_hist else 'no'} · retenido: {txt_ret} · se descargan imágenes del {inicio} al {fin}")
 
     nax.campaign_combobox = _Valor(campana)
     nax.start_date, nax.end_date = _Fecha(inicio), _Fecha(fin)
@@ -129,6 +173,9 @@ def main():
     nax.download_products()
     # Por si no hubo imágenes nuevas (download_products sale antes de bajar el maestro).
     nax.descargar_maestro_lotes(campana, nax.RUTA_MAESTRO_LOTES)
+    if not os.path.exists(HIST):
+        sys.exit("No hay histórico de la campaña actual: NAX no devolvió imágenes en el rango.")
+    actualizar_retenido(hoy - timedelta(days=VENTANA))
     recortar(HIST, hoy - timedelta(days=VENTANA))
     if not os.path.exists(HIST):
         sys.exit("No hay histórico de la campaña actual: NAX no devolvió imágenes en el rango.")

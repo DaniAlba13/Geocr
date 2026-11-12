@@ -33,6 +33,8 @@ jobs:
           path: |
             nax/historico_actual.csv
             nax/historico_campana_anterior.csv
+            nax/historico_retenido.csv
+            nax/estado_robot.txt
           key: nax-historico-${{ github.run_id }}
           restore-keys: nax-historico-
 
@@ -43,6 +45,7 @@ jobs:
           NAX_CAMPANA: ${{ vars.NAX_CAMPANA }}
           VENTANA_DIAS: ${{ vars.VENTANA_DIAS }}
           DIAS_RECIENTES: ${{ vars.DIAS_RECIENTES }}
+          DIAS_INICIALES: ${{ vars.DIAS_INICIALES }}
         run: python nax/nax_diario.py
 
       - name: Guardar el histórico para mañana
@@ -52,6 +55,8 @@ jobs:
           path: |
             nax/historico_actual.csv
             nax/historico_campana_anterior.csv
+            nax/historico_retenido.csv
+            nax/estado_robot.txt
           key: nax-historico-${{ github.run_id }}
 
       - name: Publicar en el tablero de GeoCR

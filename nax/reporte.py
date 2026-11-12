@@ -355,6 +355,21 @@ def _normalizar_columnas(df):
                       f"'{mejor_columna}' ({conteo_validos[mejor_columna]} valores numéricos válidos).")
             df = df.rename(columns={mejor_columna: COLUMNA_HUMEDAD})
 
+    # Mismo criterio para NDVI y Biomasa: NAX no siempre deja el indice con el mismo
+    # nombre (ej. 'biomass_optical' vacio y 'biomass_optical_and_sar' con datos). Se
+    # usa la columna candidata con MAS valores numericos, para no perder el indice.
+    for clave_indice, texto_indice in (("ndvi_optical", "ndvi"), ("biomass_optical", "biomass")):
+        candidatas = [c for c in df.columns if texto_indice in c.lower()]
+        if not candidatas:
+            continue
+        conteo_validos = {c: pd.to_numeric(df[c], errors="coerce").notna().sum() for c in candidatas}
+        mejor_columna = max(conteo_validos, key=conteo_validos.get)
+        if mejor_columna != clave_indice and conteo_validos[mejor_columna] > conteo_validos.get(clave_indice, 0):
+            print(f"Para '{clave_indice}' se usa '{mejor_columna}' ({conteo_validos[mejor_columna]} valores numéricos válidos).")
+            if clave_indice in df.columns:
+                df = df.drop(columns=[clave_indice])
+            df = df.rename(columns={mejor_columna: clave_indice})
+
     tiene_grouping_unit_04 = COLUMNA_TABLON in df.columns  # ya renombrado arriba si existia
     tiene_name = COLUMNA_NAME_ORIGEN in df.columns
 
@@ -614,6 +629,7 @@ def _columnas_disponibles(df):
 # reporte y el Excel siempre distingan lo medido de lo proyectado.
 RUTA_MAESTRO_LOTES = os.path.join(_DIRECTORIO_SCRIPT, "maestro_lotes.csv")
 RUTA_MAESTRO_LOTES_ANTERIOR = os.path.join(_DIRECTORIO_SCRIPT, "maestro_lotes_campana_anterior.csv")
+RUTA_HISTORICO_RETENIDO = os.path.join(_DIRECTORIO_SCRIPT, "historico_retenido.csv")
 ORIGEN_OBSERVADO = "Satelital"
 ORIGEN_PROYECTADO = "Proyectado"
 
@@ -736,6 +752,18 @@ def clasificar_datos(df):
     como una sola fila "fantasma" representando todo el tablon).
     Devuelve (df_ultima, metricas_usadas).
     """
+    # Dato mas cercano en fecha: si existe historico_retenido.csv (el robot diario guarda
+    # ahi, por pieza y por indice, la ultima lectura anterior al rango del informe), se
+    # suma a la busqueda del "ultimo valor por pieza". Asi una pieza sin imagen reciente
+    # usa su propio dato mas cercano en vez de quedar sin dato. No cambia el rango de
+    # fechas que muestra el informe (se calcula con df_historico).
+    if os.path.exists(RUTA_HISTORICO_RETENIDO):
+        try:
+            retenido = pd.read_csv(RUTA_HISTORICO_RETENIDO, low_memory=False)
+            if not retenido.empty:
+                df = pd.concat([retenido, df], ignore_index=True, sort=False)
+        except Exception as e:
+            print(f"⚠ No se pudo leer '{os.path.basename(RUTA_HISTORICO_RETENIDO)}': {e}")
     df = _normalizar_columnas(df)
     metricas = _columnas_disponibles(df)
 

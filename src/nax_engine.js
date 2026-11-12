@@ -22,7 +22,9 @@ function nxNormalize(csv){const H=csv.h,ix=n=>H.indexOf(n),get=(r,n)=>{const i=i
   const numCount=c=>{const i=ix(c);let k=0;for(const r of csv.rows)if(isFinite(nxNum(r[i])))k++;return k};
   let humCol=ix(NX_HUM)>=0?NX_HUM:null;if(!humCol){const cs=H.filter(c=>/humid|moisture/i.test(c));if(cs.length)humCol=cs.reduce((a,b)=>numCount(b)>numCount(a)?b:a)}
   const tshC=H.filter(c=>/tsh|yield_sugarcane/i.test(c)&&c!=='estimated_crop_yield'&&c!=='crop_yield');const tshCol=tshC.length?tshC.reduce((a,b)=>numCount(b)>numCount(a)?b:a):null;
-  const mets=Object.keys(NX_RANGOS).filter(m=>m===NX_HUM?!!humCol:ix(m)>=0);
+  /* NDVI y Biomasa: si NAX deja el índice con otro nombre, se usa la columna candidata con más valores (igual que reporte.py) */
+  const colDe={[NX_HUM]:humCol};[['ndvi_optical','ndvi'],['biomass_optical','biomass']].forEach(([k,t])=>{const cs=H.filter(c=>c.toLowerCase().includes(t));if(!cs.length)return;const best=cs.reduce((a,b)=>numCount(b)>numCount(a)?b:a);colDe[k]=(ix(k)>=0&&numCount(k)>=numCount(best))?k:best});
+  const mets=Object.keys(NX_RANGOS).filter(m=>!!colDe[m]);
   const hasName=ix('name')>=0,hasTab=ix('grouping_unit_04')>=0,hasIrr=ix('irrigation')>=0;
   if(!hasName&&!hasTab)throw new Error('El archivo no trae las columnas name ni grouping_unit_04.');
   const recs=csv.rows.map(r=>{const nm=hasName?nxName(get(r,'name')):null;let tab=hasTab?String(get(r,'grouping_unit_04')||'').replace(/\.0$/,''):'',pz=String(get(r,'grouping_unit_05')??'N/D').replace(/\.0$/,'')||'N/D';
@@ -31,7 +33,7 @@ function nxNormalize(csv){const H=csv.h,ix=n=>H.indexOf(n),get=(r,n)=>{const i=i
     const reg=hasIrr?nxRiego(get(r,'irrigation')):null;if(hasIrr&&NX_RIEGO.includes(div))div+=reg?' (R)':' (S)';
     const o={id:nm||tab,tab,pz,div,reg,var:get(r,'variety')||'N/D',ac:nxNum(get(r,'effective_area')),fi:nxDate(get(r,'start_date')),ts:nxDate(get(r,'timestamp')),
       tcaN:tshCol?nxNum(get(r,tshCol))/NX_FAC:NaN,tcaI:nxNum(get(r,'estimated_crop_yield'))/NX_FAC,tcaR:nxNum(get(r,'crop_yield'))/NX_FAC};
-    mets.forEach(m=>o[m]=nxNum(get(r,m===NX_HUM?humCol:m)));return o});
+    mets.forEach(m=>o[m]=nxNum(get(r,colDe[m])));return o});
   return{recs,mets}}
 function nxMaestro(csv){if(!csv)return null;const{recs}=nxNormalize(csv);const m=new Map();recs.forEach(r=>{if(!m.has(r.id))m.set(r.id,r)});return m}
 /* última lectura por pieza, cada columna por separado */
@@ -54,7 +56,8 @@ let NX_TODAY=null;const nxHoy=()=>NX_TODAY||(()=>{const d=new Date();return Date
 /* proceso completo -> snapshot compacto */
 function nxProcesar(F){
   const act=nxNormalize(F.hist),mets=act.mets,cols=[...mets,'tcaN','tcaR','tcaI'];
-  const maestro=nxMaestro(F.maestro);let rows=nxUltima(act.recs,cols);const antes=rows.length;rows=nxCompletar(rows,maestro,mets);
+  const maestro=nxMaestro(F.maestro);const ret=F.ret?nxNormalize(F.ret):null;/* dato más cercano por pieza antes del rango (robot diario) */
+  let rows=nxUltima(ret?[...ret.recs,...act.recs]:act.recs,cols);const antes=rows.length;rows=nxCompletar(rows,maestro,mets);
   mets.forEach(m=>nxProyectar(rows,m));nxProyectar(rows,'tcaN','Estimado NAX',NX_TCAMIN);
   const hoy=nxHoy();
   const ts=act.recs.map(r=>r.ts).filter(isFinite);const rango=[iso(new Date(Math.min(...ts))),iso(new Date(Math.max(...ts)))];

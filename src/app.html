@@ -1371,13 +1371,13 @@ async function nxCargar(meta){try{let s='';for(let i=0;i<meta.parts;i++){const d
 async function nxPdfB64(){if(!DB)return localStorage.getItem('geocr-naxpdf');if(!NXMETA||!NXMETA.pdf)return null;let b='';for(let i=0;i<NXMETA.pdf;i++){const d=await DB.collection('nax_snap').doc(NXMETA.sid+'-pdf-'+i).get();if(!d.exists)return null;b+=d.data().s}return b}
 /* --- herramienta: cargar archivos --- */
 const NXIN={};
-function nxRol(name){const n=name.toLowerCase();if(n.endsWith('.pdf'))return'pdf';if(n.includes('maestro'))return n.includes('anterior')?'maestroAnt':'maestro';if(n.includes('anterior'))return'histAnt';return'hist'}
-const NX_ROLN={hist:'Histórico actual',maestro:'Maestro de lotes',histAnt:'Histórico campaña anterior',maestroAnt:'Maestro campaña anterior',pdf:'Reporte PDF'};
+function nxRol(name){const n=name.toLowerCase();if(n.endsWith('.pdf'))return'pdf';if(n.includes('retenido'))return'ret';if(n.includes('maestro'))return n.includes('anterior')?'maestroAnt':'maestro';if(n.includes('anterior'))return'histAnt';return'hist'}
+const NX_ROLN={hist:'Histórico actual',ret:'Histórico retenido (opcional)',maestro:'Maestro de lotes',histAnt:'Histórico campaña anterior',maestroAnt:'Maestro campaña anterior',pdf:'Reporte PDF'};
 $('#alFiles').onchange=e=>{Object.keys(NXIN).forEach(k=>delete NXIN[k]);[...e.target.files].forEach(f=>{const r=nxRol(f.name);if(r==='hist'&&NXIN.hist){NXIN.hist=f.size>NXIN.hist.size?f:NXIN.hist}else NXIN[r]=f});
   $('#alFL').innerHTML=Object.entries(NX_ROLN).map(([r,t])=>`<div>${NXIN[r]?'✅':'—'} <b>${t}:</b> ${NXIN[r]?NXIN[r].name:'<span style="color:var(--muted)">no incluido</span>'}</div>`).join('')+(NXIN.hist?'':'<div class="qc" style="margin-top:6px">Falta el histórico de la campaña actual.</div>');
   $('#alRun').disabled=!NXIN.hist};
 $('#alRun').onclick=async()=>{const st=$('#alSt'),b=$('#alRun');b.disabled=true;try{st.textContent='Leyendo archivos…';await new Promise(r=>setTimeout(r,30));
-    const rd=async k=>NXIN[k]?nxCSV(await NXIN[k].text()):null;const F={hist:await rd('hist'),maestro:await rd('maestro'),histAnt:await rd('histAnt'),maestroAnt:await rd('maestroAnt')};
+    const rd=async k=>NXIN[k]?nxCSV(await NXIN[k].text()):null;const F={hist:await rd('hist'),maestro:await rd('maestro'),histAnt:await rd('histAnt'),maestroAnt:await rd('maestroAnt'),ret:await rd('ret')};
     st.textContent='Procesando con la lógica de reporte.py…';await new Promise(r=>setTimeout(r,30));
     const snap=nxProcesar(F);if(!snap.P.length)throw new Error('El histórico no trae piezas.');
     snap.por=await quienSoy();

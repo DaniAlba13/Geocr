@@ -8,7 +8,7 @@ const motor = fs.readFileSync(path.join(AQUI, '../src/nax_engine.js'), 'utf8');
 const E = new Function('iso', 'DIVN', motor + '\nreturn {nxCSV, nxProcesar, nxPack};')(iso, DIVN);
 const leer = f => { const p = path.join(AQUI, f); return fs.existsSync(p) && fs.statSync(p).size ? E.nxCSV(fs.readFileSync(p, 'utf8')) : null; };
 
-const F = { hist: leer('historico_actual.csv'), maestro: leer('maestro_lotes.csv'), histAnt: leer('historico_campana_anterior.csv'), maestroAnt: leer('maestro_lotes_campana_anterior.csv') };
+const F = { hist: leer('historico_actual.csv'), maestro: leer('maestro_lotes.csv'), histAnt: leer('historico_campana_anterior.csv'), maestroAnt: leer('maestro_lotes_campana_anterior.csv'), ret: leer('historico_retenido.csv') };
 if (!F.hist) { console.error('No existe historico_actual.csv: el paso de descarga no trajo datos.'); process.exit(1); }
 const snap = E.nxProcesar(F); snap.por = 'Actualización automática diaria';
 console.log(`Piezas: ${snap.P.length} · datos del ${snap.rango[0]} al ${snap.rango[1]} · maestro: ${snap.maestro ? 'sí' : 'no'} · campaña anterior: ${snap.ant ? 'sí' : 'no'}`);
