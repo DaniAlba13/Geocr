@@ -31,7 +31,8 @@ Este repositorio publica la plataforma GeoCR en Cloudflare Pages. Además, conti
 1. En Cloudflare, ve a **Storage & Databases → D1 → Create**. Ponle el nombre `geocr`.
 2. En el proyecto de Pages, ve a **Settings → Bindings → Add → D1 database**. Usa el nombre de variable `DB` y elige `geocr`.
 3. En **Settings → Variables and Secrets**, agrega `INGEST_TOKEN` de tipo *Secret*. El valor es una clave larga inventada, por ejemplo de 40 letras y números. Guárdala, porque la vas a necesitar en el paso 4.
-4. Vuelve a publicar con **Deployments → … → Retry deployment**. La tabla se crea sola en la primera visita.
+4. En **Settings → Variables and Secrets**, agrega también la variable `EDITORES`, de tipo *Text*. Su valor son los correos que pueden registrar o corregir lluvias, separados por coma. El resto del personal solo ve los mapas, el historial y la descarga.
+5. Vuelve a publicar con **Deployments → … → Retry deployment**. La tabla se crea sola en la primera visita.
 
 ### 3. Acceso solo para el personal (Cloudflare Access)
 1. En Cloudflare, ve a **Zero Trust → Access → Applications → Add → Self-hosted**.
