@@ -28,6 +28,12 @@ async function ops(lista) {
   if (!r.ok) throw new Error(`GeoCR respondió ${r.status}: ${j.error || t.slice(0, 200)}`);
   return j.out;
 }
+{ // compara huellas de la clave (sin mostrarla)
+  const { createHash } = await import('node:crypto');
+  const mia = createHash('sha256').update(TOKEN).digest('hex').slice(0, 8);
+  try { const r = await fetch(URL_ + '/api/ingest', { redirect: 'manual' }); const j = await r.json(); console.log(`Clave en GitHub: largo ${TOKEN.length}, huella ${mia} · Clave en Cloudflare: ${j.clave_configurada ? `largo ${j.largo}, huella ${j.huella}` : 'NO CONFIGURADA'}`); }
+  catch (e) { console.log(`Clave en GitHub: largo ${TOKEN.length}, huella ${mia} · no se pudo consultar Cloudflare`); }
+}
 const [prev] = await ops([{ op: 'get', coll: 'nax_meta', id: 'actual' }]);
 const sid = 's' + Date.now();
 for (let i = 0; i < partes.length; i++) await ops([{ op: 'set', coll: 'nax_snap', id: `${sid}-${i}`, data: { i, s: partes[i] } }]);

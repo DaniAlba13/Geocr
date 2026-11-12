@@ -26,9 +26,13 @@ export async function onRequest({ request, env, params }) {
 
   // --- robot NAX (GitHub Actions): protegido con token, no con Cloudflare Access ---
   if (seg[0] === 'ingest') {
+    if (m === 'GET') { // huella corta de la clave, para comparar con GitHub sin revelarla
+      const k = String(env.INGEST_TOKEN || '').trim(), h = k ? [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(k)))].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 8) : '';
+      return J({ clave_configurada: !!k, largo: k.length, huella: h });
+    }
+    if (m !== 'POST') return J({ error: 'usa POST' }, 405);
     const tok = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim(), esperado = String(env.INGEST_TOKEN || '').trim();
     if (!esperado || tok !== esperado) return J({ error: 'token inválido' }, 401);
-    if (m !== 'POST') return J({ error: 'usa POST' }, 405);
     const { ops = [] } = await request.json(); const out = [], stm = [];
     for (const o of ops) {
       if (!COLL.test(o.coll || '') || !ID.test(o.id || '')) return J({ error: 'colección o id inválido' }, 400);
