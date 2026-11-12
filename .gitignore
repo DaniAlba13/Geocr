@@ -1,0 +1,4 @@
+__pycache__/
+nax/*.csv
+nax/*.pdf
+nax/*.xlsx

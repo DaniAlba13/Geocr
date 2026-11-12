@@ -1,0 +1,72 @@
+name: Alertas NAX diarias
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 10:00 UTC = 6:00 a. m. en República Dominicana (GitHub puede atrasarse unos minutos)
+  workflow_dispatch:         # botón "Run workflow" para correrlo a mano
+
+concurrency:
+  group: nax-diario
+  cancel-in-progress: false
+
+jobs:
+  nax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: nax/requirements.txt
+      - run: pip install -r nax/requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Recuperar el histórico de días anteriores
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            nax/historico_actual.csv
+            nax/historico_campana_anterior.csv
+          key: nax-historico-${{ github.run_id }}
+          restore-keys: nax-historico-
+
+      - name: Descargar de NAX y generar el reporte
+        env:
+          NAX_EMAIL: ${{ secrets.NAX_EMAIL }}
+          NAX_PASSWORD: ${{ secrets.NAX_PASSWORD }}
+          NAX_CAMPANA: ${{ vars.NAX_CAMPANA }}
+          VENTANA_DIAS: ${{ vars.VENTANA_DIAS }}
+          DIAS_RECIENTES: ${{ vars.DIAS_RECIENTES }}
+        run: python nax/nax_diario.py
+
+      - name: Guardar el histórico para mañana
+        if: always() && hashFiles('nax/historico_actual.csv') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            nax/historico_actual.csv
+            nax/historico_campana_anterior.csv
+          key: nax-historico-${{ github.run_id }}
+
+      - name: Publicar en el tablero de GeoCR
+        env:
+          GEOCR_URL: ${{ vars.GEOCR_URL }}
+          GEOCR_INGEST_TOKEN: ${{ secrets.GEOCR_INGEST_TOKEN }}
+        run: node nax/publicar.mjs
+
+      - name: Guardar el PDF y el Excel del día (descargables 14 días)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-nax-${{ github.run_number }}
+          path: |
+            nax/reporte_nax.pdf
+            nax/reporte_nax_casos_criticos.xlsx
+          if-no-files-found: ignore
+          retention-days: 14
