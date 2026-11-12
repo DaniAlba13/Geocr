@@ -1,0 +1,17 @@
+// Configuración del Worker de GeoCR en Cloudflare (se publica solo con cada cambio en GitHub).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "geocr",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-11-10",
+  "assets": {
+    "directory": "public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "geocr", "database_id": "9646f472-45f2-4067-9199-6eb180434db0" }
+  ],
+  // Conserva las variables puestas en el panel (EDITORES); los secrets (INGEST_TOKEN) se conservan siempre.
+  "keep_vars": true,
+  "observability": { "enabled": true }
+}

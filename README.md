@@ -18,31 +18,27 @@ Este repositorio publica la plataforma GeoCR en Cloudflare Pages. Además, conti
 
 ## Configuración (se hace una sola vez)
 
-### 1. Cloudflare Pages
-1. En Cloudflare, ve a **Workers & Pages → Create → Pages → Connect to Git** y elige este repositorio.
-2. Configura el build así:
-   - **Framework preset:** None
-   - **Build command:** (vacío)
-   - **Build output directory:** `public`
-3. Pulsa **Save and Deploy**. La dirección queda como `https://geocr-xxx.pages.dev`.
-4. Ve a **Settings → Builds → Build watch paths**. En *Include paths* pon `public/*` y `functions/*`. Así, los cambios en `nax/` no gastan publicaciones.
+### 1. Cloudflare (Worker)
+El proyecto está publicado como **Worker** `geocr`, conectado a este repositorio. Cada cambio que llega a `main` se publica solo. La configuración está en `wrangler.jsonc`: la página en `public/`, la API en `worker/` y la base D1 `geocr` con el binding `DB`.
 
-### 2. Base de datos (D1)
-1. En Cloudflare, ve a **Storage & Databases → D1 → Create**. Ponle el nombre `geocr`.
-2. En el proyecto de Pages, ve a **Settings → Bindings → Add → D1 database**. Usa el nombre de variable `DB` y elige `geocr`.
-3. En **Settings → Variables and Secrets**, agrega `INGEST_TOKEN` de tipo *Secret*. El valor es una clave larga inventada, por ejemplo de 40 letras y números. Guárdala, porque la vas a necesitar en el paso 4.
-4. En **Settings → Variables and Secrets**, agrega también la variable `EDITORES`, de tipo *Text*. Su valor son los correos que pueden registrar o corregir lluvias, separados por coma. El resto del personal solo ve los mapas, el historial y la descarga.
-5. Vuelve a publicar con **Deployments → … → Retry deployment**. La tabla se crea sola en la primera visita.
+### 2. Variables del Worker
+En **Workers & Pages → geocr → Settings → Variables and Secrets**:
+
+| Tipo | Nombre | Valor |
+|---|---|---|
+| Secret | `INGEST_TOKEN` | Una clave larga inventada. Es la misma que va en GitHub como `GEOCR_INGEST_TOKEN`. |
+| Text | `EDITORES` | Los correos que pueden registrar o corregir lluvias, separados por coma. |
+
+La tabla de la base de datos se crea sola en la primera visita.
 
 ### 3. Acceso solo para el personal (Cloudflare Access)
 1. En Cloudflare, ve a **Zero Trust → Access → Applications → Add → Self-hosted**.
-   - **Dominio:** el de Pages, por ejemplo `geocr-xxx.pages.dev`.
+   - **Dominio:** el del Worker, por ejemplo `geocr.xxx.workers.dev`.
    - **Policy:** *Allow*. En *Include*, elige *Emails* y escribe los correos autorizados.
    - **Login method:** One-time PIN.
 2. Crea una **segunda** aplicación Self-hosted para el robot:
    - **Dominio:** el mismo, con la ruta `api/ingest`.
    - **Policy:** *Bypass*, con *Include* en *Everyone*. Esa ruta ya está protegida con el token `INGEST_TOKEN`.
-3. Haz lo mismo con `*.geocr-xxx.pages.dev`, que corresponde a las vistas previas, para que también pidan correo.
 
 Para agregar o quitar personas después, edita la lista de correos de la *Policy*.
 
@@ -61,7 +57,7 @@ En este repositorio, ve a **Settings → Secrets and variables → Actions**.
 
 | Nombre | Valor |
 |---|---|
-| `GEOCR_URL` | `https://geocr-xxx.pages.dev` |
+| `GEOCR_URL` | `https://geocr.xxx.workers.dev` |
 | `NAX_CAMPANA` | Opcional. El nombre exacto de la campaña, por ejemplo `12/2026 (SUGARCANE)`. Si no la pones, se usa la primera de la lista, igual que en la ventana del script. |
 | `VENTANA_DIAS` | Opcional, por defecto `35`. Son los días de imágenes que se conservan en el histórico. |
 | `DIAS_RECIENTES` | Opcional, por defecto `7`. Son los días que se vuelven a pedir cada mañana. |
