@@ -258,7 +258,7 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
 <section id="s-mapas">
   <h1>Mapas</h1>
   <p class="sub">Genera mapas de lluvia para cualquier período y combina la información de cada pieza para crear tus propios mapas, listos en PDF.</p>
-  <div class="subnav" id="subnav"><button data-s="lluvias" class="on">Lluvias</button><button data-s="otros">Otros mapas</button></div>
+  <div class="subnav" id="subnav"><button data-s="lluvias" class="on">Lluvias</button><button data-s="otros">Otros mapas</button><button data-s="registro" id="lrNav" style="display:none">Registrar lluvia</button></div>
   <div id="s-lluvias" class="subv on">
   <h2 style="font-size:20px">Mapas de lluvia</h2>
   <p class="sub" id="rainSub">Pluviómetros de Central Romana</p>
@@ -323,6 +323,45 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
     </div>
   </div>
 </div>
+  <div id="s-lreg" class="subv">
+    <h2 style="font-size:20px">Registrar lluvia</h2>
+    <p class="sub">Lo que guardes aquí actualiza los mapas de lluvia para todos los usuarios en el momento. Valores en <b>pulgadas</b>.</p>
+    <div class="msg" id="lrMsg" style="display:none"></div>
+    <div class="seg" id="lrSeg" style="max-width:760px;margin:12px 0 14px"><button data-m="dia" class="on">Lectura diaria</button><button data-m="mes">Total mensual</button><button data-m="arch">Cargar Excel o CSV</button><button data-m="pluv">Pluviómetros</button><button data-m="hist">Historial y descarga</button></div>
+    <div class="card lrv" id="lr-dia">
+      <div class="fbar" style="border:0;padding:0;margin:0 0 10px"><div><label>Fecha de la lectura</label><input type="date" id="lrFecha"></div><div><label>División</label><select id="lrDivD"><option value="">Todas</option></select></div><div style="flex:1"></div><button class="btn" id="lrSaveD">Guardar lecturas</button></div>
+      <p class="note">Deja vacío el pluviómetro que no se leyó; escribe <b>0</b> si se leyó y no llovió. Si un pluviómetro tiene lecturas diarias en un mes, en ese mes los mapas usan la suma de esas lecturas.</p>
+      <div class="status" id="lrStD"></div>
+      <div class="scroll" style="max-height:560px"><table id="lrTblD"></table></div>
+    </div>
+    <div class="card lrv" id="lr-mes" style="display:none">
+      <div class="fbar" style="border:0;padding:0;margin:0 0 10px"><div><label>Mes</label><input type="month" id="lrMesSel"></div><div><label>División</label><select id="lrDivM"><option value="">Todas</option></select></div><div style="flex:1"></div><button class="btn" id="lrSaveM">Guardar totales</button></div>
+      <p class="note">El total mensual registrado tiene prioridad sobre el Excel y sobre las lecturas diarias de ese mes. La columna “Valor actual” muestra lo que usan hoy los mapas.</p>
+      <div class="status" id="lrStM"></div>
+      <div class="scroll" style="max-height:560px"><table id="lrTblM"></table></div>
+    </div>
+    <div class="card lrv" id="lr-arch" style="display:none">
+      <h2>Cargar Excel o CSV a la base</h2>
+      <p class="note">Acepta dos formatos: <b>1)</b> el Excel de lluvias actual (columnas PLUV y pp_MesAA acumuladas por año lluvia o calendario), que se guarda como totales mensuales; <b>2)</b> lecturas diarias con columnas <b>fecha</b>, <b>PLUV</b> y <b>lluvia</b> (pulgadas; si la columna se llama mm se convierte).</p>
+      <input type="file" id="lrFile" accept=".xlsx,.xls,.csv">
+      <label style="display:flex;gap:6px;align-items:center;margin-top:10px;font-size:13px"><input type="checkbox" id="lrRepl" checked style="width:auto"> Reemplazar los valores que ya estén en la base</label>
+      <div id="lrPrev" class="note" style="margin-top:10px"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" id="lrSaveA" disabled>Guardar en la base</button></div>
+      <div class="status" id="lrStA"></div>
+    </div>
+    <div class="card lrv" id="lr-pluv" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Pluviómetros</h2><div><button class="btn sec" id="lrAddP">Agregar pluviómetro</button> <button class="btn" id="lrSaveP">Guardar cambios</button></div></div>
+      <p class="note">Coordenadas en grados decimales (por ejemplo latitud 18.45, longitud −68.97). Los marcados en rojo no tienen ubicación y no entran en los mapas. Desactivar un pluviómetro lo saca de los mapas sin borrar sus datos.</p>
+      <div class="status" id="lrStP"></div>
+      <div class="scroll" style="max-height:560px"><table id="lrTblP"></table></div>
+    </div>
+    <div class="card lrv" id="lr-hist" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Historial de registros</h2><button class="btn" id="lrXls">Descargar Excel de lluvias (formato actual)</button></div>
+      <p class="note">El Excel trae una hoja por año lluvia y por año calendario, acumulada por mes como el archivo original, con todo lo que usan hoy los mapas (Excel base + registros).</p>
+      <div class="status" id="lrStH"></div>
+      <div class="scroll" style="max-height:520px"><table id="lrTblH"></table></div>
+    </div>
+  </div>
   <div id="s-tema" class="subv">
     <div class="layout">
       <div class="card" id="temaCtl">
@@ -605,7 +644,7 @@ async function readGeo(file){
 const VIEWS=['inicio','mapas','alertas','tasa-variada','calidad','muestreo','surcos'];
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));
-  if(v==='mapas')showSub(['lluvias','otros','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
+  if(v==='mapas')showSub(['lluvias','registro','otros','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 window.addEventListener('hashchange',route);
 $$('[data-go]').forEach(c=>c.onclick=()=>location.hash=c.dataset.go);
 window.addEventListener('resize',()=>{clearTimeout(window._rz);window._rz=setTimeout(route,200)});
@@ -648,7 +687,7 @@ function loadMonthlySheets(sheets,srcName){
 function setMonthly(sheets,srcName){
   const o=loadMonthlySheets(sheets,srcName); if(!o.gauges.size)throw new Error('No encontré columnas PLUV y pp_MesAA en el Excel.');
   const keepLoc=R.gauges; o.gauges.forEach((g,p)=>{const old=keepLoc.get(p);if(old&&old.lon!==undefined){g.lon=old.lon;g.lat=old.lat}});
-  R.gauges=o.gauges; R.recs=[...R.recs.filter(r=>r.src==='dia'),...o.recs]; R.qc=o.qc; R.src=srcName;
+  R.gauges=o.gauges; R.recs=[...R.recs.filter(r=>r.src==='dia'&&!r.db),...o.recs]; R.qc=o.qc; R.src=srcName; R.base=R.recs.slice(); if(typeof lrApply==='function'&&window.LR_READY)lrApply();
 }
 function loadDaily(sheets){
   let n=0; const add=[];
@@ -661,7 +700,7 @@ function loadDaily(sheets){
       if(!/^\d{4}-\d{2}-\d{2}$/.test(f))continue; const p=String(r[iP]??'').trim(); let v=parseFloat(String(r[iV]).replace(',','.')); if(!p||!isFinite(v))continue;
       if(isMM)v/=25.4; if(!R.gauges.has(p))R.gauges.set(p,{id:p,name:p,div:''}); add.push({p,s:f,e:f,v,src:'dia'});n++}}
   if(!n)throw new Error('No encontré columnas fecha, PLUV y lluvia.');
-  R.recs=[...R.recs.filter(r=>r.src!=='dia'),...add]; return n;
+  R.base=[...(R.base||R.recs).filter(r=>r.src!=='dia'&&!r.db),...add]; R.recs=R.base.slice(); if(typeof lrApply==='function'&&window.LR_READY)lrApply(); return n;
 }
 function months(){const s=new Set();for(const r of R.recs){let d=r.s.slice(0,7);s.add(d);s.add(r.e.slice(0,7))}return[...s].sort()}
 const nextYM=ym=>{let y=+ym.slice(0,4),m=+ym.slice(5,7)+1;if(m>12){m=1;y++}return y+'-'+String(m).padStart(2,'0')};
@@ -902,7 +941,7 @@ seg('#modeSeg',d=>{mode=d.m;showCtl()});seg('#unitSeg',d=>unit=d.u);
 function msg(t,err){const s=$('#upStatus');s.textContent=t;s.className='status'+(err?' err':'')}
 function saveLoc(){try{localStorage.setItem('apcr-loc',JSON.stringify([...R.gauges.values()].filter(g=>g.lon!==undefined).map(g=>[g.id,g.lon,g.lat])));if(R.boundary)localStorage.setItem('apcr-bnd',JSON.stringify(R.boundary));if(R.divs)localStorage.setItem('apcr-div',JSON.stringify(R.divs))}catch(e){}}
 function restoreLoc(){try{const L=JSON.parse(localStorage.getItem('apcr-loc')||'[]');L.forEach(([id,lon,lat])=>{const g=R.gauges.get(id);if(g){g.lon=lon;g.lat=lat}});const b=localStorage.getItem('apcr-bnd');if(b)R.boundary=JSON.parse(b);const d=localStorage.getItem('apcr-div');if(d)R.divs=JSON.parse(d);const lg=localStorage.getItem('apcr-logo');if(lg){const im=new Image();im.onload=()=>{logoImg=im;drawRain()};im.src=lg}}catch(e){}}
-$('#upX').onchange=async e=>{try{const f=e.target.files[0];setMonthly(await readTable(f),f.name);applyLayers();restoreLoc();$('#rainSrc').textContent='Fuente: '+f.name;setupControls();msg(`${R.gauges.size} pluviómetros, ${months().length} meses. ${R.qc.length} observaciones de QC.`);drawRain()}catch(err){msg(err.message,1)}};
+$('#upX').onchange=async e=>{try{const f=e.target.files[0];setMonthly(await readTable(f),f.name);applyLayers();restoreLoc();if(window.LR_READY)lrApply();$('#rainSrc').textContent='Fuente: '+f.name;setupControls();msg(`${R.gauges.size} pluviómetros, ${months().length} meses. ${R.qc.length} observaciones de QC.`);drawRain()}catch(err){msg(err.message,1)}};
 $('#upD').onchange=async e=>{try{const n=loadDaily(await readTable(e.target.files[0]));setupControls();msg(n+' lecturas cargadas. Usa "Fechas" para cualquier rango.');drawRain()}catch(err){msg(err.message,1)}};
 $('#upG').onchange=async e=>{try{const f=e.target.files[0];let pts=[];
   if(f.name.toLowerCase().endsWith('.csv')){const[h,...rows]=parseCSV(await f.text());const H=h.map(normName);const iP=H.findIndex(x=>/^pluv/.test(x)),iX=H.findIndex(x=>/^(lon|x|este|longitud)/.test(x)),iY=H.findIndex(x=>/^(lat|y|norte|latitud)/.test(x));
@@ -1191,8 +1230,8 @@ function buildFilters(){const box=$('#tFilt');box.innerHTML=FKEYS.map(k=>{const 
 $('#tColor').onchange=()=>{TS.key=$('#tColor').value;buildTema(TS.key);drawTema()};
 $('#tClear').onclick=()=>{FKEYS.forEach(k=>FILT[k]='');buildFilters();buildTema(TS.key);drawTema()};
 function showSub(k){const lg={variedad:1,suelo:1,clase:1,corte:1,adm:1,mimapa:1,division:1};if(lg[k]){$('#tColor').value=k;TS.key=k;k='otros'}
-  $$('#subnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===k));$('#s-lluvias').classList.toggle('on',k==='lluvias');$('#s-tema').classList.toggle('on',k!=='lluvias');
-  if(k==='lluvias')drawRain();else{if(!$('#tFilt').children.length)buildFilters();TS.key=$('#tColor').value;buildTema(TS.key);drawTema()}}
+  $$('#subnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===k));$('#s-lluvias').classList.toggle('on',k==='lluvias');$('#s-lreg').classList.toggle('on',k==='registro');$('#s-tema').classList.toggle('on',k!=='lluvias'&&k!=='registro');
+  if(k==='lluvias')drawRain();else if(k==='registro')lrShow();else{if(!$('#tFilt').children.length)buildFilters();TS.key=$('#tColor').value;buildTema(TS.key);drawTema()}}
 $$('#subnav button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.s==='lluvias'?'mapas':'mapas-'+b.dataset.s});
 
 /* ================= REGISTRO (base de datos compartida) Y TABLEROS ================= */
@@ -1677,6 +1716,120 @@ $('#suFile').onchange=async e=>{const st=$('#suSt');try{const sh=(await readTabl
 $('#suSave').onclick=async()=>{const st=$('#suSt');try{if(!SUP)return;const f=$('#suFecha').value||hoyISO();await saveReg('su',{fecha:f,archivo:SUP.archivo,lotes:SUP.lotes.map(l=>({...l,fecha:l.fecha||f}))});st.textContent='Guardado en el tablero.';SUP=null;$('#suSave').disabled=true;showModSub('surcos','tab')}catch(e){st.className='status err';st.textContent=e.message||'No tienes permiso para guardar.'}};
 
 /* ---------------- arranque ---------------- */
+/* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
+const LR={dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};
+const LR_DIVC=Object.fromEntries(Object.entries(DIVN).map(([k,v])=>[v,+k]));
+const lrNum=v=>{if(v===null||v===undefined||String(v).trim()==='')return NaN;return+String(v).replace(',','.')};
+const lrF2=v=>isFinite(v)?(+v).toFixed(2):'';
+const lrCode=(a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true});
+function lrAvisar(t,err){const m=$('#lrMsg');m.style.display=t?'block':'none';m.innerHTML=t||'';m.style.borderLeftColor=err?'var(--red)':''}
+/* aplica lo guardado en la base sobre el Excel embebido */
+function lrApply(){const before=months().join();
+  R.recs=(R.base||R.recs.filter(r=>!r.db)).slice();
+  LR.pluv.forEach((g,id)=>{let x=R.gauges.get(id);if(!x){x={id,name:g.nombre||id,div:g.div||''};R.gauges.set(id,x)}
+    if(g.nombre)x.name=g.nombre;if(g.div)x.div=g.div;const la=lrNum(g.lat),lo=lrNum(g.lon);if(isFinite(la)&&isFinite(lo)){x.lat=la;x.lon=lo}x.inactivo=!!g.inactivo});
+  const mk=new Set();LR.mes.forEach((d,ym)=>Object.entries(d.v||{}).forEach(([p,v])=>{if(isFinite(lrNum(v)))mk.add(p+'|'+ym)}));
+  R.recs=R.recs.filter(r=>!(r.src==='mes'&&mk.has(r.p+'|'+r.s.slice(0,7))));
+  LR.mes.forEach((d,ym)=>{const y=+ym.slice(0,4),m=+ym.slice(5,7);Object.entries(d.v||{}).forEach(([p,v])=>{v=lrNum(v);if(!isFinite(v))return;if(!R.gauges.has(p))R.gauges.set(p,{id:p,name:p,div:''});R.recs.push({p,s:ym+'-01',e:ym+'-'+String(lastDay(y,m)).padStart(2,'0'),v,src:'mes',db:1})})});
+  LR.dia.forEach((d,f)=>Object.entries(d.v||{}).forEach(([p,v])=>{v=lrNum(v);if(!isFinite(v)||mk.has(p+'|'+f.slice(0,7)))return;if(!R.gauges.has(p))R.gauges.set(p,{id:p,name:p,div:''});R.recs.push({p,s:f,e:f,v,src:'dia',db:1})}));
+  R.recs=R.recs.filter(r=>!(R.gauges.get(r.p)||{}).inactivo);
+  if(months().join()!==before)setupControls();
+  if($('#s-lluvias').classList.contains('on')&&$('#s-mapas').classList.contains('on'))drawRain();
+  if($('#s-lreg').classList.contains('on'))lrDraw()}
+/* totales mensuales que usan hoy los mapas: p -> ym -> pulgadas */
+function lrMensual(){const out=new Map(),put=(p,ym,v)=>{if(!out.has(p))out.set(p,new Map());const m=out.get(p);m.set(ym,(m.get(ym)||0)+v)};
+  const dk=new Set();R.recs.forEach(r=>{if(r.src==='dia')dk.add(r.p+'|'+r.s.slice(0,7))});
+  R.recs.forEach(r=>{if(!isFinite(r.v))return;const ym=r.s.slice(0,7);if(r.src==='mes'&&dk.has(r.p+'|'+ym))return;put(r.p,ym,r.v)});return out}
+function lrGauges(div){return[...R.gauges.values()].filter(g=>!g.inactivo&&(!div||g.div===div)).sort((a,b)=>(LR_DIVC[a.div]||9)-(LR_DIVC[b.div]||9)||lrCode(a.id,b.id))}
+function lrDivSel(){['lrDivD','lrDivM'].forEach(id=>{const s=$('#'+id),v=s.value,ds=[...new Set([...R.gauges.values()].map(g=>g.div).filter(Boolean))].sort((a,b)=>(LR_DIVC[a]||9)-(LR_DIVC[b]||9));s.innerHTML='<option value="">Todas</option>'+ds.map(d=>`<option>${d}</option>`).join('');s.value=ds.includes(v)?v:''})}
+function lrShow(){if(!$('#lrFecha').value)$('#lrFecha').value=hoyISO();if(!$('#lrMesSel').value)$('#lrMesSel').value=hoyISO().slice(0,7);lrDivSel();lrDraw()}
+function lrDraw(){$$('#lrSeg button').forEach(b=>b.classList.toggle('on',b.dataset.m===LR.vista));$$('#s-lreg .lrv').forEach(d=>d.style.display=d.id==='lr-'+LR.vista?'':'none');
+  const cargando=!(LR.listo.dia&&LR.listo.mes&&LR.listo.pluv);
+  lrAvisar(!DB?'Para registrar lluvias GeoCR tiene que estar publicado con su base de datos.':!LR.editor?'Solo el equipo autorizado puede registrar o corregir lluvias. Puedes consultar el historial y descargar el Excel.':cargando?'Cargando los registros guardados…':'',!DB||!LR.editor);
+  const lock=!DB||!LR.editor||cargando;['lrSaveD','lrSaveM','lrSaveP','lrAddP','lrFile'].forEach(id=>$('#'+id).disabled=lock);
+  if(LR.vista==='dia')lrTablaDia();else if(LR.vista==='mes')lrTablaMes();else if(LR.vista==='pluv')lrTablaPluv();else if(LR.vista==='hist')lrTablaHist()}
+const lrIn=(p,v,max,ro)=>`<input type="number" step="0.01" min="0" max="${max}" data-p="${p}" value="${lrF2(v)}" style="max-width:120px;text-align:right"${ro?' disabled':''}>`;
+function lrFilas(gs,celdas){let h='',dv=null;gs.forEach(g=>{if(g.div!==dv){dv=g.div;h+=`<tr><td colspan="9" style="background:#F5F7FA;font-weight:700;color:var(--navy)">${dv||'Sin división'}</td></tr>`}h+=`<tr><td>${g.id}</td><td>${g.name||''}</td>${celdas(g)}</tr>`});return h}
+function lrTablaDia(){const f=$('#lrFecha').value,d=(LR.dia.get(f)||{}).v||{},gs=lrGauges($('#lrDivD').value);LR.pref.dia=new Set(Object.keys(d));
+  $('#lrTblD').innerHTML=`<tr><th>PLUV</th><th>Nombre</th><th class="num">Lluvia (in)</th></tr>`+lrFilas(gs,g=>`<td class="num">${lrIn(g.id,lrNum(d[g.id]),15,!LR.editor)}</td>`);
+  const n=Object.keys(d).length;$('#lrStD').innerHTML=n?`Ya hay ${n} lectura(s) guardadas para esta fecha${LR.dia.get(f).por?' por '+LR.dia.get(f).por:''}. Puedes corregirlas.`:''}
+function lrTablaMes(){const ym=$('#lrMesSel').value,d=(LR.mes.get(ym)||{}).v||{},gs=lrGauges($('#lrDivM').value),M=lrMensual();LR.pref.mes=new Set(Object.keys(d));
+  $('#lrTblM').innerHTML=`<tr><th>PLUV</th><th>Nombre</th><th class="num">Valor actual (in)</th><th class="num">Total registrado (in)</th></tr>`+lrFilas(gs,g=>{const a=(M.get(g.id)||new Map()).get(ym);return`<td class="num" style="color:var(--muted)">${isFinite(a)?fmt(a,2):'–'}</td><td class="num">${lrIn(g.id,lrNum(d[g.id]),60,!LR.editor)}</td>`});
+  $('#lrStM').textContent=ym?`${ymLabel(ym)}${Object.keys(d).length?` · ${Object.keys(d).length} total(es) ya registrados`:''}`:''}
+async function lrGuardarDoc(coll,id,form,pref,max,st){const vals={},borrar=[];let malo=null;
+  form.forEach(i=>{const v=lrNum(i.value),p=i.dataset.p;if(i.value.trim()===''){if(pref.has(p))borrar.push(p);return}if(!isFinite(v)||v<0||v>max)malo=malo||p;else vals[p]=Math.round(v*100)/100});
+  if(malo){st.innerHTML=`<span class="qc">Revisa el pluviómetro ${malo}: el valor debe estar entre 0 y ${max} pulgadas.</span>`;return false}
+  const ref=DB.collection(coll).doc(id),prev=await ref.get(),v={...((prev.exists&&prev.data().v)||{})};borrar.forEach(p=>delete v[p]);Object.assign(v,vals);
+  const por=await quienSoy();if(!Object.keys(v).length){if(prev.exists)await ref.delete();return true}
+  await ref.set({fecha:id,v,por,upd:new Date().toISOString()});return true}
+$('#lrSaveD').onclick=async()=>{const st=$('#lrStD'),f=$('#lrFecha').value;if(!f){st.textContent='Elige la fecha.';return}if(f>hoyISO()){st.innerHTML='<span class="qc">La fecha no puede ser futura.</span>';return}
+  st.textContent='Guardando…';try{if(await lrGuardarDoc('lluvia_dia',f,$$('#lrTblD input[data-p]'),LR.pref.dia||new Set(),15,st))st.textContent='Lecturas guardadas. Los mapas ya las incluyen.'}catch(e){st.innerHTML=`<span class="qc">No se pudo guardar (${e.message}).</span>`}};
+$('#lrSaveM').onclick=async()=>{const st=$('#lrStM'),ym=$('#lrMesSel').value;if(!ym){st.textContent='Elige el mes.';return}
+  st.textContent='Guardando…';try{if(await lrGuardarDoc('lluvia_mes',ym,$$('#lrTblM input[data-p]'),LR.pref.mes||new Set(),60,st))st.textContent='Totales guardados. Los mapas ya los incluyen.'}catch(e){st.innerHTML=`<span class="qc">No se pudo guardar (${e.message}).</span>`}};
+['lrFecha','lrDivD'].forEach(id=>$('#'+id).onchange=lrTablaDia);['lrMesSel','lrDivM'].forEach(id=>$('#'+id).onchange=lrTablaMes);
+$$('#lrSeg button').forEach(b=>b.onclick=()=>{LR.vista=b.dataset.m;lrDraw()});
+/* importar Excel/CSV */
+$('#lrFile').onchange=async e=>{const f=e.target.files[0],pv=$('#lrPrev');LR.imp=null;$('#lrSaveA').disabled=true;$('#lrStA').textContent='';if(!f)return;
+  try{const sh=await readTable(f);let imp={tipo:'',docs:new Map(),n:0,qc:0};
+    const esDia=sh.some(s=>{const h=(s.rows[0]||[]).map(x=>normName(x));return h.some(x=>/^fecha|^date/.test(x))&&h.some(x=>/^pluv/.test(x))});
+    if(esDia){const mm=sh.some(s=>(s.rows[0]||[]).some(x=>/mm/i.test(String(x||''))&&!/^fecha/i.test(String(x||''))));
+      for(const s of sh){const h=(s.rows[0]||[]).map(x=>normName(x)),iF=h.findIndex(x=>/^fecha|^date/.test(x)),iP=h.findIndex(x=>/^pluv/.test(x)),iV=h.findIndex(x=>/^(lluvia|pp|in|pulg|mm|valor)/.test(x));if(iF<0||iP<0||iV<0)continue;const isMM=/mm/.test(h[iV]);
+        for(const r of s.rows.slice(1)){let d=r[iF];if(d instanceof Date)d=iso(new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())));else if(typeof d==='number')d=iso(new Date(Date.UTC(1899,11,30)+d*864e5));else{d=String(d||'').trim();const m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)d=`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`}
+          const p=String(r[iP]??'').trim().replace(/\.0$/,'');let v=lrNum(r[iV]);if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||!p||!isFinite(v)||v<0)continue;if(isMM)v/=25.4;
+          if(!imp.docs.has(d))imp.docs.set(d,{});imp.docs.get(d)[p]=Math.round(v*100)/100;imp.n++}}
+      imp.tipo='dia'}
+    else{const o=loadMonthlySheets(sh,f.name);if(!o.recs.length)throw new Error('No reconocí el formato: faltan columnas fecha/PLUV/lluvia o PLUV/pp_MesAA.');
+      o.recs.forEach(r=>{if(!isFinite(r.v))return;const ym=r.s.slice(0,7);if(!imp.docs.has(ym))imp.docs.set(ym,{});imp.docs.get(ym)[r.p]=Math.round(r.v*100)/100;imp.n++});imp.tipo='mes';imp.qc=o.qc.length;imp.gauges=o.gauges}
+    if(!imp.n)throw new Error('El archivo no trae valores válidos.');
+    const ks=[...imp.docs.keys()].sort(),ps=new Set([...imp.docs.values()].flatMap(Object.keys)),nuevos=[...ps].filter(p=>!R.gauges.has(p));
+    pv.innerHTML=`<b>${imp.tipo==='dia'?'Lecturas diarias':'Totales mensuales'}:</b> ${fmt(imp.n)} valores de ${ps.size} pluviómetros, ${imp.tipo==='dia'?'del '+ks[0]+' al '+ks.at(-1):'de '+ymLabel(ks[0])+' a '+ymLabel(ks.at(-1))}.`+
+      (imp.qc?`<br><span class="qc">${imp.qc} mes(es) con el acumulado que baja o difiere entre hojas se omiten; regístralos a mano en “Total mensual”.</span>`:'')+
+      (nuevos.length?`<br>Pluviómetros que no estaban en GeoCR: ${nuevos.join(', ')}. Agrega su ubicación en “Pluviómetros”.`:'');
+    LR.imp=imp;$('#lrSaveA').disabled=!LR.editor||!DB}
+  catch(err){pv.innerHTML=`<span class="qc">${err.message}</span>`}};
+$('#lrSaveA').onclick=async()=>{const imp=LR.imp,st=$('#lrStA'),b=$('#lrSaveA');if(!imp)return;b.disabled=true;const coll=imp.tipo==='dia'?'lluvia_dia':'lluvia_mes',repl=$('#lrRepl').checked,por=await quienSoy();let i=0;
+  try{for(const[k,vals]of imp.docs){i++;st.textContent=`Guardando ${i} de ${imp.docs.size}…`;const ref=DB.collection(coll).doc(k),prev=await ref.get(),old=(prev.exists&&prev.data().v)||{};
+      const v=repl?{...old,...vals}:{...vals,...old};await ref.set({fecha:k,v,por,upd:new Date().toISOString()})}
+    if(imp.gauges)for(const[p,g]of imp.gauges)if(!R.gauges.has(p)&&!LR.pluv.has(p))await DB.collection('pluviometros').doc(p).set({cod:p,nombre:g.name||p,div:g.div||'',lat:null,lon:null,inactivo:false,fecha:''});
+    st.textContent=`Listo: ${imp.docs.size} ${imp.tipo==='dia'?'fecha(s)':'mes(es)'} guardados en la base.`;LR.imp=null;$('#lrFile').value='';$('#lrPrev').innerHTML=''}
+  catch(e){st.innerHTML=`<span class="qc">Se detuvo en ${i} de ${imp.docs.size} (${e.message}). Puedes volver a intentarlo.</span>`;b.disabled=false}};
+/* pluviómetros */
+let LR_NUEVOS=0;
+function lrTablaPluv(){const gs=[...R.gauges.values()].sort((a,b)=>(LR_DIVC[a.div]||9)-(LR_DIVC[b.div]||9)||lrCode(a.id,b.id)),dsel=v=>`<select data-k="div">${['',...Object.values(DIVN)].map(d=>`<option${d===v?' selected':''}>${d}</option>`).join('')}</select>`,ro=!LR.editor?' disabled':'';
+  const fila=(g,nuevo)=>{const sin=!isFinite(g.lat)||!isFinite(g.lon);return`<tr data-id="${nuevo?'':g.id}"${sin?' style="background:#FDECEA"':''}><td>${nuevo?'<input type="text" data-k="cod" placeholder="Código" style="max-width:90px">':g.id}</td><td><input type="text" data-k="nombre" value="${(g.name||'').replace(/"/g,'&quot;')}"${ro}></td><td>${dsel(g.div||'')}</td><td><input type="number" step="0.00001" data-k="lat" value="${isFinite(g.lat)?g.lat.toFixed(5):''}" style="max-width:120px"${ro}></td><td><input type="number" step="0.00001" data-k="lon" value="${isFinite(g.lon)?g.lon.toFixed(5):''}" style="max-width:120px"${ro}></td><td style="text-align:center"><input type="checkbox" data-k="act" style="width:auto"${g.inactivo?'':' checked'}${ro}></td></tr>`};
+  $('#lrTblP').innerHTML=`<tr><th>PLUV</th><th>Nombre</th><th>División</th><th>Latitud</th><th>Longitud</th><th>Activo</th></tr>`+gs.map(g=>fila(g)).join('')+Array.from({length:LR_NUEVOS},()=>fila({},1)).join('');
+  if(!LR.editor)$$('#lrTblP select').forEach(s=>s.disabled=true);
+  const sin=gs.filter(g=>!g.inactivo&&(!isFinite(g.lat)||!isFinite(g.lon)));$('#lrStP').innerHTML=sin.length?`<span class="qc">${sin.length} pluviómetro(s) activos sin ubicación: ${sin.map(g=>g.id).join(', ')}.</span>`:''}
+$('#lrAddP').onclick=()=>{LR_NUEVOS++;lrTablaPluv();const t=$('#lrTblP');t.parentElement.scrollTop=t.scrollHeight};
+$('#lrSaveP').onclick=async()=>{const st=$('#lrStP'),cambios=[];let err='';
+  $$('#lrTblP tr[data-id]').forEach(tr=>{const q=k=>tr.querySelector(`[data-k="${k}"]`),id=tr.dataset.id||(q('cod').value||'').trim();if(!id){if(q('nombre').value.trim())err='Falta el código de un pluviómetro nuevo.';return}
+    if(!tr.dataset.id&&R.gauges.has(id)){err=`El código ${id} ya existe.`;return}if(!/^[A-Za-z0-9_.\-]{1,20}$/.test(id)){err=`Código no válido: ${id}`;return}
+    const la=lrNum(q('lat').value),lo=lrNum(q('lon').value),n={cod:id,nombre:q('nombre').value.trim(),div:q('div').value,lat:isFinite(la)?la:null,lon:isFinite(lo)?lo:null,inactivo:!q('act').checked,fecha:''};
+    if((isFinite(la)||isFinite(lo))&&!(la>17.8&&la<19.4&&lo>-70&&lo<-68)){err=`Revisa las coordenadas de ${id}: deben estar en grados decimales dentro de la zona de Central Romana (lat ≈ 18.3–18.8, lon ≈ −69.3 a −68.5).`;return}
+    const g=R.gauges.get(id)||{},f5=v=>isFinite(v)?(+v).toFixed(5):'',clave=x=>[x.nombre,x.div,f5(x.lat),f5(x.lon),!!x.inactivo].join('|');
+    if(tr.dataset.id&&clave(n)===clave({nombre:g.name||'',div:g.div||'',lat:g.lat,lon:g.lon,inactivo:g.inactivo}))return;
+    cambios.push(n)});
+  if(err){st.innerHTML=`<span class="qc">${err}</span>`;return}if(!cambios.length){st.textContent='No hay cambios que guardar.';return}
+  try{for(const n of cambios){st.textContent=`Guardando ${n.cod}…`;await DB.collection('pluviometros').doc(n.cod).set(n)}LR_NUEVOS=0;st.textContent=`${cambios.length} pluviómetro(s) guardados.`}catch(e){st.innerHTML=`<span class="qc">No se pudo guardar (${e.message}).</span>`}};
+/* historial y descarga */
+function lrTablaHist(){const L=[...[...LR.dia].map(([k,d])=>['Diaria',k,d]),...[...LR.mes].map(([k,d])=>['Mensual',k,d])].sort((a,b)=>String(b[2].upd||'').localeCompare(String(a[2].upd||'')));
+  $('#lrTblH').innerHTML=L.length?`<tr><th>Tipo</th><th>Fecha / mes</th><th class="num">Pluviómetros</th><th>Registrado por</th><th>Actualizado</th>${LR.editor?'<th></th>':''}</tr>`+L.map(([t,k,d])=>`<tr><td>${t}</td><td>${t==='Mensual'?ymLabel(k):k}</td><td class="num">${Object.keys(d.v||{}).length}</td><td>${d.por||''}</td><td>${d.upd?new Date(d.upd).toLocaleString('es-DO',{dateStyle:'medium',timeStyle:'short'}):''}</td>${LR.editor?`<td><button class="btn sec" style="padding:3px 8px;font-size:12px" data-del="${t==='Diaria'?'lluvia_dia':'lluvia_mes'}|${k}">Borrar</button></td>`:''}</tr>`).join(''):'<tr><td class="note" style="padding:16px">Todavía no hay lluvias registradas en la base. Los mapas usan el Excel base.</td></tr>';
+  $$('#lrTblH [data-del]').forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Borrar';b.style.color='var(--red)';return}
+    const[c,k]=b.dataset.del.split('|');b.disabled=true;try{await DB.collection(c).doc(k).delete();$('#lrStH').textContent='Registro borrado.'}catch(e){$('#lrStH').innerHTML=`<span class="qc">No se pudo borrar (${e.message}).</span>`;b.disabled=false}})}
+$('#lrXls').onclick=()=>{if(!window.XLSX){$('#lrStH').textContent='No se pudo cargar el generador de Excel.';return}
+  const M=lrMensual(),gs=[...R.gauges.values()].filter(g=>!g.inactivo).sort((a,b)=>(LR_DIVC[a.div]||9)-(LR_DIVC[b.div]||9)||lrCode(a.id,b.id)),ms=months();if(!ms.length)return;
+  const y0=+ms[0].slice(0,4),y1=+ms.at(-1).slice(0,4),wb=XLSX.utils.book_new(),hoja=(nombre,lista)=>{const head=['PLUV','DIVISION_C','Division','Nombres',...lista.map(ym=>'pp_'+MESES[+ym.slice(5,7)-1]+ym.slice(2,4))];
+      const rows=gs.map(g=>{const m=M.get(g.id)||new Map();let acc=0,roto=false;return[g.id,LR_DIVC[g.div]||'',g.div||'',g.name||'',...lista.map(ym=>{if(roto||ym>ms.at(-1))return null;const v=m.get(ym);if(!isFinite(v)){roto=true;return null}acc+=v;return Math.round(acc*100)/100})]});
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([head,...rows]),nombre.slice(0,31))};
+  for(let y=y1;y>=y0-1;y--){const l=Array.from({length:12},(_,i)=>{const mm=i+4;return mm<=12?`${y}-${String(mm).padStart(2,'0')}`:`${y+1}-${String(mm-12).padStart(2,'0')}`});if(l.some(ym=>ms.includes(ym)))hoja(`Año lluvia ${String(y).slice(2)}-${String(y+1).slice(2)}`,l)}
+  for(let y=y1;y>=y0;y--)hoja(`Calendario ${y}`,Array.from({length:12},(_,i)=>`${y}-${String(i+1).padStart(2,'0')}`));
+  saveFile(`lluvias_GeoCR_${hoyISO()}.xlsx`,new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),$('#lrStH'))};
+/* carga desde la base */
+(async()=>{for(let t=0;t<200&&!DB&&DBSTATE==='cargando';t++)await new Promise(r=>setTimeout(r,50));
+  if(!DB){LR.listo={dia:true,mes:true,pluv:true};return}
+  if(window.claude&&claude.use)LR.editor=true;else{try{const r=await fetch('/api/me',{cache:'no-store'});const j=await r.json();LR.editor=!!j.editor}catch(e){LR.editor=false}}
+  $('#lrNav').style.display='';window.LR_READY=true;let tm=null;const later=()=>{clearTimeout(tm);tm=setTimeout(lrApply,150)};
+  [['dia','lluvia_dia',2000],['mes','lluvia_mes',600],['pluv','pluviometros',500]].forEach(([k,c,n])=>DB.collection(c).orderBy('fecha','desc').limit(n).onSnapshot(s=>{LR[k]=new Map(s.docs.map(d=>[d.id,d.data()]));LR.listo[k]=true;later()},()=>{LR.listo[k]=true;later()}))})();
 setMonthly(EMBED_SHEETS,'ARCHIVO_MAPA_DE_LLUVIAS_AÑO.xlsx'); applyLayers(); restoreLoc(); setupControls(); showCtl(); detectKeys();
 $('#rainSub').textContent=`${R.gauges.size} pluviómetros · ${[...new Set([...R.gauges.values()].map(g=>g.div).filter(Boolean))].length} divisiones · lámina mensual derivada de los acumulados`;
 homeInfo();route();
