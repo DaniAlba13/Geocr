@@ -26,8 +26,8 @@ export async function onRequest({ request, env, params }) {
 
   // --- robot NAX (GitHub Actions): protegido con token, no con Cloudflare Access ---
   if (seg[0] === 'ingest') {
-    const tok = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-    if (!env.INGEST_TOKEN || tok !== env.INGEST_TOKEN) return J({ error: 'token inválido' }, 401);
+    const tok = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim(), esperado = String(env.INGEST_TOKEN || '').trim();
+    if (!esperado || tok !== esperado) return J({ error: 'token inválido' }, 401);
     if (m !== 'POST') return J({ error: 'usa POST' }, 405);
     const { ops = [] } = await request.json(); const out = [], stm = [];
     for (const o of ops) {

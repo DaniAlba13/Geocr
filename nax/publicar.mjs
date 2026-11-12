@@ -1,7 +1,7 @@
 // Procesa los CSV del robot con el MISMO motor del tablero (src/nax_engine.js) y publica en GeoCR.
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
-const URL_ = (process.env.GEOCR_URL || '').replace(/\/+$/, ''), TOKEN = process.env.GEOCR_INGEST_TOKEN || '';
+const URL_ = (process.env.GEOCR_URL || '').replace(/\/+$/, ''), TOKEN = (process.env.GEOCR_INGEST_TOKEN || '').trim();
 const iso = d => d.toISOString().slice(0, 10);
 const DIVN = { 1: 'Higueral', 2: 'Guaymate', 3: 'La Higuera', 4: 'Chavón Abajo', 5: 'Cuyá', 6: 'Lechugas', 7: 'Baigua' };
 const motor = fs.readFileSync(path.join(AQUI, '../src/nax_engine.js'), 'utf8');
@@ -24,6 +24,7 @@ async function ops(lista) {
   const r = await fetch(URL_ + '/api/ingest', { method: 'POST', redirect: 'manual', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + TOKEN }, body: JSON.stringify({ ops: lista }) });
   if (r.status >= 300 && r.status < 400) throw new Error('Cloudflare Access bloqueó /api/ingest: falta la regla "Bypass" para esa ruta (ver README).');
   const t = await r.text(); let j; try { j = JSON.parse(t); } catch (e) { throw new Error(`Respuesta inesperada (${r.status}): ${t.slice(0, 200)}`); }
+  if (r.status === 401) throw new Error('GeoCR rechazó la clave: GEOCR_INGEST_TOKEN (GitHub) no es igual a INGEST_TOKEN (Cloudflare). Vuelve a pegar la misma clave en los dos lugares.');
   if (!r.ok) throw new Error(`GeoCR respondió ${r.status}: ${j.error || t.slice(0, 200)}`);
   return j.out;
 }

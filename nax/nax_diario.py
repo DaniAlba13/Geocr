@@ -133,6 +133,14 @@ def main():
     if not os.path.exists(HIST):
         sys.exit("No hay histórico de la campaña actual: NAX no devolvió imágenes en el rango.")
 
+    # Diagnóstico: qué columnas trae NAX y cuántos valores tiene cada una (para revisar los modelos).
+    try:
+        d = pd.read_csv(HIST, low_memory=False)
+        cols = [(c, int(pd.to_numeric(d[c], errors='coerce').notna().sum())) for c in d.columns]
+        print("Columnas numéricas del histórico (valores):", ", ".join(f"{c}={n}" for c, n in cols if n))
+    except Exception as e:
+        print("No se pudo listar columnas:", e)
+
     # Campaña anterior: mismo período desplazado (lo calcula tu función).
     try:
         nax.download_datos_campana_anterior()
