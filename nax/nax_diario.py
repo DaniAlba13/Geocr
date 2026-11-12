@@ -138,6 +138,9 @@ def main():
         d = pd.read_csv(HIST, low_memory=False)
         cols = [(c, int(pd.to_numeric(d[c], errors='coerce').notna().sum())) for c in d.columns]
         print("Columnas numéricas del histórico (valores):", ", ".join(f"{c}={n}" for c, n in cols if n))
+        for c in d.columns:
+            if d[c].dtype == object and d[c].nunique() <= 60:
+                print(f"Columna de texto '{c}':", d[c].value_counts().head(15).to_dict())
     except Exception as e:
         print("No se pudo listar columnas:", e)
 
