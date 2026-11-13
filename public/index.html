@@ -1555,12 +1555,12 @@ function nxProcesar(F){
       tN:isFinite(r.tcaN)?+r.tcaN.toFixed(3):null,tNo:r.tcaN_o,tI:isFinite(r.tcaI)?+r.tcaI.toFixed(3):null,tR:isFinite(r.tcaR)?+r.tcaR.toFixed(3):null};
     mets.forEach(m=>{const k=NX_RANGOS[m].k;o[k]=isFinite(r[m])?+r[m].toFixed(4):null;o[k+'o']=r[m+'_o']});return o});
   return{v:1,fecha:new Date().toISOString(),hoy:iso(new Date(hoy)),rango,mets:mets.map(m=>NX_RANGOS[m].k),P,ant,agregadas:rows.length-antes,maestro:!!maestro}}
-const NX_OR=['Satelital','Proyectado','Estimado NAX','Sin dato'];
+const NX_OR=['Satelital','Proyectado','Estimado NAX','Sin dato'],NX_ORK=/^(humo|ndvio|bioo|tNo)$/; /* columnas de origen del dato (no confundir con 'bio') */
 function nxPack(S){const D=[...new Set([...S.P.map(p=>p.div),...(S.ant?[...Object.values(S.ant.obs).flat(),...S.ant.tca].map(a=>a[0]):[])])],di=d=>D.indexOf(d),cols=Object.keys(S.P[0]);
-  const enc=(c,v)=>c==='div'?di(v):/o$/.test(c)&&c!=='pz'?NX_OR.indexOf(v):v;
+  const enc=(c,v)=>c==='div'?di(v):NX_ORK.test(c)?NX_OR.indexOf(v):v;
   return{...S,v:2,D,cols,P:S.P.map(p=>cols.map(c=>enc(c,p[c]))),ant:S.ant&&{obs:Object.fromEntries(Object.entries(S.ant.obs).map(([k,a])=>[k,a.map(x=>[di(x[0]),x[1]])])),tca:S.ant.tca.map(x=>[di(x[0]),x[1],x[2]])}}}
 function nxUnpack(S){if(S.v!==2)return S;const D=S.D,cols=S.cols;
-  return{...S,P:S.P.map(r=>{const o={};cols.forEach((c,i)=>{const v=r[i];o[c]=c==='div'?D[v]:/o$/.test(c)&&c!=='pz'?NX_OR[v]:v});return o}),ant:S.ant&&{obs:Object.fromEntries(Object.entries(S.ant.obs).map(([k,a])=>[k,a.map(x=>[D[x[0]],x[1]])])),tca:S.ant.tca.map(x=>[D[x[0]],x[1],x[2]])}}}
+  return{...S,P:S.P.map(r=>{const o={};cols.forEach((c,i)=>{const v=r[i];o[c]=c==='div'?D[v]:NX_ORK.test(c)?NX_OR[v]:v});return o}),ant:S.ant&&{obs:Object.fromEntries(Object.entries(S.ant.obs).map(([k,a])=>[k,a.map(x=>[D[x[0]],x[1]])])),tca:S.ant.tca.map(x=>[D[x[0]],x[1],x[2]])}}}
 
 /* --- análisis sobre el snapshot (lo que se dibuja) --- */
 const NX_BYK=Object.fromEntries(Object.entries(NX_RANGOS).map(([c,r])=>[r.k,r]));
