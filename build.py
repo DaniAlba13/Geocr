@@ -7,7 +7,8 @@ h = open(s('app.html'), encoding='utf-8').read()
 rep = {'__NAXENGINE__': open(s('nax_engine.js'), encoding='utf-8').read(), '__SHEETS__': open(s('sheets.json')).read(),
        '__LAYERS__': open(s('layers.json')).read(), '__PIECES__': open(s('pieces.json')).read(), '__ATTRS__': open(s('attrs.json')).read(),
        '__CASCRIPT__': enc(open(s('calidad_aplicacion_dji.py'), encoding='utf-8').read()), '__GLUE__': enc(open(s('glue.py'), encoding='utf-8').read()),
-       '__ROSA__': open(s('rosa.b64')).read().strip()}
+       '__ROSA__': open(s('rosa.b64')).read().strip(),
+       '__CAMPO__': open(s('campo.json'), encoding='utf-8').read().replace('</', '<\\/')}
 for k, v in rep.items():
     assert k in h, k
     h = h.replace(k, v)
