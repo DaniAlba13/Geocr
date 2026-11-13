@@ -1717,7 +1717,9 @@ const CG=(()=>{const U=new Map();
         adm:r&&r[7]?'ADM '+r[7]:'',dis:id?id.slice(2,4):'',vr:r?ATT.var[r[3]]||'':'',su:r?ATT.suelo[r[4]]||'':'',cl:r?ATT.clase[r[5]]||'':'',
         fc:r&&/^\d{8}$/.test(r[6]||'')?`${r[6].slice(0,4)}-${r[6].slice(4,6)}-${r[6].slice(6,8)}`:'',ac:0,pis:[]};U.set(k,u)}
     u.pis.push(pi);u.ac+=polysArea([[p[3]]])/M2_PER_ACRE});
-  return[...U.values()].sort((a,b)=>a.dn-b.dn||(+a.tab-+b.tab)||(+a.pz-+b.pz))})();
+  /* piezas sin división en la capa: se completan con el ID (dígito 2 = división, 5-8 = tablón, 9-11 = pieza); las que no tienen ni división ni ID (polígonos sin asignar) no se listan */
+  const out=[];U.forEach(u=>{if(!DIVN[u.dn]&&u.id&&DIVN[+u.id[1]]){u.dn=+u.id[1];u.div=DIVN[u.dn];u.tab=String(+u.id.slice(4,8));u.pz=String(+u.id.slice(8,11))}if(DIVN[u.dn])out.push(u)});
+  return out.sort((a,b)=>a.dn-b.dn||(+a.tab-+b.tab)||(+a.pz-+b.pz))})();
 const CGF={adm:'',div:'',dis:'',tab:'',q:null};let CG_MK=null,CG_V=null;
 /* Datos de campo (field_data): variedad, área, nombre de suelo, clase de caña y número de corte por pieza */
 let CAMPO=EMBED_CAMPO;
