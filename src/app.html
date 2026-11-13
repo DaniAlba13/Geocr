@@ -1319,7 +1319,7 @@ const HOME_APPS=[
   $('#tl').innerHTML=apps.map((a,i)=>`<div class="tw${i>=apps.length-3?' up':''}"><button class="ti" data-i="${i}"><i><svg viewBox="0 0 24 24">${a.ic}</svg></i><span><b>${info[i].b}</b><small>${info[i].p}</small></span><span class="n">${String(i+1).padStart(2,'0')}</span></button></div>`).join('');
   const hold=document.createElement('div');hold.hidden=true;show.appendChild(hold);info.forEach(x=>{if(x.em)hold.appendChild(x.em)});
   src.remove();show.style.setProperty('--dur',DUR+'ms');
-  function render(){const cap=$('#shCap'),a=apps[cur];cap.querySelectorAll('em').forEach(e=>hold.appendChild(e));cap.innerHTML=`<div><div class="k">${String(cur+1).padStart(2,'0')} / ${String(apps.length).padStart(2,'0')} · Herramienta</div><h3>${info[cur].b}</h3></div><a class="sh-go" href="#${a.id}">Abrir →</a>`;if(info[cur].em)cap.firstElementChild.appendChild(info[cur].em)}
+  function render(){const cap=$('#shCap'),a=apps[cur];cap.querySelectorAll('em').forEach(e=>hold.appendChild(e));cap.innerHTML=`<div><div class="k">Herramienta</div><h3>${info[cur].b}</h3></div><a class="sh-go" href="#${a.id}">Abrir →</a>`;if(info[cur].em)cap.firstElementChild.appendChild(info[cur].em)}
   function go(i){cur=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===cur));$$('#tl .ti').forEach((b,k)=>{b.classList.remove('on');if(k===cur){void b.offsetWidth;b.classList.add('on')}});render();tick()}
   function tick(){clearTimeout(tm);if(!paused&&$('#s-inicio').classList.contains('on'))tm=setTimeout(()=>go(cur+1),DUR)}
   show.onmouseenter=()=>{paused=true;show.classList.add('paused');clearTimeout(tm)};show.onmouseleave=()=>{paused=false;show.classList.remove('paused');tick()};
