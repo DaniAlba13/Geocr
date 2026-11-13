@@ -70,3 +70,4 @@ Para probarlo, ve a **Actions → Alertas NAX diarias → Run workflow**. La pri
 Los cambios se piden en Claude. Claude edita `src/`, ejecuta `python build.py` y sube el resultado a GitHub. Cloudflare publica la nueva versión sola en 1–2 minutos.
 
 El plan gratuito permite 500 publicaciones al mes.
+
