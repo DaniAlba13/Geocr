@@ -302,7 +302,20 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
 .sp-in{position:relative;text-align:center;padding:0 20px}
 .sp-t{font-size:clamp(84px,17vw,210px);font-weight:900;line-height:.95;letter-spacing:2px;display:flex;justify-content:center;filter:drop-shadow(0 0 40px rgba(0,112,201,.55))}
 .sp-t span{display:inline-block;opacity:0;transform:translateY(60px) rotateX(70deg);animation:spLet .9s cubic-bezier(.2,.9,.25,1.2) forwards,spFloat 5s ease-in-out infinite}
-.sp-t span:nth-child(1){animation-delay:.15s,1.4s}.sp-t span:nth-child(2){animation-delay:.27s,1.6s}.sp-t span:nth-child(3){animation-delay:.39s,1.8s}.sp-t span:nth-child(4){animation-delay:.55s,2s;color:#FF5A52}.sp-t span:nth-child(5){animation-delay:.67s,2.2s;color:#7FC1FF}
+.sp-t .l1{animation-delay:.15s,1.4s}.sp-t .l2{animation-delay:.27s,1.6s}.sp-t .l3{animation-delay:.39s,1.8s}.sp-t .l4{animation-delay:.55s,2s;color:#FF5A52}.sp-t .l5{animation-delay:.67s,2.2s;color:#7FC1FF}
+.sp-t .sp-cr{position:relative;display:inline-flex;opacity:1;transform:none;animation:none}
+.sp-t .sp-cr::before{content:"";position:absolute;left:.04em;right:.06em;top:.02em;height:.075em;border-radius:.04em;background:linear-gradient(90deg,#7FC1FF,#fff 50%,#FF5A52);box-shadow:0 0 18px rgba(127,193,255,.7);transform:scaleX(0);transform-origin:left;animation:spLine .7s cubic-bezier(.6,.1,.2,1) forwards 1.05s}
+@keyframes spLine{to{transform:scaleX(1)}}
+.sp-o{position:relative}
+.sp-o .gi{font-style:normal;display:inline-block;background:linear-gradient(100deg,#fff 30%,#BFE0FF 50%,#fff 70%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;animation:spOin .6s ease forwards 2.9s}
+.sp-t.on .sp-o .gi{animation:spOin .6s ease forwards 2.9s,spShine 3.5s linear infinite}
+@keyframes spOin{to{opacity:1}}
+.sp-o .globe{position:absolute;left:50%;bottom:.04em;width:.6em;height:.6em;transform:translateX(-50%);filter:drop-shadow(0 0 14px rgba(127,193,255,.8));animation:spGlobe .7s ease forwards 2.6s}
+@keyframes spGlobe{0%{opacity:1;transform:translateX(-50%) scale(1)}60%{opacity:.6;transform:translateX(-50%) scale(1.15)}100%{opacity:0;transform:translateX(-50%) scale(.85)}}
+.sp-o .mer{animation:spMer 1.2s linear infinite;transform-origin:50px 50px}
+@keyframes spMer{from{transform:translateX(-14px)}to{transform:translateX(14px)}}
+.sp-o .land{animation:spLand 2.4s linear infinite}
+@keyframes spLand{from{transform:translateX(0)}to{transform:translateX(-100px)}}
 @keyframes spLet{to{opacity:1;transform:none}}
 @keyframes spFloat{0%,100%{translate:0 0}50%{translate:0 -10px}}
 .sp-t .g{background:linear-gradient(100deg,#fff 30%,#BFE0FF 50%,#fff 70%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -327,7 +340,7 @@ body.splashing{overflow:hidden}
 <div id="splash" role="dialog" aria-label="Bienvenida a GeoCR">
   <div class="sp-lines"></div><div class="sp-grid"></div><div class="sp-scan"></div>
   <div class="sp-in">
-    <div class="sp-t" id="spT"><span class="g">G</span><span class="g">e</span><span class="g">o</span><span>C</span><span>R</span></div>
+    <div class="sp-t" id="spT"><span class="g l1">G</span><span class="g l2">e</span><span class="l3 sp-o"><i class="gi">o</i><svg class="globe" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="spGl" cx="38%" cy="32%" r="70%"><stop offset="0" stop-color="#BFE0FF"/><stop offset=".55" stop-color="#0070C9"/><stop offset="1" stop-color="#0A2240"/></radialGradient><clipPath id="spGc"><circle cx="50" cy="50" r="44"/></clipPath></defs><circle cx="50" cy="50" r="44" fill="url(#spGl)"/><g clip-path="url(#spGc)" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2"><ellipse cx="50" cy="50" rx="44" ry="14"/><line x1="0" y1="50" x2="100" y2="50"/><ellipse cx="50" cy="50" rx="44" ry="32" opacity=".5"/><g class="mer"><ellipse cx="50" cy="50" rx="10" ry="44"/><ellipse cx="50" cy="50" rx="28" ry="44"/><line x1="50" y1="0" x2="50" y2="100"/></g><g class="land" fill="rgba(255,255,255,.55)" stroke="none"><path d="M18 30c8-6 18-4 22 3s-2 12-9 13-16-2-17-8 0-5 4-8zM56 56c6-3 16 0 18 7s-5 14-12 12-11-6-10-11 1-6 4-8zM60 18c5-2 12 1 12 6s-6 6-10 4-6-8-2-10z"/><path d="M118 30c8-6 18-4 22 3s-2 12-9 13-16-2-17-8 0-5 4-8zM156 56c6-3 16 0 18 7s-5 14-12 12-11-6-10-11 1-6 4-8zM160 18c5-2 12 1 12 6s-6 6-10 4-6-8-2-10z"/></g></g><circle cx="50" cy="50" r="44" fill="none" stroke="#7FC1FF" stroke-width="2.5"/></svg></span><span class="sp-cr"><span class="l4">C</span><span class="l5">R</span></span></div>
     <div class="sp-bar"></div>
     <div class="sp-s">Área de Agricultura de Precisión</div>
     <div class="sp-d">Departamento de Investigaciones Agrícolas · Central Romana Corporation, Ltd.</div>
