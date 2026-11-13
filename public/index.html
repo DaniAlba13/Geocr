@@ -49,6 +49,7 @@ label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:12p
 select,input[type=date],input[type=month],input[type=number],input[type=text]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:4px;font:inherit;background:#fff}
 .seg{display:flex;flex-wrap:wrap;gap:4px}
 .seg button{flex:1 1 auto;border:1px solid var(--line);background:#fff;padding:6px 8px;border-radius:4px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
+.perh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}.perh h2{margin:0}.perseg{flex:0 0 auto}.perseg button{flex:0 0 auto;padding:4px 10px}
 .seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .btn{border:0;background:var(--blue);color:#fff;padding:8px 14px;border-radius:4px;font:inherit;font-weight:700;cursor:pointer}
 .btn.sec{background:#fff;color:var(--blue);border:1px solid var(--blue)}
@@ -1533,6 +1534,26 @@ function monthBars(svg,recs,valFn,opt={}){const H=210,W=svgSize(svg,H),Lm=40,B=3
   if(opt.ref){const y=H-B-(H-B-12)*opt.ref/mx;h+=`<line x1="${Lm}" x2="${W}" y1="${y}" y2="${y}" stroke="#0E2A47" stroke-dasharray="4 3"/><text x="${W-2}" y="${y-4}" font-size="10" text-anchor="end" fill="#0E2A47">${opt.refLabel||''}</text>`}
   ms.forEach((m,i)=>{const v=vals[i],x=Lm+i*bw;if(isFinite(v)){const bh=(H-B-12)*v/mx;h+=`<rect x="${x+3}" y="${H-B-bh}" width="${bw-6}" height="${bh}" rx="2" fill="${opt.color?opt.color(v):'#0070C9'}"><title>${ymLabel(m)}: ${opt.fmt?opt.fmt(v):fmt(v)}</title></rect>`}
     h+=`<text x="${x+bw/2}" y="${H-B+13}" font-size="10" text-anchor="middle" fill="#5B6673">${MESES[+m.slice(5,7)-1]}</text>`;if(m.endsWith('-01')||i===0)h+=`<text x="${x+bw/2}" y="${H-B+25}" font-size="9" font-weight="700" text-anchor="middle" fill="#0E2A47">${m.slice(0,4)}</text>`});svg.innerHTML=h}
+/* --- gráfico por período: día (30 días), semana (16 semanas), mes (12 meses) o zafra (oct–sep) --- */
+const PER={tv:'mes',ca:'mes'},PER_N={dia:'día',semana:'semana',mes:'mes',zafra:'zafra'};
+const dUTC=s=>Date.UTC(+s.slice(0,4),+s.slice(5,7)-1,+s.slice(8,10)),dISO=t=>new Date(t).toISOString().slice(0,10);
+const zafraDe=s=>{const y=+s.slice(0,4),m=+s.slice(5,7);return m>=10?y:y-1},zafraLab=y=>String(y).slice(2)+'-'+String(y+1).slice(2);
+function periodBars(svg,recs,valFn,opt={},gran='mes'){if(gran==='mes')return monthBars(svg,recs,valFn,opt);
+  const H=210,W=svgSize(svg,H),Lm=40,B=30,hoy=dUTC(hoyISO()),D=864e5;let keys=[],key,lab,sub;
+  if(gran==='dia'){for(let i=29;i>=0;i--)keys.push(dISO(hoy-i*D));key=f=>f.slice(0,10);lab=k=>String(+k.slice(8,10));sub=(k,i)=>k.endsWith('-01')||i===0?MESES[+k.slice(5,7)-1]:''}
+  else if(gran==='semana'){const dow=(new Date(hoy).getUTCDay()+6)%7,lun=hoy-dow*D;for(let i=15;i>=0;i--)keys.push(dISO(lun-i*7*D));
+    key=f=>{const t=dUTC(f);return dISO(t-((new Date(t).getUTCDay()+6)%7)*D)};lab=k=>k.slice(8,10)+'/'+k.slice(5,7);sub=(k,i)=>i===0||k.slice(5,7)!==keys[i-1].slice(5,7)&&k.slice(0,4)!==keys[i-1].slice(0,4)?k.slice(0,4):''}
+  else{const zs=recs.map(r=>r.fecha).filter(Boolean).map(zafraDe),z1=zafraDe(hoyISO()),z0=Math.min(z1-3,...zs);for(let z=z0;z<=z1;z++)keys.push(String(z));key=f=>String(zafraDe(f));lab=k=>zafraLab(+k);sub=k=>+k===z1?'en curso':''}
+  const g=new Map(keys.map(k=>[k,[]]));recs.forEach(r=>{if(!r.fecha)return;const k=key(r.fecha);if(g.has(k))g.get(k).push(r)});
+  const vals=keys.map(k=>{const rs=g.get(k);return rs.length?valFn(rs):NaN}),mx=Math.max(opt.max||0,...vals.filter(isFinite),1e-9),n=keys.length,bw=(W-Lm-6)/n,pad=Math.min(3,bw*.15);
+  let h='';niceBreaks(mx,4).forEach(t=>{if(t>mx)return;const y=H-B-(H-B-12)*t/mx;h+=`<line x1="${Lm}" x2="${W}" y1="${y}" y2="${y}" stroke="#EEF1F5"/><text x="${Lm-5}" y="${y+4}" font-size="10" text-anchor="end" fill="#5B6673">${opt.fmt?opt.fmt(t):fmt(t)}</text>`});
+  if(opt.ref){const y=H-B-(H-B-12)*opt.ref/mx;h+=`<line x1="${Lm}" x2="${W}" y1="${y}" y2="${y}" stroke="#0E2A47" stroke-dasharray="4 3"/><text x="${W-2}" y="${y-4}" font-size="10" text-anchor="end" fill="#0E2A47">${opt.refLabel||''}</text>`}
+  const every=gran==='dia'?(bw<16?3:1):gran==='semana'?(bw<34?2:1):1,tit=k=>gran==='dia'?k.split('-').reverse().join('/'):gran==='semana'?'Semana del '+k.split('-').reverse().join('/'):'Zafra '+zafraLab(+k);
+  keys.forEach((k,i)=>{const v=vals[i],x=Lm+i*bw;if(isFinite(v)){const bh=(H-B-12)*v/mx;h+=`<rect x="${x+pad}" y="${H-B-bh}" width="${Math.max(1,bw-2*pad)}" height="${bh}" rx="2" fill="${opt.color?opt.color(v):'#0070C9'}"><title>${tit(k)}: ${opt.fmt?opt.fmt(v):fmt(v)}</title></rect>`;
+      if(gran==='zafra')h+=`<text x="${x+bw/2}" y="${H-B-bh-5}" font-size="11" font-weight="700" text-anchor="middle" fill="#0E2A47">${(opt.vfmt||opt.fmt||fmt)(v)}</text>`}
+    if(i%every===0||gran==='zafra')h+=`<text x="${x+bw/2}" y="${H-B+13}" font-size="10" text-anchor="middle" fill="#5B6673">${lab(k)}</text>`;const s=sub(k,i);if(s)h+=`<text x="${x+bw/2}" y="${H-B+25}" font-size="9" font-weight="700" text-anchor="middle" fill="#0E2A47">${s}</text>`});
+  if(!vals.some(isFinite))h+=`<text x="${(Lm+W)/2}" y="${(H-B)/2}" font-size="12" text-anchor="middle" fill="#5B6673">Sin registros en este período</text>`;
+  svg.innerHTML=h}
 /* --- mapa del tablero --- */
 const DV={};
 function dashMap(k,colors){const cv=$('#'+k+'Map');const pts=EMBED_LAYERS.mask.flatMap(p=>p[0]),v=makeView(cv,bboxPts(pts),cv.parentElement.clientWidth),ctx=v.ctx;
@@ -1553,9 +1574,9 @@ function dashShell(k,cfg){$('#'+k+'-tab').innerHTML=`<div class="dashtop"><span 
   <div class="kpis kpi5" id="${k}K"></div><div id="${k}Al"></div>
   <div class="agrid"><div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>${cfg.mapT}</h2><span class="note">Clic en una pieza</span></div><div class="mapwrap"><canvas class="map" id="${k}Map"></canvas><div class="tip" id="${k}Tip"></div></div><div class="legend" id="${k}Leg"></div></div>
   <div class="card"><h2>${cfg.s1T}</h2><svg class="chart" id="${k}S1"></svg></div></div>
-  <div class="two" style="margin-top:16px"><div class="card"><h2>${cfg.monT}</h2><svg class="chart" id="${k}Mon"></svg></div><div class="card"><h2>${cfg.s2T}</h2><svg class="chart" id="${k}S2"></svg></div></div>
+  <div class="two" style="margin-top:16px"><div class="card"><div class="perh"><h2 id="${k}MonT">${cfg.monT}</h2>${cfg.per?`<div class="seg perseg" id="${k}Per">${Object.entries({dia:"Día",semana:"Semana",mes:"Mes",zafra:"Zafra"}).map(([v,t])=>`<button data-p="${v}"${PER[k]===v?' class="on"':''}>${t}</button>`).join('')}</div>`:''}</div><svg class="chart" id="${k}Mon"></svg></div><div class="card"><h2>${cfg.s2T}</h2><svg class="chart" id="${k}S2"></svg></div></div>
   <div class="card" style="margin-top:16px"><h2>${cfg.tblT}</h2><div class="scroll" style="max-height:420px"><table id="${k}Tbl"></table></div></div>`;
-  $('#'+k+'Demo').onchange=e=>{DEMO_ON[k]=e.target.checked;drawDash(k)};$('#'+k+'Map').addEventListener('click',e=>dashTip(k,e,ri=>cfg.tip(DASHRECS[k]||[],ri)))}
+  $('#'+k+'Demo').onchange=e=>{DEMO_ON[k]=e.target.checked;drawDash(k)};if(cfg.per)$$('#'+k+'Per button').forEach(b=>b.onclick=()=>{PER[k]=b.dataset.p;$$('#'+k+'Per button').forEach(x=>x.classList.toggle('on',x===b));drawDash(k)});$('#'+k+'Map').addEventListener('click',e=>dashTip(k,e,ri=>cfg.tip(DASHRECS[k]||[],ri)))}
 const DASHRECS={};
 function drawDash(k){const cfg=DASH[k],sec=$('#'+k+'-tab');if(!sec||!sec.classList.contains('on')||!sec.offsetParent)return;
   const recs=DEMO_ON[k]?(DEMO_CACHE[k]||(DEMO_CACHE[k]=cfg.demo())):STORE[k].slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));DASHRECS[k]=recs;
@@ -1564,7 +1585,7 @@ function drawDash(k){const cfg=DASH[k],sec=$('#'+k+'-tab');if(!sec||!sec.classLi
   $('#'+k+'K').innerHTML=cfg.kpis(recs).map(([t,v,s,c])=>`<div class="kpi"><small>${t}</small><div style="${c?'color:'+c:''}">${v}</div><em>${s||''}</em></div>`).join('');
   $('#'+k+'Al').innerHTML=cfg.alerts?cfg.alerts(recs):'';
   const col=cfg.colors(recs);dashMap(k,col);$('#'+k+'Leg').innerHTML=cfg.legend.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
-  cfg.s1(svgEl(k+'S1'),recs);cfg.mon(svgEl(k+'Mon'),recs);cfg.s2(svgEl(k+'S2'),recs);
+  cfg.s1(svgEl(k+'S1'),recs);if(cfg.per)$('#'+k+'MonT').textContent=cfg.per+' por '+PER_N[PER[k]];cfg.mon(svgEl(k+'Mon'),recs,PER[k]);cfg.s2(svgEl(k+'S2'),recs);
   $('#'+k+'Tbl').innerHTML=recs.length?cfg.table(recs):`<tr><td class="note" style="padding:16px">${cfg.empty}</td></tr>`;cfg.after&&cfg.after(recs)}
 const svgEl=id=>document.getElementById(id);
 function redrawDash(k){(k?[k]:Object.keys(COLL)).forEach(x=>drawDash(x))}
@@ -1957,14 +1978,14 @@ let CAMPO_SID=null;
     try{let s='';for(let i=0;i<m.parts;i++){const x=await DB.collection('campo_snap').doc(m.sid+'-'+i).get();if(!x.exists)throw 0;s+=x.data().s}CAMPO=JSON.parse(s);CAMPO_SID=m.sid;cgSrcTxt();cgDraw()}catch(e){}})})();
 /* ---------- configuración de cada tablero ---------- */
 const DASH={};
-DASH.tv={mapT:'Tablones aplicados a tasa variada',s1T:'Producto aplicado por producto',monT:'Litros aplicados por mes',s2T:'Acres aplicados por división',tblT:'Aplicaciones registradas',
+DASH.tv={mapT:'Tablones aplicados a tasa variada',s1T:'Producto aplicado por producto',monT:'Litros aplicados por mes',per:'Litros aplicados',s2T:'Acres aplicados por división',tblT:'Aplicaciones registradas',
   empty:'Todavía no hay aplicaciones registradas. Genera una prescripción y pulsa <b>Registrar aplicación</b>.',
   kpis:R=>{const L=sumBy(R,r=>r.litros),Lf=sumBy(R,r=>r.litros_fija),ac=sumBy(R,r=>r.acres_apl),at=sumBy(R,r=>r.acres_total);
     return[['Producto aplicado',fmt(L)+' L',`${R.length} aplicaciones`],['Producto ahorrado',Lf?fmt((Lf-L)/Lf*100,1)+'%':'–',Lf?fmt(Lf-L)+' L vs. tasa fija':'',GOOD],['Acres aplicados',fmt(ac),at?`de ${fmt(at)} acres en las zonas`:''],['Dosis media',ac?fmt(L/ac,2):'–','L/acre aplicada'],['Tablones',fmt(new Set(R.flatMap(r=>r.tablones||[])).size),'distintos']]},
   colors:R=>{const m=new Map();R.slice().reverse().forEach(r=>(r.recs||[]).forEach(i=>m.set(i,ageColor(r.fecha))));return m},legend:AGE_LEG,
   tip:(R,ri)=>{const r=R.find(x=>(x.recs||[]).includes(ri));return r?`${r.producto} · ${r.fecha}<br>${fmt(r.litros,1)} L · ahorro ${fmt(r.ahorro_pct,1)}%`:''},
   s1:(s,R)=>{const g=new Map();R.forEach(r=>g.set(r.producto||'—',(g.get(r.producto||'—')||0)+r.litros));const it=[...g].sort((a,b)=>b[1]-a[1]).map(([t,v],i)=>[t,v,CAT_COLORS[i%12]]);donut(s,it,fmt(sumBy(R,r=>r.litros)),'litros')},
-  mon:(s,R)=>monthBars(s,R,rs=>sumBy(rs,r=>r.litros),{fmt:v=>fmt(v)}),
+  mon:(s,R,g)=>periodBars(s,R,rs=>sumBy(rs,r=>r.litros),{fmt:v=>fmt(v)},g),
   s2:(s,R)=>{const g=new Map();R.forEach(r=>{const d=r.division||'—';g.set(d,(g.get(d)||0)+r.acres_apl)});hbars(s,[...g].sort((a,b)=>b[1]-a[1]).map(([t,v])=>[t,v,'#0070C9']),v=>fmt(v))},
   table:R=>'<tr><th>Fecha</th><th>Producto</th><th>Tablón(es)</th><th class="n">Acres apl.</th><th class="n">Litros</th><th class="n">L/acre</th><th class="n">Ahorro</th><th></th></tr>'+R.map(r=>`<tr><td>${r.fecha}</td><td>${r.producto}</td><td>${(r.tablones||[]).join(', ')}</td><td class="n">${fmt(r.acres_apl,1)} / ${fmt(r.acres_total,1)}</td><td class="n">${fmt(r.litros,1)}</td><td class="n">${fmt(r.acres_apl?r.litros/r.acres_apl:0,2)}</td><td class="n">${chip(fmt(r.ahorro_pct,1)+'%',GOOD)}</td><td>${delBtn('tv',r)}</td></tr>`).join(''),
   demo:()=>{const r=rng(31),prods=['Madurante','Madurante','Madurante','Bioestimulante'];return demoPieces(22,31).map(p=>{const at=40+r()*110,ap=at*(.6+r()*.35),df=1.2,dm=df*(.62+r()*.25),L=ap*dm;const recs=[...(TABDIV.get(p[0]+'|'+p[1])||[])];
@@ -1982,7 +2003,7 @@ DASH.mu={mapT:'Tablones muestreados',s1T:'Puntos por ambiente',monT:'Puntos de m
 function caEstado(t){return t.cob<85||t.unif<70?['Alerta',BAD]:t.cob<95||t.unif<85||t.sob>5?['Atención',WARN]:['Bien',GOOD]}
 function caTabs(R){return R.flatMap(r=>(r.tabs||[]).map(t=>({...t,fecha:r.fecha,rid:r.id,pdf:r.pdfParts,equipos:r.equipos})))}
 function caLatest(R){const m=new Map();caTabs(R).forEach(t=>{const k=t.division+'|'+t.tablon;if(!m.has(k)||m.get(k).fecha<t.fecha)m.set(k,t)});return[...m.values()]}
-DASH.ca={mapT:'Estado de la última aplicación por tablón',s1T:'Tablones por estado',monT:'Cobertura media por mes',s2T:'Tablones con menor cobertura',tblT:'Evaluaciones por tablón',
+DASH.ca={mapT:'Estado de la última aplicación por tablón',s1T:'Tablones por estado',monT:'Cobertura media por mes',per:'Cobertura media',s2T:'Tablones con menor cobertura',tblT:'Evaluaciones por tablón',
   empty:'Todavía no hay evaluaciones. Ve a <b>Nueva evaluación</b> para procesar los KML del drone o subir los resultados del script.',
   kpis:R=>{const T=caTabs(R),A=sumBy(T,t=>t.area),cob=A?sumBy(T,t=>t.cob*t.area)/A:NaN,un=A?sumBy(T,t=>t.unif*t.area)/A:NaN,no=sumBy(T,t=>t.area*t.no/100),lat=caLatest(R),al=lat.filter(t=>caEstado(t)[0]==='Alerta').length;
     return[['Aplicaciones evaluadas',fmt(R.length),`${fmt(sumBy(R,r=>r.vuelos))} vuelos`],['Acres evaluados',fmt(A),`${fmt(no)} acres sin aplicar`],['Cobertura media',isFinite(cob)?fmt(cob,1)+'%':'–','meta ≥ 95 %',isFinite(cob)?(cob>=95?GOOD:cob>=85?WARN:BAD):''],['Uniformidad media',isFinite(un)?fmt(un,1)+'%':'–','meta ≥ 85 %',isFinite(un)?(un>=85?GOOD:un>=70?WARN:BAD):''],['Tablones en alerta',fmt(al),`de ${lat.length} evaluados`,al?BAD:GOOD]]},
@@ -1991,7 +2012,7 @@ DASH.ca={mapT:'Estado de la última aplicación por tablón',s1T:'Tablones por e
   colors:R=>{const m=new Map();caLatest(R).forEach(t=>recsTab(t.tablon,t.division).forEach(i=>m.set(i,caEstado(t)[1])));return m},legend:[[GOOD,'Bien (cobertura ≥ 95 %, unif. ≥ 85 %)'],[WARN,'Atención'],[BAD,'Alerta (cobertura < 85 % o unif. < 70 %)'],['#E6E9ED','Sin evaluar']],
   tip:(R,ri)=>{const t=caLatest(R).find(t=>recsTab(t.tablon,t.division).includes(ri));return t?`${caEstado(t)[0]} · ${t.fecha}<br>Cobertura ${fmt(t.cob,1)}% · unif. ${fmt(t.unif,1)}%`:''},
   s1:(s,R)=>{const L=caLatest(R),c=e=>L.filter(t=>caEstado(t)[0]===e).length;donut(s,[['Bien',c('Bien'),GOOD],['Atención',c('Atención'),WARN],['Alerta',c('Alerta'),BAD]],L.length,'tablones')},
-  mon:(s,R)=>monthBars(s,caTabs(R),ts=>{const A=sumBy(ts,t=>t.area);return A?sumBy(ts,t=>t.cob*t.area)/A:NaN},{max:100,ref:95,refLabel:'meta 95 %',fmt:v=>fmt(v)+'%',color:v=>v>=95?GOOD:v>=85?WARN:BAD}),
+  mon:(s,R,g)=>periodBars(s,caTabs(R),ts=>{const A=sumBy(ts,t=>t.area);return A?sumBy(ts,t=>t.cob*t.area)/A:NaN},{max:100,ref:95,refLabel:'meta 95 %',fmt:v=>fmt(v)+'%',vfmt:v=>fmt(v,1)+'%',color:v=>v>=95?GOOD:v>=85?WARN:BAD},g),
   s2:(s,R)=>hbars(s,caLatest(R).sort((a,b)=>a.cob-b.cob).slice(0,7).map(t=>[`T-${t.tablon}`,t.cob,caEstado(t)[1],t.fecha]),v=>fmt(v,1)+'%',{max:100,L:80}),
   table:R=>'<tr><th>Fecha</th><th>Tablón</th><th>División</th><th class="n">Acres</th><th class="n">Cobertura</th><th class="n">Sin aplicar</th><th class="n">Sobreapl.</th><th class="n">Dosis L/acre</th><th class="n">CV</th><th class="n">Unif.</th><th>Estado</th><th>Informe</th><th></th></tr>'+
     caTabs(R).map(t=>{const e=caEstado(t);return`<tr><td>${t.fecha}</td><td><b>${t.tablon}</b></td><td>${DIVN[t.division]||t.division||'—'}</td><td class="n">${fmt(t.area,1)}</td><td class="n" style="color:${t.cob>=95?GOOD:t.cob>=85?WARN:BAD};font-weight:700">${fmt(t.cob,1)}%</td><td class="n">${fmt(t.no,1)}%</td><td class="n">${fmt(t.sob,1)}%</td><td class="n">${fmt(t.dosis,2)}</td><td class="n">${fmt(t.cv,1)}%</td><td class="n" style="color:${t.unif>=85?GOOD:t.unif>=70?WARN:BAD};font-weight:700">${fmt(t.unif,1)}%</td><td>${chip(e[0],e[1])}</td><td>${t.pdf&&!DEMO_ON.ca?`<button class="mmpdf" data-pdf="${t.rid}" data-n="${t.pdf}">PDF</button>`:'<span class="note">—</span>'}</td><td>${DEMO_ON.ca?'':delBtnId('ca',t.rid)}</td></tr>`}).join(''),
