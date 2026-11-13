@@ -47,6 +47,12 @@ h2{font-size:15px;margin:0 0 10px;color:var(--navy);font-weight:700}
 @media(max-width:920px){.layout{grid-template-columns:1fr}}
 label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 4px;text-transform:uppercase;letter-spacing:.4px}
 select,input[type=date],input[type=month],input[type=number],input[type=text]{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:4px;font:inherit;background:#fff}
+.cfm{position:fixed;inset:0;z-index:300;background:rgba(14,42,71,.45);display:flex;align-items:center;justify-content:center;padding:20px;animation:spFade .15s ease}
+.cfm-b{background:#fff;border-radius:10px;max-width:440px;width:100%;padding:22px 22px 18px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.cfm-b h3{margin:0 0 8px;font-size:17px;color:var(--navy)}.cfm-b p{margin:0 0 6px;color:var(--muted);font-size:13px;line-height:1.5}
+.cfm-a{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.cfm-a .btn{min-width:84px}.btn.danger{background:#C62828;border-color:#C62828}
+.upchip{display:inline-flex;align-items:center;gap:8px;background:#EEF4FB;border:1px solid #CFE0F2;border-radius:999px;padding:4px 6px 4px 12px;font-size:12px;color:var(--navy);margin:4px 6px 4px 0}
+.upchip button{border:0;background:#fff;color:#C62828;border-radius:999px;font:inherit;font-size:11px;font-weight:700;padding:3px 9px;cursor:pointer}.upchip button:hover{background:#C62828;color:#fff}
 .seg{display:flex;flex-wrap:wrap;gap:4px}
 .seg button{flex:1 1 auto;border:1px solid var(--line);background:#fff;padding:6px 8px;border-radius:4px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted)}
 .perh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}.perh h2{margin:0}.perseg{flex:0 0 auto}.perseg button{flex:0 0 auto;padding:4px 10px}
@@ -515,7 +521,7 @@ body.splashing{overflow:hidden}
     <div class="card lrv" id="lr-hist" style="display:none">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Historial de registros</h2><button class="btn" id="lrXls">Descargar Excel de lluvias (formato actual)</button></div>
       <p class="note">El Excel trae una hoja por año lluvia y por año calendario, acumulada por mes como el archivo original, con todo lo que usan hoy los mapas (Excel base + registros).</p>
-      <div class="status" id="lrStH"></div>
+      <div class="status" id="lrStH"></div><div id="lrCargas"></div>
       <div class="scroll" style="max-height:520px"><table id="lrTblH"></table></div>
     </div>
   </div>
@@ -567,7 +573,7 @@ body.splashing{overflow:hidden}
       <div style="flex:1"></div>
       <button class="btn sec" id="cgClr">Limpiar</button><button class="btn" id="cgXls">Descargar Excel</button><span class="status" id="cgSt"></span>
     </div>
-    <div class="cg-src"><span id="cgSrc"></span><label class="btn sec" id="cgUpL" style="display:none">Actualizar datos de campo<input type="file" id="cgUp" accept=".xlsx,.xls,.csv" hidden></label><span class="status" id="cgUpSt"></span></div>
+    <div class="cg-src"><span id="cgSrc"></span><label class="btn sec" id="cgUpL" style="display:none">Actualizar datos de campo<input type="file" id="cgUp" accept=".xlsx,.xls,.csv" hidden></label><span id="cgUpChip"></span><span class="status" id="cgUpSt"></span></div>
   </div>
   <div id="cgHead" class="cg-head"></div>
   <div id="cgFicha" class="cg-ficha" style="display:none"></div>
@@ -651,7 +657,7 @@ body.splashing{overflow:hidden}
           <li>Clasifica con los rangos del reporte: Humedad ≥72 Bien, 70–72 Revisar, &lt;70 Alerta; NDVI ≥0.57 alto, 0.53 normal, 0.50 bajo, &lt;0.50 crítico; Biomasa 1.5 / 1.0 / 0.5.</li>
           <li>Cruza la humedad con la edad (madurante 8.5–9.5 meses, estrés 4–6 meses), compara con la campaña anterior y calcula el TCA (TCH ÷ 2.47) por riego y por división.</li>
         </ul>
-        <p class="note">El tablero queda publicado para todos los que tengan acceso a GeoCR hasta la próxima actualización.</p></div>
+        <p class="note">El tablero queda publicado para todos los que tengan acceso a GeoCR hasta la próxima actualización.</p><div id="alPub"></div></div>
     </div>
   </div>
 </section>
@@ -1508,6 +1514,13 @@ async function saveReg(k,obj){obj.creado=new Date().toISOString();
   if(DB){const ref=DB.collection(COLL[k]).doc();await ref.set(obj);return ref.id}
   const L=localRegs(k);obj.id='l'+Date.now();L.unshift(obj);try{localStorage.setItem('geocr-'+k,JSON.stringify(L))}catch(e){throw new Error('No se pudo guardar en este navegador.')}
   STORE[k]=L;redrawDash(k);return obj.id}
+/* confirmación Sí / No antes de eliminar */
+window.askConfirm=(t,d)=>new Promise(res=>{const o=document.createElement('div');o.className='cfm';
+  o.innerHTML=`<div class="cfm-b" role="alertdialog" aria-modal="true"><h3>${t}</h3>${d?`<p>${d}</p>`:''}<div class="cfm-a"><button class="btn sec" data-r="0">No</button><button class="btn danger" data-r="1">Sí</button></div></div>`;
+  document.body.appendChild(o);const kd=e=>{if(e.key==='Escape')fin(false)},fin=v=>{o.remove();document.removeEventListener('keydown',kd);res(v)};document.addEventListener('keydown',kd);
+  o.onclick=e=>{if(e.target===o)return fin(false);const b=e.target.closest('[data-r]');if(b)fin(b.dataset.r==='1')};o.querySelector('[data-r="0"]').focus()});
+async function updReg(k,id,obj){const{id:_,...d}=obj;if(DB){await DB.collection(COLL[k]).doc(id).set(d);return}
+  const L=localRegs(k).map(r=>r.id===id?{...d,id}:r);localStorage.setItem('geocr-'+k,JSON.stringify(L));STORE[k]=L;redrawDash(k)}
 async function delReg(k,id){if(DB){if(k==='ca'){const r=STORE.ca.find(x=>x.id===id);for(let i=0;i<(r&&r.pdfParts||0);i++)await DB.collection('reg_calidad_pdf').doc(id+'-'+i).delete()}await DB.collection(COLL[k]).doc(id).delete()}else{const L=localRegs(k).filter(r=>r.id!==id);localStorage.setItem('geocr-'+k,JSON.stringify(L));STORE[k]=L;redrawDash(k)}}
 /* --- índices espaciales sobre la capa CR --- */
 const PBB=EMBED_PIECES.map(p=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;p[3].forEach(q=>{a=Math.min(a,q[0]);b=Math.min(b,q[1]);c=Math.max(c,q[0]);d=Math.max(d,q[1])});return[a,b,c,d]});
@@ -1744,7 +1757,12 @@ function nxStatsTbl(cur,prev){const st=a=>[nxMean(a),nxMedian(a),nxStd(a)],c=st(
   const row=(t,i,col)=>{const va=hasP&&p[i]?Math.round((c[i]-p[i])/Math.abs(p[i])*1000)/10+0:NaN;return`<tr><td>${t}</td>${hasP?`<td class="num">${fmt(p[i],2)}</td>`:''}<td class="num"><b>${fmt(c[i],2)}</b></td>${hasP?`<td class="num" style="${col&&isFinite(va)?`color:${va>=0?'#2E7D32':'#C62828'};font-weight:700`:''}">${isFinite(va)?(va>0?'+':'')+fmt(va,1)+'%':'–'}</td>`:''}</tr>`};
   return`<table><tr><th>Estadístico</th>${hasP?'<th class="num">Anterior</th>':''}<th class="num">Actual</th>${hasP?'<th class="num">Variación</th>':''}</tr>${row('Media',0,1)}${row('Mediana',1,1)}${row('Desviación',2,0)}</table>${hasP?'':'<p class="note">Sin datos de la campaña anterior para comparar.</p>'}`}
 const prosa=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' y '+a.at(-1);
-function drawAlerts(){const sec=$('#alertas-tab');if(!sec)return;const tag=$('#alTag');
+function alPubChip(){const el=$('#alPub');if(!el)return;if(!NX){el.innerHTML='';return}
+  el.innerHTML=`<span class="upchip">Reporte publicado: ${NX.rango?NX.rango.join(' a '):''}${NX.fecha?' · '+NX.fecha:''}${NXMETA&&NXMETA.por?' · '+NXMETA.por:''}<button id="alDel" title="Eliminar el reporte publicado">✕ Eliminar</button></span>`;
+  $('#alDel').onclick=async()=>{if(!await askConfirm('¿Desea eliminar el elemento seleccionado?','Se eliminará el reporte NAX publicado (mapa de alertas, tablas y PDF). El tablero quedará sin datos hasta que subas otro o el robot diario publique el siguiente.'))return;const st=$('#alSt');
+    try{if(DB){const d=await DB.collection('nax_meta').doc('actual').get();if(d.exists){const m=d.data();await DB.collection('nax_meta').doc('actual').delete();for(let i=0;i<(m.parts||0);i++)DB.collection('nax_snap').doc(m.sid+'-'+i).delete().catch(()=>{});for(let i=0;i<(m.pdf||0);i++)DB.collection('nax_snap').doc(m.sid+'-pdf-'+i).delete().catch(()=>{})}}
+      else{localStorage.removeItem('geocr-nax');localStorage.removeItem('geocr-naxpdf')}NX=null;NXMETA=null;NXPDF=null;NXLOAD='ok';if(st)st.textContent='Reporte eliminado.';drawAlerts();cgDraw&&cgDraw()}catch(e){if(st)st.innerHTML=`<span class="qc">No se pudo eliminar (${e.message||e}).</span>`}}}
+function drawAlerts(){alPubChip();const sec=$('#alertas-tab');if(!sec)return;const tag=$('#alTag');
   if(!NX){$('#alBody').style.display='none';const e=$('#alEmpty');e.style.display='block';e.innerHTML=NXLOAD==='cargando'?'Cargando el último reporte de NAX…':NXLOAD==='error'?'<span class="qc">No se pudo leer el reporte publicado.</span> Recarga la página o vuelve a subir los archivos en <b>Actualizar datos</b>.':'Todavía no hay datos de NAX cargados.<br>Ve a <b>Actualizar datos</b> y sube el histórico que genera <code>Descarga_Nax_NewEra.py</code>.';
     tag.textContent='SIN DATOS';tag.className='tag demo';return}
   tag.textContent='DATOS NAX · '+NX.rango[1];tag.className='tag real';
@@ -1952,6 +1970,12 @@ function cgHistDraw(S){const sv=svgEl('cgHist'),T=$('#cgHistT');if(!HIST){cgHist
   const ult=agg.length-1;$('#cgHistN').textContent=`La zafra ${Z[ult]} está en curso: todavía no tiene TCA real. ${mk?'Caña quedada: no se cosechó en esa zafra y conserva el corte hasta la zafra en que se cosecha. En gris, zafras sin variedad ni siembra registrada.':'Promedios ponderados por área efectiva; las piezas en renovación o con caña quedada sin registro de siembra no se incluyen.'}`}
 /* Actualizar datos de campo (field_data_AAAAMMDD.xlsx) para todos */
 function cgSrcTxt(){return;$('#cgSrc').innerHTML=`Datos de campo: <b>${CAMPO.archivo||'field_data'}</b> · ${fmt(Object.keys(CAMPO.d).length)} piezas${CAMPO.por?' · subido por '+CAMPO.por:''}${CAMPO.fecha?' · '+CAMPO.fecha.split('-').reverse().join('/'):''}`}
+let CG_ED=false;
+function cgChip(){const el=$('#cgUpChip');if(!el)return;if(!CG_ED||CAMPO===EMBED_CAMPO){el.innerHTML='';return}
+  el.innerHTML=`<span class="upchip">${CAMPO.archivo||'datos de campo'}${CAMPO.fecha?' · '+CAMPO.fecha.split('-').reverse().join('/'):''}${CAMPO.por?' · '+CAMPO.por:''}<button id="cgDel" title="Eliminar datos subidos">✕ Eliminar</button></span>`;
+  $('#cgDel').onclick=async()=>{if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará el archivo <b>${CAMPO.archivo||'de datos de campo'}</b>. Cartografía volverá a los datos de campo de base y se actualizará sola.`))return;const st=$('#cgUpSt');st.textContent='Eliminando…';
+    try{if(DB){const d=await DB.collection('campo_meta').doc('actual').get();if(d.exists){const m=d.data();await DB.collection('campo_meta').doc('actual').delete();for(let i=0;i<(m.parts||0);i++)DB.collection('campo_snap').doc(m.sid+'-'+i).delete().catch(()=>{})}}
+      else localStorage.removeItem('geocr-campo');CAMPO=EMBED_CAMPO;CAMPO_SID=null;cgChip();st.textContent='Datos subidos eliminados.';cgDraw()}catch(e){st.innerHTML=`<span class="qc">No se pudo eliminar (${e.message||e}).</span>`}}}
 cgSrcTxt();
 function cgLeerCampo(sh,nombre){for(const s of sh){const H=(s.rows[0]||[]).map(x=>String(x||'').trim()),ix=n=>H.findIndex(x=>cgNorm(x)===cgNorm(n));
     const iN=ix('name');if(iN<0)continue;const g=n=>ix(n),c=v=>{if(v===undefined||v===null||v==='')return null;if(typeof v==='number')return Math.round(v*100)/100;const t=String(v).replace(/¥/g,'Ñ').trim();return t===''||/^nan$/i.test(t)?null:(/^-?\d+(\.\d+)?$/.test(t)?Math.round(+t*100)/100:t)};
@@ -1967,15 +1991,15 @@ $('#cgUp').onchange=async e=>{const f=e.target.files[0],st=$('#cgUpSt');if(!f)re
       await DB.collection('campo_meta').doc('actual').set({sid,parts:parts.length,fecha:nuevo.fecha,archivo:nuevo.archivo,por:nuevo.por});
       if(prev&&prev.sid)for(let i=0;i<(prev.parts||0);i++)DB.collection('campo_snap').doc(prev.sid+'-'+i).delete().catch(()=>{})}
     else{try{localStorage.setItem('geocr-campo',js)}catch(e){}}
-    CAMPO=nuevo;CAMPO_SID=null;cgSrcTxt();st.textContent=`Listo: ${fmt(n)} piezas actualizadas.`;cgDraw()}
+    CAMPO=nuevo;CAMPO_SID=null;cgSrcTxt();cgChip();st.textContent=`Listo: ${fmt(n)} piezas actualizadas.`;cgDraw()}
   catch(err){st.innerHTML=`<span class="qc">${err.message||err}</span>`}e.target.value=''};
 let CAMPO_SID=null;
 (async()=>{for(let t=0;t<200&&!DB&&DBSTATE==='cargando';t++)await new Promise(r=>setTimeout(r,50));
   let ed=false;if(window.claude&&claude.use)ed=!!DB;else if(DB){try{const r=await fetch('/api/me',{cache:'no-store'});ed=!!(await r.json()).editor}catch(e){}}else ed=true;
-  $('#cgUpL').style.display=ed?'':'none';
-  if(!DB){try{const s=localStorage.getItem('geocr-campo');if(s){CAMPO=JSON.parse(s);cgSrcTxt()}}catch(e){}return}
-  DB.collection('campo_meta').doc('actual').onSnapshot(async d=>{if(!d.exists)return;const m=d.data();if(m.sid===CAMPO_SID)return;
-    try{let s='';for(let i=0;i<m.parts;i++){const x=await DB.collection('campo_snap').doc(m.sid+'-'+i).get();if(!x.exists)throw 0;s+=x.data().s}CAMPO=JSON.parse(s);CAMPO_SID=m.sid;cgSrcTxt();cgDraw()}catch(e){}})})();
+  $('#cgUpL').style.display=ed?'':'none';CG_ED=ed;cgChip();
+  if(!DB){try{const s=localStorage.getItem('geocr-campo');if(s){CAMPO=JSON.parse(s);cgSrcTxt();cgChip()}}catch(e){}return}
+  DB.collection('campo_meta').doc('actual').onSnapshot(async d=>{if(!d.exists){if(CAMPO!==EMBED_CAMPO){CAMPO=EMBED_CAMPO;CAMPO_SID=null;cgChip();cgDraw()}return}const m=d.data();if(m.sid===CAMPO_SID)return;
+    try{let s='';for(let i=0;i<m.parts;i++){const x=await DB.collection('campo_snap').doc(m.sid+'-'+i).get();if(!x.exists)throw 0;s+=x.data().s}CAMPO=JSON.parse(s);CAMPO_SID=m.sid;cgSrcTxt();cgChip();cgDraw()}catch(e){}})})();
 /* ---------- configuración de cada tablero ---------- */
 const DASH={};
 DASH.tv={mapT:'Tablones aplicados a tasa variada',s1T:'Producto aplicado por producto',monT:'Litros aplicados por mes',per:'Litros aplicados',s2T:'Acres aplicados por división',tblT:'Aplicaciones registradas',
@@ -2023,7 +2047,7 @@ function suEstado(l){return l.desp>15?['Alerta',BAD]:l.desp>8?['Atención',WARN]
 /* nombre del lote de la herramienta: '176' o 'T-176' = tablón 176; '0028-1' = tablón 28, pieza 1 (siempre tablón y luego pieza) */
 function suNombre(s){const m=String(s||'').match(/(\d+)(?:\s*-\s*P?\s*(\d+))?/i);return m?{tab:String(+m[1]),pz:m[2]!=null?String(+m[2]):null}:null}
 const suNom=l=>{const t=l.tablon!=null?{tab:l.tablon,pz:l.pieza}:suNombre(l.lote);return t?`Tablón ${t.tab}${t.pz!=null?' · Pieza '+t.pz:''}`:(l.lote||'—')};
-const suLotes=R=>R.flatMap(r=>(r.lotes||[]).map(l=>({...l,fecha:l.fecha||r.fecha,rid:r.id})));
+const suLotes=R=>R.flatMap(r=>(r.lotes||[]).map((l,li)=>({...l,fecha:l.fecha||r.fecha,rid:r.id,li})));
 DASH.su={mapT:'Despoblación por pieza evaluada',s1T:'Superficie por condición',monT:'Despoblación media por mes',per:'Despoblación media',s2T:'Despoblación media por variedad',tblT:'Tablones evaluados',
   empty:'Todavía no hay resultados. Ve a <b>Cargar resultados</b> y sube la carpeta de salida de la detección de surcos de cada tablón o pieza (detalle_surcos.xlsx y surcos.csv).',
   kpis:R=>{const L=suLotes(R),A=sumBy(L,l=>l.acres),pl=A?sumBy(L,l=>l.plantas*l.acres)/A:NaN,de=A?sumBy(L,l=>l.desp*l.acres)/A:NaN,al=L.filter(l=>suEstado(l)[0]==='Alerta').length;
@@ -2035,11 +2059,18 @@ DASH.su={mapT:'Despoblación por pieza evaluada',s1T:'Superficie por condición'
     const c=e=>L.filter(l=>suEstado(l)[0]===e).length;donut(s,[['Bien',c('Bien'),GOOD],['Atención',c('Atención'),WARN],['Alerta',c('Alerta'),BAD]],L.length,'tablones')},
   mon:(s,R,g)=>periodBars(s,suLotes(R),ls=>{const A=sumBy(ls,l=>l.acres);return A?sumBy(ls,l=>l.desp*l.acres)/A:NaN},{fmt:v=>fmt(v,0)+'%',vfmt:v=>fmt(v,1)+'%',ref:15,refLabel:'alerta 15 %',color:v=>v<=8?GOOD:v<=15?WARN:BAD},g),
   s2:(s,R)=>{const g=new Map();suLotes(R).forEach(l=>{const v=l.variedad||'—';if(!g.has(v))g.set(v,[0,0]);const a=g.get(v);a[0]+=l.desp*l.acres;a[1]+=l.acres});hbars(s,[...g].map(([v,[n,d]])=>[v,d?n/d:0]).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([v,x])=>[v,x,x<=8?GOOD:x<=15?WARN:BAD]),v=>fmt(v,1)+'%')},
-  table:R=>'<tr><th>Fecha</th><th>Tablón / pieza</th><th>Variedad(es)</th><th class="n">Acres</th><th class="n">Surcos</th><th class="n">Plantas/acre</th><th class="n">Plantas faltantes</th><th class="n">Despoblación</th><th>Estado</th><th></th></tr>'+suLotes(R).map(l=>{const e=suEstado(l);return`<tr><td>${l.fecha}</td><td><b>${suNom(l)}</b>${l.division||l.piezas&&l.piezas.length?`<br><span class="note">${[l.division,l.piezas&&l.piezas.length>1?l.piezas.length+' piezas: '+l.piezas.map(x=>x.split('-')[1]).join(', '):''].filter(Boolean).join(' · ')}</span>`:''}</td><td>${l.variedad||'—'}</td><td class="n">${fmt(l.acres,2)}</td><td class="n">${l.surcos?fmt(l.surcos):'—'}</td><td class="n">${fmt(l.plantas)}</td><td class="n">${l.faltantes?fmt(l.faltantes):'—'}</td><td class="n" style="color:${e[1]};font-weight:700">${fmt(l.desp,1)}%</td><td>${chip(e[0],e[1])}</td><td>${DEMO_ON.su?'':delBtnId('su',l.rid)}</td></tr>`}).join(''),
+  table:R=>'<tr><th>Fecha</th><th>Tablón / pieza</th><th>Variedad(es)</th><th class="n">Acres</th><th class="n">Surcos</th><th class="n">Plantas/acre</th><th class="n">Plantas faltantes</th><th class="n">Despoblación</th><th>Estado</th><th></th></tr>'+suLotes(R).map(l=>{const e=suEstado(l);return`<tr><td>${l.fecha}</td><td><b>${suNom(l)}</b>${l.division||l.piezas&&l.piezas.length?`<br><span class="note">${[l.division,l.piezas&&l.piezas.length>1?l.piezas.length+' piezas: '+l.piezas.map(x=>x.split('-')[1]).join(', '):''].filter(Boolean).join(' · ')}</span>`:''}</td><td>${l.variedad||'—'}</td><td class="n">${fmt(l.acres,2)}</td><td class="n">${l.surcos?fmt(l.surcos):'—'}</td><td class="n">${fmt(l.plantas)}</td><td class="n">${l.faltantes?fmt(l.faltantes):'—'}</td><td class="n" style="color:${e[1]};font-weight:700">${fmt(l.desp,1)}%</td><td>${chip(e[0],e[1])}</td><td>${DEMO_ON.su?'':`<button class="xdel" title="Eliminar" onclick="confirmDelSu('${l.rid}',${l.li},this)">✕</button>`}</td></tr>`}).join(''),
   demo:()=>{const r=rng(61),vars=['CR-87339','CR-83323','CR-74250','BR-0402','CR-0026'];const ps=demoPieces(26,61);return[0,1,2,3].map(k=>({fecha:demoDate(r,120),lotes:ps.slice(k*6,k*6+6+(k===3?2:0)).map(p=>{const d=r()<.2?15+r()*12:2+r()*12;return{lote:p[1]+'-'+p[2],variedad:vars[Math.floor(r()*5)],acres:10+r()*25,surcos:Math.round(300+r()*500),plantas:Math.round(22000-d*500+r()*2000),desp:d,recs:[p[4]]}})})).sort((a,b)=>b.fecha.localeCompare(a.fecha))}};
 const delBtn=(k,r)=>DEMO_ON[k]?'':delBtnId(k,r.id);
-const delBtnId=(k,id)=>`<button class="xdel" title="Borrar registro" onclick="confirmDel('${k}','${id}',this)">✕</button>`;
-window.confirmDel=async(k,id,b)=>{if(b.dataset.c!=='1'){b.dataset.c='1';b.textContent='¿Borrar?';setTimeout(()=>{b.dataset.c='';b.textContent='✕'},3000);return}try{await delReg(k,id)}catch(e){b.textContent='Sin permiso'}};
+const delBtnId=(k,id)=>`<button class="xdel" title="Eliminar" onclick="confirmDel('${k}','${id}',this)">✕</button>`;
+const regDesc=(k,r)=>!r?'este registro':k==='tv'?`la aplicación del ${r.fecha} (${r.producto||'producto'} · ${(r.tablones||[]).join(', ')})`:k==='mu'?`el muestreo del ${r.fecha} (${(r.tablones||[]).join(', ')} · ${r.puntos} puntos)`:
+  k==='ca'?`la evaluación del ${r.fecha} (${(r.tabs||[]).length} tablón(es): ${(r.tabs||[]).map(t=>t.tablon).join(', ')})`:`el registro del ${r.fecha}`;
+window.confirmDel=async(k,id,b)=>{const r=(STORE[k]||[]).find(x=>x.id===id);
+  if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará ${regDesc(k,r)}${r&&r.archivo?' · archivo '+r.archivo:''}. El tablero se actualizará sin esa información.`))return;
+  b.disabled=true;try{await delReg(k,id);redrawDash(k)}catch(e){b.disabled=false;b.textContent='Sin permiso'}};
+window.confirmDelSu=async(id,li,b)=>{const r=(STORE.su||[]).find(x=>x.id===id);if(!r)return;const l=(r.lotes||[])[li];
+  if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará ${l?suNom(l):'este resultado'} (vuelo del ${l&&l.fecha||r.fecha}). El tablero se actualizará sin esa información.`))return;
+  b.disabled=true;try{const rest=(r.lotes||[]).filter((_,i)=>i!==li);if(rest.length)await updReg('su',id,{...r,lotes:rest});else await delReg('su',id);redrawDash('su')}catch(e){b.disabled=false;b.textContent='Sin permiso'}};
 ['tv','mu','ca','su'].forEach(k=>dashShell(k,DASH[k]));
 
 /* ================= HERRAMIENTAS: registrar en tableros ================= */
@@ -2193,7 +2224,7 @@ $('#suSave').onclick=async()=>{const st=$('#suSt');try{if(!SUP)return;const f=$(
 
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
-const LR={dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};
+const LR={cargas:new Map(),dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{cargas:false,dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};
 const LR_DIVC=Object.fromEntries(Object.entries(DIVN).map(([k,v])=>[v,+k]));
 const lrNum=v=>{if(v===null||v===undefined||String(v).trim()==='')return NaN;return+String(v).replace(',','.')};
 const lrF2=v=>isFinite(v)?(+v).toFixed(2):'';
@@ -2245,7 +2276,7 @@ $('#lrSaveM').onclick=async()=>{const st=$('#lrStM'),ym=$('#lrMesSel').value;if(
 ['lrFecha','lrDivD'].forEach(id=>$('#'+id).onchange=lrTablaDia);['lrMesSel','lrDivM'].forEach(id=>$('#'+id).onchange=lrTablaMes);
 $$('#lrSeg button').forEach(b=>b.onclick=()=>{LR.vista=b.dataset.m;lrDraw()});
 /* importar Excel/CSV */
-$('#lrFile').onchange=async e=>{const f=e.target.files[0],pv=$('#lrPrev');LR.imp=null;$('#lrSaveA').disabled=true;$('#lrStA').textContent='';if(!f)return;
+$('#lrFile').onchange=async e=>{const f=e.target.files[0],pv=$('#lrPrev');LR.impName=f?f.name:'';LR.imp=null;$('#lrSaveA').disabled=true;$('#lrStA').textContent='';if(!f)return;
   try{const sh=await readTable(f);let imp={tipo:'',docs:new Map(),n:0,qc:0};
     const esDia=sh.some(s=>{const h=(s.rows[0]||[]).map(x=>normName(x));return h.some(x=>/^fecha|^date/.test(x))&&h.some(x=>/^pluv/.test(x))});
     if(esDia){const mm=sh.some(s=>(s.rows[0]||[]).some(x=>/mm/i.test(String(x||''))&&!/^fecha/i.test(String(x||''))));
@@ -2267,6 +2298,7 @@ $('#lrSaveA').onclick=async()=>{const imp=LR.imp,st=$('#lrStA'),b=$('#lrSaveA');
   try{for(const[k,vals]of imp.docs){i++;st.textContent=`Guardando ${i} de ${imp.docs.size}…`;const ref=DB.collection(coll).doc(k),prev=await ref.get(),old=(prev.exists&&prev.data().v)||{};
       const v=repl?{...old,...vals}:{...vals,...old};await ref.set({fecha:k,v,por,upd:new Date().toISOString()})}
     if(imp.gauges)for(const[p,g]of imp.gauges)if(!R.gauges.has(p)&&!LR.pluv.has(p))await DB.collection('pluviometros').doc(p).set({cod:p,nombre:g.name||p,div:g.div||'',lat:null,lon:null,inactivo:false,fecha:''});
+    try{const ps=[...new Set([...imp.docs.values()].flatMap(v=>Object.keys(v)))];await DB.collection('lluvia_cargas').doc('c'+Date.now()).set({archivo:LR.impName||'archivo',tipo:imp.tipo,keys:[...imp.docs.keys()],pluv:ps,repl,por,fecha:new Date().toISOString()})}catch(e){}
     st.textContent=`Listo: ${imp.docs.size} ${imp.tipo==='dia'?'fecha(s)':'mes(es)'} guardados en la base.`;LR.imp=null;$('#lrFile').value='';$('#lrPrev').innerHTML=''}
   catch(e){st.innerHTML=`<span class="qc">Se detuvo en ${i} de ${imp.docs.size} (${e.message}). Puedes volver a intentarlo.</span>`;b.disabled=false}};
 /* pluviómetros */
@@ -2288,10 +2320,19 @@ $('#lrSaveP').onclick=async()=>{const st=$('#lrStP'),cambios=[];let err='';
   if(err){st.innerHTML=`<span class="qc">${err}</span>`;return}if(!cambios.length){st.textContent='No hay cambios que guardar.';return}
   try{for(const n of cambios){st.textContent=`Guardando ${n.cod}…`;await DB.collection('pluviometros').doc(n.cod).set(n)}LR_NUEVOS=0;st.textContent=`${cambios.length} pluviómetro(s) guardados.`}catch(e){st.innerHTML=`<span class="qc">No se pudo guardar (${e.message}).</span>`}};
 /* historial y descarga */
+function lrCargasHtml(){const C=[...LR.cargas].sort((a,b)=>String(b[1].fecha).localeCompare(String(a[1].fecha)));if(!C.length)return'';
+  return`<div style="margin:6px 0 12px"><div class="note" style="margin-bottom:4px">Archivos cargados${LR.editor?' (eliminar un archivo quita sus valores de los pluviómetros y fechas que traía)':''}:</div>${C.map(([id,c])=>`<span class="upchip">${c.archivo} · ${c.tipo==='dia'?'diarias':'mensuales'} · ${(c.keys||[]).length} ${c.tipo==='dia'?'fecha(s)':'mes(es)'} · ${new Date(c.fecha).toLocaleDateString('es-DO')}${LR.editor?`<button data-carga="${id}" title="Eliminar este archivo">✕ Eliminar</button>`:''}</span>`).join('')}</div>`}
+async function lrBorrarCarga(id){const c=LR.cargas.get(id);if(!c)return;const st=$('#lrStH');
+  if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará el archivo <b>${c.archivo}</b>: se quitan sus valores de ${(c.pluv||[]).length} pluviómetro(s) en ${(c.keys||[]).length} ${c.tipo==='dia'?'fecha(s)':'mes(es)'}. Los mapas de lluvia se actualizarán sin esa información.`))return;
+  const coll=c.tipo==='dia'?'lluvia_dia':'lluvia_mes',P=new Set(c.pluv||[]);let i=0;
+  try{for(const k of c.keys||[]){i++;st.textContent=`Eliminando ${i} de ${c.keys.length}…`;const ref=DB.collection(coll).doc(k),d=await ref.get();if(!d.exists)continue;const v={...(d.data().v||{})};P.forEach(p=>delete v[p]);
+      if(Object.keys(v).length)await ref.set({...d.data(),v,upd:new Date().toISOString()});else await ref.delete()}
+    await DB.collection('lluvia_cargas').doc(id).delete();st.textContent=`Archivo ${c.archivo} eliminado.`}catch(e){st.innerHTML=`<span class="qc">No se pudo eliminar (${e.message}).</span>`}}
 function lrTablaHist(){const L=[...[...LR.dia].map(([k,d])=>['Diaria',k,d]),...[...LR.mes].map(([k,d])=>['Mensual',k,d])].sort((a,b)=>String(b[2].upd||'').localeCompare(String(a[2].upd||'')));
-  $('#lrTblH').innerHTML=L.length?`<tr><th>Tipo</th><th>Fecha / mes</th><th class="num">Pluviómetros</th><th>Registrado por</th><th>Actualizado</th>${LR.editor?'<th></th>':''}</tr>`+L.map(([t,k,d])=>`<tr><td>${t}</td><td>${t==='Mensual'?ymLabel(k):k}</td><td class="num">${Object.keys(d.v||{}).length}</td><td>${d.por||''}</td><td>${d.upd?new Date(d.upd).toLocaleString('es-DO',{dateStyle:'medium',timeStyle:'short'}):''}</td>${LR.editor?`<td><button class="btn sec" style="padding:3px 8px;font-size:12px" data-del="${t==='Diaria'?'lluvia_dia':'lluvia_mes'}|${k}">Borrar</button></td>`:''}</tr>`).join(''):'<tr><td class="note" style="padding:16px">Todavía no hay lluvias registradas en la base. Los mapas usan el Excel base.</td></tr>';
-  $$('#lrTblH [data-del]').forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='¿Seguro? Borrar';b.style.color='var(--red)';return}
-    const[c,k]=b.dataset.del.split('|');b.disabled=true;try{await DB.collection(c).doc(k).delete();$('#lrStH').textContent='Registro borrado.'}catch(e){$('#lrStH').innerHTML=`<span class="qc">No se pudo borrar (${e.message}).</span>`;b.disabled=false}})}
+  $('#lrTblH').innerHTML=L.length?`<tr><th>Tipo</th><th>Fecha / mes</th><th class="num">Pluviómetros</th><th>Registrado por</th><th>Actualizado</th>${LR.editor?'<th></th>':''}</tr>`+L.map(([t,k,d])=>`<tr><td>${t}</td><td>${t==='Mensual'?ymLabel(k):k}</td><td class="num">${Object.keys(d.v||{}).length}</td><td>${d.por||''}</td><td>${d.upd?new Date(d.upd).toLocaleString('es-DO',{dateStyle:'medium',timeStyle:'short'}):''}</td>${LR.editor?`<td><button class="btn sec" style="padding:3px 8px;font-size:12px" data-del="${t==='Diaria'?'lluvia_dia':'lluvia_mes'}|${k}">Eliminar</button></td>`:''}</tr>`).join(''):'<tr><td class="note" style="padding:16px">Todavía no hay lluvias registradas en la base. Los mapas usan el Excel base.</td></tr>';
+  $('#lrCargas').innerHTML=lrCargasHtml();$$('#lrCargas [data-carga]').forEach(b=>b.onclick=()=>lrBorrarCarga(b.dataset.carga));
+  $$('#lrTblH [data-del]').forEach(b=>b.onclick=async()=>{const[c,k]=b.dataset.del.split('|');
+    if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará el registro ${c==='lluvia_dia'?'diario del '+k:'mensual de '+ymLabel(k)} con todos sus pluviómetros. Los mapas de lluvia se actualizarán sin esa información.`))return;b.disabled=true;try{await DB.collection(c).doc(k).delete();$('#lrStH').textContent='Registro borrado.'}catch(e){$('#lrStH').innerHTML=`<span class="qc">No se pudo borrar (${e.message}).</span>`;b.disabled=false}})}
 $('#lrXls').onclick=()=>{if(!window.XLSX){$('#lrStH').textContent='No se pudo cargar el generador de Excel.';return}
   const M=lrMensual(),gs=[...R.gauges.values()].filter(g=>!g.inactivo).sort((a,b)=>(LR_DIVC[a.div]||9)-(LR_DIVC[b.div]||9)||lrCode(a.id,b.id)),ms=months();if(!ms.length)return;
   const y0=+ms[0].slice(0,4),y1=+ms.at(-1).slice(0,4),wb=XLSX.utils.book_new(),hoja=(nombre,lista)=>{const head=['PLUV','DIVISION_C','Division','Nombres',...lista.map(ym=>'pp_'+MESES[+ym.slice(5,7)-1]+ym.slice(2,4))];
@@ -2305,7 +2346,7 @@ $('#lrXls').onclick=()=>{if(!window.XLSX){$('#lrStH').textContent='No se pudo ca
   if(!DB){LR.listo={dia:true,mes:true,pluv:true};return}
   if(window.claude&&claude.use)LR.editor=true;else{try{const r=await fetch('/api/me',{cache:'no-store'});const j=await r.json();LR.editor=!!j.editor}catch(e){LR.editor=false}}
   $('#lrNav').style.display='';window.LR_READY=true;let tm=null;const later=()=>{clearTimeout(tm);tm=setTimeout(lrApply,150)};
-  [['dia','lluvia_dia',2000],['mes','lluvia_mes',600],['pluv','pluviometros',500]].forEach(([k,c,n])=>DB.collection(c).orderBy('fecha','desc').limit(n).onSnapshot(s=>{LR[k]=new Map(s.docs.map(d=>[d.id,d.data()]));LR.listo[k]=true;later()},()=>{LR.listo[k]=true;later()}))})();
+  [['cargas','lluvia_cargas',200],['dia','lluvia_dia',2000],['mes','lluvia_mes',600],['pluv','pluviometros',500]].forEach(([k,c,n])=>DB.collection(c).orderBy('fecha','desc').limit(n).onSnapshot(s=>{LR[k]=new Map(s.docs.map(d=>[d.id,d.data()]));LR.listo[k]=true;later()},()=>{LR.listo[k]=true;later()}))})();
 setMonthly(EMBED_SHEETS,'ARCHIVO_MAPA_DE_LLUVIAS_AÑO.xlsx'); applyLayers(); restoreLoc(); setupControls(); showCtl(); detectKeys();
 $('#rainSub').textContent=`${R.gauges.size} pluviómetros · ${[...new Set([...R.gauges.values()].map(g=>g.div).filter(Boolean))].length} divisiones · lámina mensual derivada de los acumulados`;
 homeInfo();route();
