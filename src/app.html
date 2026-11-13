@@ -273,6 +273,7 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
 .cg-ficha .g div em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
 .cg-ficha .x{margin-top:10px;font-size:12px;color:var(--muted)}
 @media(max-width:900px){.cg-ficha .g{grid-template-columns:repeat(2,1fr)}}
+.cg-hleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0 2px}.cg-hleg i{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}.cg-hleg i.dash{background:repeating-linear-gradient(90deg,#0070C9 0 5px,transparent 5px 8px)}
 .cg-tbl tr[data-u]{cursor:pointer}.cg-tbl tr[data-u]:hover td{background:#F2F7FD}.cg-tbl tr.mk td{background:#FDECEA}
 
 /* Cómo trabaja: gemelo digital */
@@ -530,6 +531,10 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
       <h3 class="cg-h3">Suelo</h3><svg class="chart" id="cgSue"></svg>
       <h3 class="cg-h3">Clase de cepa</h3><svg class="chart" id="cgCla"></svg></div>
   </div>
+  <div class="card" style="margin-top:16px" id="cgHistC"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h2 id="cgHistH">Historia de rendimiento</h2><span class="note">TCA (toneladas de caña por acre) por zafra, desde 2020-21</span></div>
+    <div class="cg-hleg"><span><i style="background:#0E2A47"></i>TCA real</span><span><i class="dash"></i>TCA estimado ingenio</span><span><i style="background:#B8C4D2"></i>Real promedio Central Romana</span></div>
+    <svg class="chart" id="cgHist"></svg><p class="note" id="cgHistN"></p>
+    <div class="scroll" style="max-height:none;margin-top:8px"><table id="cgHistT" class="cg-tbl"></table></div></div>
   <div class="card" style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h2>Detalle por pieza</h2><span class="note" id="cgN"></span></div>
     <div class="scroll" style="max-height:560px"><table id="cgTbl" class="cg-tbl"></table></div></div>
 </section>
@@ -1712,13 +1717,13 @@ function cgDraw(){if(!$('#s-cartografia').classList.contains('on'))return;cgData
   const ed=S.map(cgEdad).filter(isFinite);$('#cgK5').textContent=ed.length?fmt(sumBy(S.filter(u=>isFinite(cgEdad(u))),u=>u.ac*cgEdad(u))/sumBy(S.filter(u=>isFinite(cgEdad(u))),u=>u.ac),1):'–';
   const top=(L,n=8)=>{const t=L.slice(0,n);if(L.length>n)t.push(['Otras',L.slice(n).reduce((s,x)=>s+x[1],0)]);return t.map(([k,v])=>[k.length>20?k.slice(0,19)+'…':k,v,k==='Otras'||k==='Sin dato'?'#B0B0B0':'#0070C9'])};
   hbars(svgEl('cgVar'),top(V),v=>fmt(v,0),{L:150});hbars(svgEl('cgSue'),top(by(cgSue)),v=>fmt(v,0),{L:150});hbars(svgEl('cgCla'),top(by(cgCla)),v=>fmt(v,0),{L:150});
-  cgMap(S);cgFicha(S,one);
+  cgMap(S);cgFicha(S,one);cgHistDraw(S);
   const nx=!!NX,rows=S.slice(0,600);$('#cgN').textContent=S.length>600?`Se muestran 600 de ${fmt(S.length)} piezas; el Excel trae todas.`:`${fmt(S.length)} pieza(s)`;
   const fd=d=>d?d.split('-').reverse().join('/'):'';
   $('#cgTbl').innerHTML=`<tr><th>División</th><th>Distrito</th><th>Tablón</th><th>Pieza</th><th>ID</th><th>Variedad</th><th class="num">Área (acres)</th><th>Nombre de suelo</th><th>Clase de caña</th><th class="num">N.º de corte</th><th>Último corte / siembra</th><th class="num">Edad (meses)</th><th class="num">Acres mapa</th><th class="num">TCA ingenio</th>${nx?'<th class="num">TCA NAX</th><th class="num">Humedad</th><th class="num">NDVI</th>':''}</tr>`+
     rows.map(u=>{const n=nx?cgNax(u):null,c=(k,d)=>n&&n[k]!=null?`<td class="num" style="color:${nxColor(k,nxCat(k,n[k]))};font-weight:700">${fmt(n[k],d)}</td>`:'<td class="num">–</td>';
       return`<tr data-u="${u.k}"${CG_MK===u.k?' class="mk"':''}><td>${u.div||'–'}</td><td>${u.dis||'–'}</td><td><b>${u.tab}</b></td><td>${u.pz}</td><td>${u.id||'–'}</td><td>${cgVar(u)||'–'}</td><td class="num">${fmt(cgArea(u),2)}</td><td>${cgSue(u)||'–'}</td><td>${cgCla(u)||'–'}</td><td class="num">${(cgC(u)||{}).corte??'–'}</td><td>${fd(u.fc)||'–'}</td><td class="num">${fmt(cgEdad(u),1)}</td><td class="num">${fmt(u.ac,2)}</td><td class="num"><b>${fmt(cgTcaI(u),1)}</b></td>${nx?`<td class="num">${n&&n.tN!=null?fmt(n.tN,1):'–'}</td>`+c('hum',1)+c('ndvi',3):''}</tr>`}).join('');
-  $$('#cgTbl tr[data-u]').forEach(tr=>tr.onclick=()=>{CG_MK=CG_MK===tr.dataset.u?null:tr.dataset.u;$$('#cgTbl tr.mk').forEach(x=>x.classList.remove('mk'));if(CG_MK)tr.classList.add('mk');cgMap(S);cgFicha(S,one);$('#cgFicha').scrollIntoView({behavior:'smooth',block:'nearest'})});
+  $$('#cgTbl tr[data-u]').forEach(tr=>tr.onclick=()=>{CG_MK=CG_MK===tr.dataset.u?null:tr.dataset.u;$$('#cgTbl tr.mk').forEach(x=>x.classList.remove('mk'));if(CG_MK)tr.classList.add('mk');cgMap(S);cgFicha(S,one);cgHistDraw(S);$('#cgFicha').scrollIntoView({behavior:'smooth',block:'nearest'})});
   $('#cgSt').textContent=''}
 function cgMap(S){const cv=$('#cgMap'),sel=new Set(S.flatMap(u=>u.pis)),all=sel.size===EMBED_PIECES.length;
   let bb=all?bboxPts(EMBED_LAYERS.mask.flatMap(p=>p[0])):bboxPts([...sel].flatMap(i=>EMBED_PIECES[i][3]));
@@ -1752,6 +1757,36 @@ $('#cgXls').onclick=()=>{if(!window.XLSX){$('#cgSt').textContent='No se pudo car
   const rows=S.map(u=>{const n=cgNax(u),c=cgC(u)||{},r=[u.div,u.adm,u.dis,c.finca||'',+u.tab,+u.pz,u.id,u.idnax,cgVar(u),isFinite(cgArea(u))?cgArea(u):'',cgSue(u),c.cod||'',cgCla(u),c.corte??'',u.fc,isFinite(cgEdad(u))?+cgEdad(u).toFixed(1):'',+u.ac.toFixed(2),isFinite(cgTcaI(u))?+cgTcaI(u).toFixed(2):''];if(NX)r.push(n?.hum??'',n?.ndvi??'',n?.bio??'',n?.tN??'');return r});
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([head,...rows]);ws['!cols']=head.map(h=>({wch:Math.max(10,h.length+2)}));XLSX.utils.book_append_sheet(wb,ws,'Cartografía');
   const nm=[CGF.div,CGF.tab&&'tablon_'+CGF.tab].filter(Boolean).join('_')||'central_romana';saveFile(`cartografia_${slug(nm)}_${hoyISO()}.xlsx`,new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),$('#cgSt'))};
+
+/* ---- Historia por zafra (historia.json: field_data 2020-21 a 2026-27) ---- */
+let HIST=null,HIST_ST='';
+async function cgHistLoad(){if(HIST||HIST_ST)return;HIST_ST='cargando';try{const r=await fetch('historia.json',{cache:'force-cache'});HIST=await r.json();
+    HIST.cr=HIST.z.map((_,k)=>{let w=0,s=0;for(const id in HIST.d){const x=HIST.d[id][k];if(x&&x[3]!=null){const a=x[5]||1;w+=a;s+=a*x[3]}}return w?s/w:NaN});HIST_ST='ok';cgDraw()}catch(e){HIST_ST='error';$('#cgHistN').textContent='No se pudo cargar la historia de zafras.'}}
+const cgHx=(u,k)=>HIST&&u.id&&HIST.d[u.id]?HIST.d[u.id][k]:null;
+const cgEstado=x=>!x?'Sin registro':x[6]?(x[1]===0?'En renovación':'Sin registro'):x[2]?'Cosechada '+String(x[2]).slice(6,8)+'/'+String(x[2]).slice(4,6)+'/'+String(x[2]).slice(0,4):'Sin cosecha';
+function cgHistDraw(S){const sv=svgEl('cgHist'),T=$('#cgHistT');if(!HIST){cgHistLoad();sv.innerHTML='';T.innerHTML='';$('#cgHistN').textContent=HIST_ST==='error'?'No se pudo cargar la historia de zafras.':'Cargando historia de zafras…';return}
+  const Z=HIST.z,mk=CG_MK?CG.find(u=>u.k===CG_MK):null,set=mk?[mk]:S;
+  $('#cgHistH').textContent=mk?`Historia de la pieza ${mk.tab}-${mk.pz}`:(S.length&&new Set(S.map(u=>u.div+'|'+u.tab)).size===1?`Historia del tablón ${S[0].tab}`:'Historia de rendimiento');
+  const agg=Z.map((_,k)=>{let wr=0,sr=0,we=0,se=0,n=0,ac=0,co=0,nc=0;const vv=new Map();set.forEach(u=>{const x=cgHx(u,k);if(!x||x[6])return;const a=x[5]||u.ac||1;n++;ac+=a;if(x[0]!=null)vv.set(HIST.v[x[0]],(vv.get(HIST.v[x[0]])||0)+a);if(x[1]!=null){co+=x[1];nc++}if(x[3]!=null){wr+=a;sr+=a*x[3]}if(x[4]!=null){we+=a;se+=a*x[4]}});
+    return{r:wr?sr/wr:NaN,e:we?se/we:NaN,n,ac,var:[...vv].sort((a,b)=>b[1]-a[1])[0]?.[0]||'',co:nc?co/nc:NaN}});
+  /* gráfico */
+  const H=230,W=svgSize(sv,H),L=48,R=38,Tp=16,B=34,all=[...agg.flatMap(a=>[a.r,a.e]),...HIST.cr].filter(isFinite);
+  if(!all.length){sv.innerHTML='<text x="4" y="22" font-size="12" fill="#5B6673">Sin registros de rendimiento para esta selección.</text>'}
+  else{let lo=Math.min(...all),hi=Math.max(...all);const pd=(hi-lo)*.15||2;lo=Math.max(0,lo-pd);hi+=pd;const x=k=>L+(W-L-R)*(Z.length>1?k/(Z.length-1):.5),y=v=>Tp+(H-Tp-B)*(1-(v-lo)/(hi-lo));
+    let g='';niceBreaks(hi-lo,5).forEach(()=>{});const st=(hi-lo)/4;for(let i=0;i<=4;i++){const v=lo+st*i;g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(v)+4}" font-size="10" text-anchor="end" fill="#5B6673">${fmt(v,0)}</text>`}
+    Z.forEach((z,k)=>{g+=`<text x="${x(k)}" y="${H-12}" font-size="11" text-anchor="middle" fill="#1F2933">${z}</text>`});
+    const line=(vals,st2)=>{let d='',pen=false;vals.forEach((v,k)=>{if(!isFinite(v)){pen=false;return}d+=(pen?'L':'M')+x(k)+' '+y(v)+' ';pen=true});return`<path d="${d}" fill="none" ${st2}/>`};
+    g+=line(HIST.cr,'stroke="#B8C4D2" stroke-width="2"');g+=line(agg.map(a=>a.e),'stroke="#0070C9" stroke-width="2.2" stroke-dasharray="6 4"');g+=line(agg.map(a=>a.r),'stroke="#0E2A47" stroke-width="3"');
+    agg.forEach((a,k)=>{if(isFinite(a.e))g+=`<circle cx="${x(k)}" cy="${y(a.e)}" r="3.5" fill="#fff" stroke="#0070C9" stroke-width="2"><title>${Z[k]} · estimado ingenio ${fmt(a.e,1)}</title></circle>`;
+      if(isFinite(a.r))g+=`<circle cx="${x(k)}" cy="${y(a.r)}" r="4.5" fill="#0E2A47"><title>${Z[k]} · real ${fmt(a.r,1)}</title></circle><text x="${x(k)}" y="${y(a.r)-9}" font-size="11" font-weight="700" text-anchor="middle" fill="#0E2A47">${fmt(a.r,1)}</text>`;
+      if(mk){const xx=cgHx(mk,k);if(xx&&!xx[6]&&xx[1]!=null)g+=`<text x="${x(k)}" y="${H-24}" font-size="10" text-anchor="middle" fill="#5B6673">corte ${xx[1]}</text>`}});
+    sv.innerHTML=g}
+  /* tabla */
+  const dif=(r,e)=>r!=null&&e!=null&&isFinite(r)&&isFinite(e)&&e?(r-e)/e*100:NaN,dc=v=>isFinite(v)?`<span style="color:${v>=0?'#2E7D32':'#C62828'};font-weight:700">${v>0?'+':''}${fmt(v,1)}%</span>`:'–';
+  if(mk){T.innerHTML=`<tr><th>Zafra</th><th>Variedad</th><th class="num">Corte</th><th>Estado</th><th class="num">TCA estimado ingenio</th><th class="num">TCA real</th><th class="num">Real vs estimado</th></tr>`+Z.map((z,k)=>{const x=cgHx(mk,k);const emp=!x||x[6];
+      return`<tr${emp?' style="color:var(--muted)"':''}><td><b>${z}</b></td><td>${!emp&&x[0]!=null?HIST.v[x[0]]:'–'}</td><td class="num">${!emp&&x[1]!=null?x[1]:'–'}</td><td>${cgEstado(x)}</td><td class="num">${x&&x[4]!=null?fmt(x[4],1):'–'}</td><td class="num"><b>${x&&x[3]!=null?fmt(x[3],1):'–'}</b></td><td class="num">${x?dc(dif(x[3],x[4])):'–'}</td></tr>`}).reverse().join('')}
+  else T.innerHTML=`<tr><th>Zafra</th><th class="num">Piezas con registro</th><th class="num">Acres</th><th>Variedad principal</th><th class="num">Corte promedio</th><th class="num">TCA estimado ingenio</th><th class="num">TCA real</th><th class="num">Real vs estimado</th><th class="num">Real Central Romana</th></tr>`+agg.map((a,k)=>`<tr><td><b>${Z[k]}</b></td><td class="num">${fmt(a.n)}</td><td class="num">${fmt(a.ac,0)}</td><td>${a.var||'–'}</td><td class="num">${fmt(a.co,1)}</td><td class="num">${fmt(a.e,1)}</td><td class="num"><b>${fmt(a.r,1)}</b></td><td class="num">${dc(dif(a.r,a.e))}</td><td class="num">${fmt(HIST.cr[k],1)}</td></tr>`).reverse().join('');
+  const ult=agg.length-1;$('#cgHistN').textContent=`La zafra ${Z[ult]} está en curso: todavía no tiene TCA real. ${mk?'Las zafras en gris no tienen variedad ni siembra registrada (en renovación o sin registro).':'Promedios ponderados por área efectiva; las piezas en renovación o sin registro no se incluyen.'}`}
 /* Actualizar datos de campo (field_data_AAAAMMDD.xlsx) para todos */
 function cgSrcTxt(){return;$('#cgSrc').innerHTML=`Datos de campo: <b>${CAMPO.archivo||'field_data'}</b> · ${fmt(Object.keys(CAMPO.d).length)} piezas${CAMPO.por?' · subido por '+CAMPO.por:''}${CAMPO.fecha?' · '+CAMPO.fecha.split('-').reverse().join('/'):''}`}
 cgSrcTxt();
