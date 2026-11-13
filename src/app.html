@@ -337,7 +337,7 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
   <div id="s-lluvias" class="subv on">
   <h2 style="font-size:20px">Mapas de lluvia</h2>
   <p class="sub" id="rainSub">Pluviómetros de Central Romana</p>
-  <p class="area" id="rainSrc">Fuente: ARCHIVO_MAPA_DE_LLUVIAS_AÑO.xlsx</p>
+  <p class="area" id="rainSrc" hidden></p>
   <div class="layout">
     <div class="card">
       <h2>Período</h2>
@@ -1065,7 +1065,7 @@ seg('#modeSeg',d=>{mode=d.m;showCtl()});seg('#unitSeg',d=>unit=d.u);
 function msg(t,err){const s=$('#upStatus');s.textContent=t;s.className='status'+(err?' err':'')}
 function saveLoc(){try{localStorage.setItem('apcr-loc',JSON.stringify([...R.gauges.values()].filter(g=>g.lon!==undefined).map(g=>[g.id,g.lon,g.lat])));if(R.boundary)localStorage.setItem('apcr-bnd',JSON.stringify(R.boundary));if(R.divs)localStorage.setItem('apcr-div',JSON.stringify(R.divs))}catch(e){}}
 function restoreLoc(){try{const L=JSON.parse(localStorage.getItem('apcr-loc')||'[]');L.forEach(([id,lon,lat])=>{const g=R.gauges.get(id);if(g){g.lon=lon;g.lat=lat}});const b=localStorage.getItem('apcr-bnd');if(b)R.boundary=JSON.parse(b);const d=localStorage.getItem('apcr-div');if(d)R.divs=JSON.parse(d);const lg=localStorage.getItem('apcr-logo');if(lg){const im=new Image();im.onload=()=>{logoImg=im;drawRain()};im.src=lg}}catch(e){}}
-$('#upX').onchange=async e=>{try{const f=e.target.files[0];setMonthly(await readTable(f),f.name);applyLayers();restoreLoc();if(window.LR_READY)lrApply();$('#rainSrc').textContent='Fuente: '+f.name;setupControls();msg(`${R.gauges.size} pluviómetros, ${months().length} meses. ${R.qc.length} observaciones de QC.`);drawRain()}catch(err){msg(err.message,1)}};
+$('#upX').onchange=async e=>{try{const f=e.target.files[0];setMonthly(await readTable(f),f.name);applyLayers();restoreLoc();if(window.LR_READY)lrApply();setupControls();msg(`${R.gauges.size} pluviómetros, ${months().length} meses. ${R.qc.length} observaciones de QC.`);drawRain()}catch(err){msg(err.message,1)}};
 $('#upD').onchange=async e=>{try{const n=loadDaily(await readTable(e.target.files[0]));setupControls();msg(n+' lecturas cargadas. Usa "Fechas" para cualquier rango.');drawRain()}catch(err){msg(err.message,1)}};
 $('#upG').onchange=async e=>{try{const f=e.target.files[0];let pts=[];
   if(f.name.toLowerCase().endsWith('.csv')){const[h,...rows]=parseCSV(await f.text());const H=h.map(normName);const iP=H.findIndex(x=>/^pluv/.test(x)),iX=H.findIndex(x=>/^(lon|x|este|longitud)/.test(x)),iY=H.findIndex(x=>/^(lat|y|norte|latitud)/.test(x));
@@ -1285,7 +1285,7 @@ function temaColor(ri){if(!TS.cat||ri===undefined)return null;const c=TS.cat[ri]
 function drawTema(){
   if(!$('#s-tema').classList.contains('on'))return;const key=TS.key,isMM=key==='mimapa';
   $('#mmCtl').style.display=isMM?'block':'none';
-  $('#temaInfo').innerHTML=isMM?'':`<p class="note">Fuente: capa CR (${fmt(ATT.rec.length)} piezas).${key==='corte'?' Meses contados hasta hoy desde la fecha de corte (FC_FS).':''}</p>`;
+  $('#temaInfo').innerHTML=!isMM&&key==='corte'?'<p class="note">Meses contados hasta hoy desde la fecha de corte.</p>':'';
   const has=!!(TS.cat&&TS.legend.length);$('#temaEmpty').style.display=has?'none':'block';$('#temaMap').style.display=has?'block':'none';
   if(!has){$('#temaTable').innerHTML='';['tK1','tK2','tK3','tK4'].forEach(i=>$('#'+i).textContent='–');return}
   drawPiecesLayout($('#temaMap'),null);
@@ -1728,7 +1728,7 @@ $('#cgXls').onclick=()=>{if(!window.XLSX){$('#cgSt').textContent='No se pudo car
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([head,...rows]);ws['!cols']=head.map(h=>({wch:Math.max(10,h.length+2)}));XLSX.utils.book_append_sheet(wb,ws,'Cartografía');
   const nm=[CGF.div,CGF.tab&&'tablon_'+CGF.tab].filter(Boolean).join('_')||'central_romana';saveFile(`cartografia_${slug(nm)}_${hoyISO()}.xlsx`,new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),$('#cgSt'))};
 /* Actualizar datos de campo (field_data_AAAAMMDD.xlsx) para todos */
-function cgSrcTxt(){$('#cgSrc').innerHTML=`Datos de campo: <b>${CAMPO.archivo||'field_data'}</b> · ${fmt(Object.keys(CAMPO.d).length)} piezas${CAMPO.por?' · subido por '+CAMPO.por:''}${CAMPO.fecha?' · '+CAMPO.fecha.split('-').reverse().join('/'):''}`}
+function cgSrcTxt(){return;$('#cgSrc').innerHTML=`Datos de campo: <b>${CAMPO.archivo||'field_data'}</b> · ${fmt(Object.keys(CAMPO.d).length)} piezas${CAMPO.por?' · subido por '+CAMPO.por:''}${CAMPO.fecha?' · '+CAMPO.fecha.split('-').reverse().join('/'):''}`}
 cgSrcTxt();
 function cgLeerCampo(sh,nombre){for(const s of sh){const H=(s.rows[0]||[]).map(x=>String(x||'').trim()),ix=n=>H.findIndex(x=>cgNorm(x)===cgNorm(n));
     const iN=ix('name');if(iN<0)continue;const g=n=>ix(n),c=v=>{if(v===undefined||v===null||v==='')return null;if(typeof v==='number')return Math.round(v*100)/100;const t=String(v).replace(/¥/g,'Ñ').trim();return t===''||/^nan$/i.test(t)?null:(/^-?\d+(\.\d+)?$/.test(t)?Math.round(+t*100)/100:t)};
