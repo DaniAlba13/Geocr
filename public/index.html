@@ -228,7 +228,8 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
 #shBrand .hero-s{font-size:16px;color:var(--navy);margin-top:6px}
 #shBrand .chips{margin-top:14px}#shBrand .chips span{background:#EEF4FB;border-color:#D5E3F2;color:var(--navy);font-size:12px;padding:5px 12px}
 .tl{display:flex;flex-direction:column;gap:4px}
-.ti{position:relative;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:0;background:none;text-align:left;font:inherit;cursor:pointer;color:var(--ink);overflow:hidden}
+.tw{position:relative;height:62px}
+.ti{position:absolute;left:0;right:0;top:0;z-index:1;transition:box-shadow .25s,background .25s;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:0;background:none;text-align:left;font:inherit;cursor:pointer;color:var(--ink);overflow:hidden}
 .ti:hover{background:#F2F7FD}
 .ti i{width:40px;height:40px;border-radius:11px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;box-shadow:0 2px 6px rgba(14,42,71,.08)}
 .ti i svg{width:24px;height:24px}
@@ -236,7 +237,9 @@ section.on .flow2{animation:tileIn .7s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
 .ti small{display:block;font-size:12px;color:var(--muted);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
 .ti>span:nth-child(2){min-width:0}
 .ti .n{font-size:11px;font-weight:800;color:#AFC0D3;letter-spacing:.5px}
-.ti.on{background:#EEF4FB}.ti.on .n{color:var(--blue)}
+.tw.up .ti{top:auto;bottom:0}
+.ti.on{background:#fff;z-index:3;box-shadow:0 12px 30px rgba(14,42,71,.18),0 0 0 1px #D5E3F2}.ti.on .n{color:var(--blue)}
+.ti.on small{white-space:normal;overflow:visible;color:var(--ink)}
 .ti.on::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;border-radius:2px;background:var(--blue);transform-origin:left;animation:cdot var(--dur,7s) linear forwards}
 .show.paused .ti.on::after{animation-play-state:paused}
 @keyframes cdot{from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -1225,10 +1228,10 @@ const HOME_APPS=[
   $('#shBrand').append(...[...src.querySelector('.hero-in').children].filter(e=>!e.classList.contains('hero-d')));
   const slides=tiles.map(t=>{const s=document.createElement('div');s.className='slide';s.innerHTML='<div class="sbg"></div><div class="sstar"></div><div class="sart"></div>';s.querySelector('.sart').appendChild(t.querySelector('svg'));car.insertBefore(s,$('#shCap'));return s});
   const info=tiles.map(t=>({b:t.querySelector('b').textContent,p:t.querySelector('p').textContent,em:t.querySelector('em')}));
-  $('#tl').innerHTML=apps.map((a,i)=>`<button class="ti" data-i="${i}"><i><svg viewBox="0 0 24 24">${a.ic}</svg></i><span><b>${info[i].b}</b><small>${info[i].p}</small></span><span class="n">${String(i+1).padStart(2,'0')}</span></button>`).join('');
+  $('#tl').innerHTML=apps.map((a,i)=>`<div class="tw${i>=apps.length-3?' up':''}"><button class="ti" data-i="${i}"><i><svg viewBox="0 0 24 24">${a.ic}</svg></i><span><b>${info[i].b}</b><small>${info[i].p}</small></span><span class="n">${String(i+1).padStart(2,'0')}</span></button></div>`).join('');
   const hold=document.createElement('div');hold.hidden=true;show.appendChild(hold);info.forEach(x=>{if(x.em)hold.appendChild(x.em)});
   src.remove();show.style.setProperty('--dur',DUR+'ms');
-  function render(){const cap=$('#shCap'),a=apps[cur];cap.querySelectorAll('em').forEach(e=>hold.appendChild(e));cap.innerHTML=`<div><div class="k">${String(cur+1).padStart(2,'0')} / ${String(apps.length).padStart(2,'0')} · Herramienta</div><h3>${info[cur].b}</h3><p>${info[cur].p}</p></div><a class="sh-go" href="#${a.id}">Abrir →</a>`;if(info[cur].em)cap.firstElementChild.appendChild(info[cur].em)}
+  function render(){const cap=$('#shCap'),a=apps[cur];cap.querySelectorAll('em').forEach(e=>hold.appendChild(e));cap.innerHTML=`<div><div class="k">${String(cur+1).padStart(2,'0')} / ${String(apps.length).padStart(2,'0')} · Herramienta</div><h3>${info[cur].b}</h3></div><a class="sh-go" href="#${a.id}">Abrir →</a>`;if(info[cur].em)cap.firstElementChild.appendChild(info[cur].em)}
   function go(i){cur=(i+slides.length)%slides.length;slides.forEach((s,k)=>s.classList.toggle('on',k===cur));$$('#tl .ti').forEach((b,k)=>{b.classList.remove('on');if(k===cur){void b.offsetWidth;b.classList.add('on')}});render();tick()}
   function tick(){clearTimeout(tm);if(!paused&&$('#s-inicio').classList.contains('on'))tm=setTimeout(()=>go(cur+1),DUR)}
   show.onmouseenter=()=>{paused=true;show.classList.add('paused');clearTimeout(tm)};show.onmouseleave=()=>{paused=false;show.classList.remove('paused');tick()};
