@@ -196,6 +196,8 @@ def download_products():
     # relacionada a "lai"/"biomass" en el histórico y te dice el nombre exacto.
     productos_confirmados.append("lai_20m")
     productos_confirmados.append("lai_level_2_20m")
+    # Índice de maduración (para el informe de cosecha de GeoCR).
+    productos_confirmados.append("ripening_level_2")
 
     # Anomalias: "anomalies" SÍ está confirmado en la lista oficial (Anexo III).
     productos_confirmados.append("anomalies")

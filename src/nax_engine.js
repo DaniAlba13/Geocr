@@ -21,6 +21,7 @@ const nxDate=v=>{const t=Date.parse(String(v||'').slice(0,10));return isFinite(t
 function nxNormalize(csv){const H=csv.h,ix=n=>H.indexOf(n),get=(r,n)=>{const i=ix(n);return i<0?undefined:r[i]};
   const numCount=c=>{const i=ix(c);let k=0;for(const r of csv.rows)if(isFinite(nxNum(r[i])))k++;return k};
   let humCol=ix(NX_HUM)>=0?NX_HUM:null;if(!humCol){const cs=H.filter(c=>/humid|moisture/i.test(c));if(cs.length)humCol=cs.reduce((a,b)=>numCount(b)>numCount(a)?b:a)}
+  const madC=H.filter(c=>/ripen|madur/i.test(c));const madCol=madC.length?madC.reduce((a,b)=>numCount(b)>numCount(a)?b:a):null;
   const tshC=H.filter(c=>/tsh|yield_sugarcane/i.test(c)&&c!=='estimated_crop_yield'&&c!=='crop_yield');const tshCol=tshC.length?tshC.reduce((a,b)=>numCount(b)>numCount(a)?b:a):null;
   /* NDVI y Biomasa: si NAX deja el índice con otro nombre, se usa la columna candidata con más valores (igual que reporte.py) */
   const colDe={[NX_HUM]:humCol};[['ndvi_optical','ndvi'],['biomass_optical','biomass']].forEach(([k,t])=>{const cs=H.filter(c=>c.toLowerCase().includes(t));if(!cs.length)return;const best=cs.reduce((a,b)=>numCount(b)>numCount(a)?b:a);colDe[k]=(ix(k)>=0&&numCount(k)>=numCount(best))?k:best});
@@ -32,7 +33,7 @@ function nxNormalize(csv){const H=csv.h,ix=n=>H.indexOf(n),get=(r,n)=>{const i=i
     let div=ix('grouping_unit_02')>=0?(nxDiv(get(r,'grouping_unit_02'))||'Todos los tablones'):'Todos los tablones';
     const reg=hasIrr?nxRiego(get(r,'irrigation')):null;if(hasIrr&&NX_RIEGO.includes(div))div+=reg?' (R)':' (S)';
     const o={id:nm||tab,tab,pz,div,reg,var:get(r,'variety')||'N/D',ac:nxNum(get(r,'effective_area')),fi:nxDate(get(r,'start_date')),ts:nxDate(get(r,'timestamp')),
-      tcaN:tshCol?nxNum(get(r,tshCol))/NX_FAC:NaN,tcaI:nxNum(get(r,'estimated_crop_yield'))/NX_FAC,tcaR:nxNum(get(r,'crop_yield'))/NX_FAC};
+      tcaN:tshCol?nxNum(get(r,tshCol))/NX_FAC:NaN,tcaI:nxNum(get(r,'estimated_crop_yield'))/NX_FAC,tcaR:nxNum(get(r,'crop_yield'))/NX_FAC,mad:madCol?nxNum(get(r,madCol)):NaN};
     mets.forEach(m=>o[m]=nxNum(get(r,colDe[m])));return o});
   return{recs,mets}}
 function nxMaestro(csv){if(!csv)return null;const{recs}=nxNormalize(csv);const m=new Map();recs.forEach(r=>{if(!m.has(r.id))m.set(r.id,r)});return m}
@@ -55,7 +56,7 @@ function nxClasificar(v,t){if(!isFinite(v))return'Sin dato';for(const[u,e]of t)i
 let NX_TODAY=null;const nxHoy=()=>NX_TODAY||(()=>{const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())})();
 /* proceso completo -> snapshot compacto */
 function nxProcesar(F){
-  const act=nxNormalize(F.hist),mets=act.mets,cols=[...mets,'tcaN','tcaR','tcaI'];
+  const act=nxNormalize(F.hist),mets=act.mets,cols=[...mets,'tcaN','tcaR','tcaI','mad'];
   const maestro=nxMaestro(F.maestro);const ret=F.ret?nxNormalize(F.ret):null;/* dato más cercano por pieza antes del rango (robot diario) */
   let rows=nxUltima(ret?[...ret.recs,...act.recs]:act.recs,cols);const antes=rows.length;rows=nxCompletar(rows,maestro,mets);
   mets.forEach(m=>nxProyectar(rows,m));nxProyectar(rows,'tcaN','Estimado NAX',NX_TCAMIN);
@@ -67,7 +68,7 @@ function nxProcesar(F){
     let base=prev.recs.length?nxUltima(prev.recs.filter(r=>isFinite(r.tcaN)),['tcaN']):[];base=nxCompletar(base,mA,['tcaN']);
     if(base.length){nxProyectar(base,'tcaN','Estimado NAX',NX_TCAMIN);ant.tca=base.filter(r=>isFinite(r.tcaN)&&r.reg!=null).map(r=>[r.div,r.reg,+r.tcaN.toFixed(3)])}}
   const P=rows.map(r=>{const o={id:r.id,tab:r.tab,pz:r.pz,div:r.div||'Todos los tablones',v:r.var,ac:isFinite(+r.ac)?+(+r.ac).toFixed(3):null,fi:isFinite(r.fi)?iso(new Date(r.fi)):null,reg:r.reg,
-      tN:isFinite(r.tcaN)?+r.tcaN.toFixed(3):null,tNo:r.tcaN_o,tI:isFinite(r.tcaI)?+r.tcaI.toFixed(3):null,tR:isFinite(r.tcaR)?+r.tcaR.toFixed(3):null};
+      tN:isFinite(r.tcaN)?+r.tcaN.toFixed(3):null,tNo:r.tcaN_o,tI:isFinite(r.tcaI)?+r.tcaI.toFixed(3):null,tR:isFinite(r.tcaR)?+r.tcaR.toFixed(3):null,mad:isFinite(r.mad)?+r.mad.toFixed(4):null};
     mets.forEach(m=>{const k=NX_RANGOS[m].k;o[k]=isFinite(r[m])?+r[m].toFixed(4):null;o[k+'o']=r[m+'_o']});return o});
   return{v:1,fecha:new Date().toISOString(),hoy:iso(new Date(hoy)),rango,mets:mets.map(m=>NX_RANGOS[m].k),P,ant,agregadas:rows.length-antes,maestro:!!maestro}}
 const NX_OR=['Satelital','Proyectado','Estimado NAX','Sin dato'],NX_ORK=/^(humo|ndvio|bioo|tNo)$/; /* columnas de origen del dato (no confundir con 'bio') */

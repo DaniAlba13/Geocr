@@ -87,7 +87,7 @@ DIAS_INICIALES = int(os.environ.get("DIAS_INICIALES") or 180)  # primera vez: ll
 RECIENTES = int(os.environ.get("DIAS_RECIENTES") or 7)
 
 
-ES_INDICE = ("ndvi", "biomass", "moisture", "humid", "tsh", "yield_sugarcane", "lai")
+ES_INDICE = ("ndvi", "biomass", "moisture", "humid", "tsh", "yield_sugarcane", "lai", "ripen")
 
 
 def actualizar_retenido(desde):
