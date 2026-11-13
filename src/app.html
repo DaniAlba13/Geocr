@@ -956,7 +956,12 @@ function drawMap(rows,avg,P,T){
   const idw=(E,N)=>{let ws=0,sm=0;for(const g of G){const d=Math.hypot(E-g.E,N-g.N);if(d<1)return g.val;const w=1/Math.pow(d,pw);ws+=w;sm+=w*g.val}return sm/ws};
   // IDW + recorte
   const inClip=maskFor(W,H,clip,px),inside=(x,y)=>x>=F.x&&x<F.x+F.w&&y>=F.y&&y<F.y+F.h&&inClip(x,y);
-  const RS=G.length?idwRaster(F.x,F.y,F.w,F.h,Math.max(2,Math.round(3*s)),toUtm,G,pw,inside):{cells:[],mean:NaN},cell=Math.max(2,Math.round(3*s));
+  // IDW a 1 px (en el PDF ≈ 25–30 m por píxel): ráster continuo sin bloques
+  const stp=T?1:2,nx=Math.ceil(F.w/stp),ny=Math.ceil(F.h/stp),VAL=new Float32Array(nx*ny).fill(NaN);let sm0=0,n0=0;
+  if(G.length){const GE=Float64Array.from(G,g=>g.E),GN=Float64Array.from(G,g=>g.N),GV=Float64Array.from(G,g=>g.val),ng=G.length,hp=pw/2;
+    for(let j=0;j<ny;j++){const yy=F.y+(j+.5)*stp;for(let i=0;i<nx;i++){const xx=F.x+(i+.5)*stp;if(!inside(xx,yy))continue;const[E,N]=toUtm(xx,yy);let ws=0,sv=0,ex=NaN;
+      for(let k=0;k<ng;k++){const dx=E-GE[k],dy=N-GN[k],d2=dx*dx+dy*dy;if(d2<1){ex=GV[k];break}const wt=1/Math.pow(d2,hp);ws+=wt;sv+=wt*GV[k]}const v=isNaN(ex)?sv/ws:ex;VAL[j*nx+i]=v;sm0+=v;n0++}}}
+  const RS={mean:n0?sm0/n0:NaN};
   const mean=clip&&isFinite(RS.mean)?RS.mean:avg;
   // clases
   let br,labels;
@@ -965,7 +970,10 @@ function drawMap(rows,avg,P,T){
   const d2=unit==='mm'?0:2;
   labels=br.map(([t,c],i)=>{const nx=br[i+1]?br[i+1][0]:null;return[c,i===0&&cls!=='abs'?`< ${fmt(nx,d2)}`:nx===null?`> ${fmt(t,d2)}`:`${fmt(t,d2)} - ${fmt(nx,d2)}`]});
   ctx.save();ctx.beginPath();ctx.rect(F.x,F.y,F.w,F.h);ctx.clip();
-  RS.cells.forEach(([x,y,v])=>{ctx.fillStyle=colorFor(U(v),br);ctx.fillRect(x,y,cell+.5,cell+.5)});
+  {const oc=document.createElement('canvas');oc.width=nx;oc.height=ny;const oc2=oc.getContext('2d'),im=oc2.createImageData(nx,ny),D=im.data,cache=new Map();
+    const rgb=hx=>{let c=cache.get(hx);if(!c){const t=document.createElement('canvas').getContext('2d');t.fillStyle=hx;const s2=t.fillStyle;c=s2.startsWith('#')?[parseInt(s2.slice(1,3),16),parseInt(s2.slice(3,5),16),parseInt(s2.slice(5,7),16)]:s2.match(/\d+/g).slice(0,3).map(Number);cache.set(hx,c)}return c};
+    for(let q=0;q<VAL.length;q++){const v=VAL[q];if(isNaN(v))continue;const c=rgb(colorFor(U(v),br)),o=q*4;D[o]=c[0];D[o+1]=c[1];D[o+2]=c[2];D[o+3]=255}
+    oc2.putImageData(im,0,0);ctx.imageSmoothingEnabled=false;ctx.drawImage(oc,F.x,F.y,nx*stp,ny*stp);ctx.imageSmoothingEnabled=true}
   // cuadrícula
   const span=Math.max(bb[2]-bb[0],bb[3]-bb[1]),gs=[1000,2000,5000,7000,10000,20000].find(g=>span/g<=10)||50000;
   ctx.strokeStyle='rgba(120,120,120,.35)';ctx.lineWidth=.6;const ticks={x:[],y:[]};
@@ -976,11 +984,13 @@ function drawMap(rows,avg,P,T){
   // divisiones y contorno
   if(R.divs)R.divs.forEach(d=>{path(d.polys);ctx.strokeStyle='#2B2B2B';ctx.lineWidth=1.6*s;ctx.stroke()});
   if(clip){path(clip);ctx.strokeStyle='#1A1A1A';ctx.lineWidth=2.2*s;ctx.stroke()}
+  // pluviómetros
+  const dentro=(x,y)=>{if(!clip)return true;for(let dx=-3;dx<=3;dx+=3)for(let dy=-3;dy<=3;dy+=3)if(inClip(x+dx*s,y+dy*s))return true;return false};
+  loc.forEach(r=>{const[x,y]=px(r.lon,r.lat),rr=6*s;if(!dentro(x,y))return;ctx.beginPath();ctx.arc(x,y,rr,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=1.6*s;ctx.strokeStyle=isFinite(r.v)?'#111':'#D32F2F';ctx.stroke();ctx.beginPath();ctx.arc(x,y,1.8*s,0,7);ctx.fillStyle='#111';ctx.fill()});
+  // etiquetas de divisiones (encima de los pluviómetros)
   if(R.divs){ctx.font=`${20*s}px Arial`;ctx.textAlign='center';ctx.fillStyle='#fff';
     R.divs.forEach(d=>{let X,Y;if(d.lab){[X,Y]=px(d.lab[0],d.lab[1])}else{const ring=d.polys.reduce((a,p)=>p[0].length>a.length?p[0]:a,[]);X=0;Y=0;ring.forEach(q=>{const[x,y]=px(q[0],q[1]);X+=x;Y+=y});X/=ring.length;Y/=ring.length}
-      ctx.lineWidth=3*s;ctx.strokeStyle='rgba(0,0,0,.45)';const lines=wrap(ctx,'Div. '+d.name,130*s);lines.forEach((l,i)=>{const yy=Y+(i-(lines.length-1)/2)*22*s;ctx.strokeText(l,X,yy);ctx.fillText(l,X,yy)})})}
-  // pluviómetros
-  loc.forEach(r=>{const[x,y]=px(r.lon,r.lat),rr=6*s;ctx.beginPath();ctx.arc(x,y,rr,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=1.6*s;ctx.strokeStyle=isFinite(r.v)?'#111':'#D32F2F';ctx.stroke();ctx.beginPath();ctx.arc(x,y,1.8*s,0,7);ctx.fillStyle='#111';ctx.fill()});
+      ctx.lineJoin='round';ctx.lineWidth=4.5*s;ctx.strokeStyle='rgba(0,0,0,.62)';const lines=wrap(ctx,'Div. '+d.name,130*s);lines.forEach((l,i)=>{const yy=Y+(i-(lines.length-1)/2)*22*s;ctx.strokeText(l,X,yy);ctx.fillText(l,X,yy)})})}
   // rosa de los vientos
   {if(ROSA.complete&&ROSA.naturalWidth){const w=78*s,hh=w*ROSA.naturalHeight/ROSA.naturalWidth;ctx.drawImage(ROSA,855*s-w/2,170*s-hh/2,w,hh)}}
   // escala
@@ -1184,9 +1194,9 @@ $('#dlKmz').onclick=async()=>{if(!MU||!MU.pts.length)return $('#muDl').textConte
 
 /* ---------- PDF de mapas ---------- */
 function rowsFor(a,b){const A=accumulate(a,b);const rows=[...R.gauges.values()].map(g=>({...g,v:A.vals.has(g.id)?A.vals.get(g.id):NaN}));const ok=rows.filter(r=>isFinite(r.v));return{rows,avg:ok.reduce((s,r)=>s+r.v,0)/(ok.length||1),n:ok.length}}
-function mapPage(a,b,md){const{rows,avg,n}=rowsFor(a,b);if(!n)return null;const c=document.createElement('canvas');if(!drawMap(rows,avg,{a,b,mode:md},{canvas:c,W:2580}))return null;return c}
+function mapPage(a,b,md){const{rows,avg,n}=rowsFor(a,b);if(!n)return null;const c=document.createElement('canvas');if(!drawMap(rows,avg,{a,b,mode:md},{canvas:c,W:3300}))return null;return c}
 function pdfFrom(canvases){const{jsPDF}=window.jspdf;const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
-  canvases.forEach((c,i)=>{if(i)pdf.addPage('letter','landscape');const w=269,hh=w*c.height/c.width;pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',5,(215.9-hh)/2,w,hh)});return pdf.output('blob')}
+  canvases.forEach((c,i)=>{if(i)pdf.addPage('letter','landscape');const w=269,hh=w*c.height/c.width;pdf.addImage(c.toDataURL('image/jpeg',0.95),'JPEG',5,(215.9-hh)/2,w,hh,undefined,'SLOW')});return pdf.output('blob')}
 const slug=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'');
 async function dlMapsPdf(all){const st=$('#pngSt');if(!window.jspdf){st.textContent='No se pudo cargar el generador de PDF.';return}
   st.textContent='Generando PDF…';await new Promise(r=>setTimeout(r,30));
