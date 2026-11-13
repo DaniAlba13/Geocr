@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-CALIDAD DE APLICACION CON DRONE DJI (Agras) A PARTIR DEL KML DE VUELO
+CALIDAD DE APLICACION CON DRONE A PARTIR DEL KML DE VUELO
 Central Romana Corporation - Area de Agricultura de Precision
 
 USO
@@ -14,7 +14,7 @@ USO
   3. Los resultados quedan en la carpeta  Calidad_Aplicacion_<fecha de aplicacion>
 
 QUE HACE
-  El KML de DJI no trae caudal punto a punto: trae la linea de vuelo (vertices) y, por vuelo,
+  El KML del drone no trae caudal punto a punto: trae la linea de vuelo (vertices) y, por vuelo,
   altura, ancho de faja (Route Spacing), velocidad, area de tarea y ml asperjados.
   Con eso el script:
     a) separa las PASADAS DE APLICACION (paralelas al rumbo de trabajo) de los TRASLADOS;
@@ -1035,8 +1035,8 @@ def main():
     with open(os.path.join(salida, "resumen_vuelos.csv"), "w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh)
         w.writerow(["vuelo", "id", "archivo", "inicio", "duracion_min", "equipo", "piloto", "tablones", "altura_m",
-                    "velocidad_m_s", "ancho_faja_m", "area_dji_%s" % U, "area_calculada_%s" % U,
-                    "litros", "dosis_dji_L_%s" % U, "dosis_calc_L_%s" % U, "dosis_calc_L_ha",
+                    "velocidad_m_s", "ancho_faja_m", "area_equipo_%s" % U, "area_calculada_%s" % U,
+                    "litros", "dosis_equipo_L_%s" % U, "dosis_calc_L_%s" % U, "dosis_calc_L_ha",
                     "litros_dentro_tablones", "long_pasadas_m", "long_traslados_m", "litros_esperados_prescripcion",
                     "factor_calibracion"])
         for v in vuelos:
@@ -1717,7 +1717,7 @@ def main():
         efic_v = np.array([pct(v["L_dentro"], v["litros"]) for v in vuelos])
         series = [("Litros aplicados por vuelo", [v["litros"] for v in vuelos]),
                   ("Dosis por vuelo (L/%.0s§)" % U_TXT, dosis_v),
-                  ("Área barrida por vuelo (%s): calculada vs DJI" % U_TXT, [a_unidad(v["area_calc_m2"]) for v in vuelos]),
+                  ("Área barrida por vuelo (%s): calculada vs equipo" % U_TXT, [a_unidad(v["area_calc_m2"]) for v in vuelos]),
                   ("Rendimiento en vuelo (%s/h) y producto dentro de tablones" % U_TXT, rend_v)]
         if TASA_VARIADA:
             dosis_v = np.array([v["factor"] * 100 for v in vuelos])
@@ -1740,7 +1740,7 @@ def main():
             elif i == 2:
                 axg.bar(n, ys, color=CR_MARINO, width=anch, label="Calculada")
                 axg.plot(n, [a_unidad(v["area_dji_ha"] * 1e4) for v in vuelos], "o", color=CR_ROJO, ms=3,
-                         label="Área de tarea DJI")
+                         label="Área de tarea (equipo)")
                 axg.legend(fontsize=7, frameon=False, loc="lower right", bbox_to_anchor=(1, 1.0), ncol=2)
             elif i == 3:
                 axg.bar(n, ys, color=CR_MARINO, width=anch, label="Rendimiento")
@@ -1872,7 +1872,7 @@ def main():
             ("Área evaluada", "%.2f %s" % (a_unidad(A_lote), U_TXT), "%.2f ha" % (A_lote / 1e4), None),
             ("En calles", "%.2f %s" % (a_unidad(A_calle), U_TXT), "%.1f L" % L_calle, None),
             ("Fuera de tablones", "%.2f %s" % (a_unidad(A_fuera), U_TXT), "%.1f L" % L_fuera, None),
-            ("Área barrida", "%.2f %s" % (a_unidad(A_barrida), U_TXT), "DJI: %.2f %s" % (a_unidad(A_dji), U_TXT), None),
+            ("Área barrida", "%.2f %s" % (a_unidad(A_barrida), U_TXT), "Equipo: %.2f %s" % (a_unidad(A_dji), U_TXT), None),
             ("Dosis efectiva", "%.2f L/%.0s§" % (dosis_efectiva_lote, U_TXT), "litros / área evaluada", None),
             (("Litros prescritos", "%.1f L" % L_presc, "aplicados: %.1f L (%+.1f%%)" % (L_in, pct(L_in - L_presc, L_presc)), None)
              if TASA_VARIADA else
@@ -1885,7 +1885,7 @@ def main():
         cerrar_pagina(pdf, fig)
 
         # =========================== DETALLE POR VUELO ===========================
-        enc = ["#", "Inicio", "Dur.\n(min)", "Tablón(es)", "Altura\n(m)", "Faja\n(m)", "Área DJI\n(%s)" % U_TXT,
+        enc = ["#", "Inicio", "Dur.\n(min)", "Tablón(es)", "Altura\n(m)", "Faja\n(m)", "Área equipo\n(%s)" % U_TXT,
                "Área calc.\n(%s)" % U_TXT, "Litros", "Dosis\nL/%.0s§" % U_TXT, "Dosis\nL/ha", "L en\ntablones"]
         filas_v = []
         for v in vuelos:
@@ -1923,7 +1923,7 @@ def main():
     print("Aplicado (1 pasada)  : %.2f %s (%.1f %%)" % (a_unidad(A_apl), U_TXT, pct(A_apl, A_lote)))
     print("Sobreaplicado (>=2)  : %.2f %s (%.1f %%)" % (a_unidad(A_sob), U_TXT, pct(A_sob, A_lote)))
     print("No aplicado          : %.2f %s (%.1f %%)" % (a_unidad(A_no), U_TXT, pct(A_no, A_lote)))
-    print("Area barrida calc/DJI: %.2f / %.2f %s" % (a_unidad(A_barrida), a_unidad(A_dji), U_TXT))
+    print("Area barrida calc/equipo: %.2f / %.2f %s" % (a_unidad(A_barrida), a_unidad(A_dji), U_TXT))
     print("Dosis area cubierta  : %.2f L/%.0sacre (%.2f L/ha)" % (dosis_media_cub, U_TXT, dosis_media_cub / M2_POR_UNIDAD * 1e4))
     print("CV dosis             : %.1f %% | Uniformidad: %.1f %%" % (cv, unif))
     print("Litros tablones / calles / fuera: %.1f / %.1f / %.1f" % (L_in, L_calle, L_fuera))
