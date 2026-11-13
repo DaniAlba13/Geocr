@@ -587,9 +587,9 @@ body.splashing{overflow:hidden}
     <div class="kpi"><small>Edad promedio</small><div id="cgK5">–</div><em>meses desde el último corte o siembra</em></div>
   </div>
   <div class="agrid">
-    <div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Ubicación</h2><span class="note">Clic en una pieza para ver su ficha</span></div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Ubicación</h2><span class="note">Clic en una pieza para marcarla y ver su ficha</span></div>
       <div class="mapwrap"><canvas class="map" id="cgMap"></canvas><div class="tip" id="cgTip"></div></div>
-      <div class="legend"><span><i style="background:#0070C9"></i>Selección</span><span><i style="background:#EE3B33"></i>Pieza marcada</span><span><i style="background:#E6E9ED"></i>Resto de Central Romana</span></div></div>
+      <div class="legend"><span><i style="background:#0070C9"></i>Selección</span><span id="cgLegMk"><i style="background:#EE3B33"></i>Pieza marcada</span><span><i style="background:#E6E9ED"></i>Resto de Central Romana</span></div></div>
     <div class="card"><h2>Composición (acres)</h2>
       <h3 class="cg-h3">Variedad</h3><svg class="chart" id="cgVar"></svg>
       <h3 class="cg-h3">Suelo</h3><svg class="chart" id="cgSue"></svg>
@@ -1935,21 +1935,22 @@ function cgDraw(){if(!$('#s-cartografia').classList.contains('on'))return;cgData
   const top=(L,n=8)=>{const t=L.slice(0,n);if(L.length>n)t.push(['Otras',L.slice(n).reduce((s,x)=>s+x[1],0)]);return t.map(([k,v])=>[k.length>20?k.slice(0,19)+'…':k,v,k==='Otras'||k==='Sin dato'?'#B0B0B0':'#0070C9'])};
   hbars(svgEl('cgVar'),top(V),v=>fmt(v,0),{L:150});hbars(svgEl('cgSue'),top(by(cgSue)),v=>fmt(v,0),{L:150});hbars(svgEl('cgCla'),top(by(cgCla)),v=>fmt(v,0),{L:150});
   cgMap(S);cgFicha(S,one);cgHistDraw(S);
-  const nx=!!NX,rows=S.slice(0,600);$('#cgN').textContent=S.length>600?`Se muestran 600 de ${fmt(S.length)} piezas; el Excel trae todas.`:`${fmt(S.length)} pieza(s)`;
+  const nx=!!NX,rows=S.slice(0,600),fdd=s=>s?String(s).slice(0,10).split('-').reverse().join('/'):'',nxTxt=NX?` · Índices NAX del robot diario, actualizado el ${fdd(NX.fecha)}${NX.rango&&NX.rango[1]?' (imágenes hasta el '+fdd(NX.rango[1])+')':''}`:'';$('#cgN').textContent=(S.length>600?`Se muestran 600 de ${fmt(S.length)} piezas; el Excel trae todas.`:`${fmt(S.length)} pieza(s)`)+nxTxt;
   const fd=d=>d?d.split('-').reverse().join('/'):'';
   $('#cgTbl').innerHTML=`<tr><th>División</th><th>Distrito</th><th>Tablón</th><th>Pieza</th><th>ID</th><th>Variedad</th><th class="num">Área (acres)</th><th>Nombre de suelo</th><th>Clase de caña</th><th class="num">N.º de corte</th><th>Último corte / siembra</th><th class="num">Edad (meses)</th><th class="num">Acres mapa</th><th class="num">TCA ingenio</th>${nx?'<th class="num">TCA NAX</th><th class="num">Humedad</th><th class="num">NDVI</th>':''}</tr>`+
     rows.map(u=>{const n=nx?cgNax(u):null,c=(k,d)=>n&&n[k]!=null?`<td class="num" style="color:${nxColor(k,nxCat(k,n[k]))};font-weight:700">${fmt(n[k],d)}</td>`:'<td class="num">–</td>';
       return`<tr data-u="${u.k}"${CG_MK===u.k?' class="mk"':''}><td>${u.div||'–'}</td><td>${u.dis||'–'}</td><td><b>${u.tab}</b></td><td>${u.pz}</td><td>${u.id||'–'}</td><td>${cgVar(u)||'–'}</td><td class="num">${fmt(cgArea(u),2)}</td><td>${cgSue(u)||'–'}</td><td>${cgCla(u)||'–'}</td><td class="num">${(cgC(u)||{}).corte??'–'}</td><td>${fd(u.fc)||'–'}</td><td class="num">${fmt(cgEdad(u),1)}</td><td class="num">${fmt(u.ac,2)}</td><td class="num"><b>${fmt(cgTcaI(u),1)}</b></td>${nx?`<td class="num">${n&&n.tN!=null?fmt(n.tN,1):'–'}</td>`+c('hum',1)+c('ndvi',3):''}</tr>`}).join('');
   $$('#cgTbl tr[data-u]').forEach(tr=>tr.onclick=()=>{CG_MK=CG_MK===tr.dataset.u?null:tr.dataset.u;$$('#cgTbl tr.mk').forEach(x=>x.classList.remove('mk'));if(CG_MK)tr.classList.add('mk');cgMap(S);cgFicha(S,one);cgHistDraw(S);$('#cgFicha').scrollIntoView({behavior:'smooth',block:'nearest'})});
   $('#cgSt').textContent=''}
-function cgMap(S){const cv=$('#cgMap'),sel=new Set(S.flatMap(u=>u.pis)),all=sel.size===EMBED_PIECES.length;
+let CG_S=null;
+function cgMap(S){CG_S=S;const cv=$('#cgMap'),sel=new Set(S.flatMap(u=>u.pis)),all=sel.size===EMBED_PIECES.length;
   let bb=all?bboxPts(EMBED_LAYERS.mask.flatMap(p=>p[0])):bboxPts([...sel].flatMap(i=>EMBED_PIECES[i][3]));
   if(!all){const w=bb[2]-bb[0],h=bb[3]-bb[1],pd=Math.max(w,h)*.18+.004;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];const cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2,k=Math.cos(cy*Math.PI/180);let W=(bb[2]-bb[0])*k,H=bb[3]-bb[1];if(W<H*1.45)W=H*1.45;else H=W/1.45;bb=[cx-W/k/2,cy-H/2,cx+W/k/2,cy+H/2]}
   const v=makeView(cv,bb,cv.parentElement.clientWidth),ctx=v.ctx,ring=r=>{r.forEach((q,i)=>{const[x,y]=v.px(q[0],q[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.closePath()};
   ctx.beginPath();EMBED_LAYERS.mask.forEach(p=>p.forEach(ring));ctx.fillStyle='#fff';ctx.fill('evenodd');
   ctx.beginPath();EMBED_PIECES.forEach((p,i)=>{if(!sel.has(i))ring(p[3])});ctx.fillStyle='#E6E9ED';ctx.fill();
   ctx.beginPath();sel.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.fillStyle='#0070C9';ctx.fill();
-  const mk=CG_MK?CG.find(u=>u.k===CG_MK):null;if(mk){ctx.beginPath();mk.pis.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.fillStyle='#EE3B33';ctx.fill()}
+  const mk=CG_MK?S.find(u=>u.k===CG_MK):null;$('#cgLegMk').style.display=mk?'':'none';if(mk){ctx.beginPath();mk.pis.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.fillStyle='#EE3B33';ctx.fill()}
   ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=all?.3:1;ctx.stroke();
   EMBED_LAYERS.divs.forEach(d=>{ctx.beginPath();d.polys.forEach(p=>p.forEach(ring));ctx.strokeStyle='#0E2A47';ctx.lineWidth=1.3;ctx.stroke()});
   ctx.textAlign='center';ctx.textBaseline='middle';
@@ -1958,6 +1959,7 @@ function cgMap(S){const cv=$('#cgMap'),sel=new Set(S.flatMap(u=>u.pis)),all=sel.
   CG_V=v}
 $('#cgMap').addEventListener('click',e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,t=$('#cgTip');if(!CG_V)return;const[lon,lat]=CG_V.geo(x,y),pi=pieceAt(lon,lat);
   if(pi<0){t.style.display='none';return}const u=CG.find(z=>z.pis.includes(pi));if(!u)return;const n=cgNax(u);
+  if(CG_MK!==u.k&&CG_S&&CG_S.includes(u)){CG_MK=u.k;cgMap(CG_S);cgFicha(CG_S,CG_S.length&&new Set(CG_S.map(z=>z.div+'|'+z.tab)).size===1?CG_S[0]:null)}
   const cc=cgC(u)||{};t.innerHTML=`<b>${u.div} · Tablón ${u.tab} · Pieza ${u.pz}</b><br>${u.adm||''}${u.dis?' · Distrito '+u.dis:''}<br>ID ${u.id||'–'} · ${isFinite(cgArea(u))?fmt(cgArea(u),2):fmt(u.ac,1)} acres<br>${cgVar(u)||'–'} · ${cgSue(u)||'–'}<br>${cgCla(u)||''}${cc.corte!=null?' · corte '+cc.corte:''}${u.fc?'<br>Último corte/siembra: '+u.fc.split('-').reverse().join('/')+` (${fmt(cgEdad(u),1)} meses)`:''}${isFinite(cgTcaI(u))?`<br>TCA estimado ingenio: ${fmt(cgTcaI(u),1)}`:''}${n?`<br>NAX: humedad ${fmt(n.hum,1)} · NDVI ${fmt(n.ndvi,3)} · TCA ${fmt(n.tN,1)}`:''}<br><a href="#" data-tab="${u.div}|${u.tab}">Ver todo el tablón →</a>`;
   t.style.left=Math.min(x+12,r.width-270)+'px';t.style.top=(y+12)+'px';t.style.display='block';
   t.querySelector('[data-tab]').onclick=ev=>{ev.preventDefault();const[d,tb]=ev.target.dataset.tab.split('|');Object.assign(CGF,{adm:'',dis:'',div:d,tab:tb,q:null});$('#cgQ').value='';CG_MK=u.k;t.style.display='none';cgDraw()}});
