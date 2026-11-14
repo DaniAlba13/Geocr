@@ -626,10 +626,45 @@ def main():
 
     campos_tab = [CAMPO_TABLON] if CAMPO_TABLON else ["TAB", "TABLON", "TABLÓN", "ID_TABLON", "TABLON_ID", "LOTE"]
     grupos = {}
+    campos_div = ["DIVISION_C", "DIVISION", "DIV", "DIVISION_N", "DIV_NAME", "NOM_DIV", "DIV_COD", "COD_DIV",
+                  "DIVISION_CODE", "DIVISION_NAME", "DIVISIÓN"]
+    campos_id = ["ID_F_CR", "ID_F", "ID", "NAME", "ID_PIEZA"]
     for i, (anillos, at) in enumerate(lote_xy):
         tab = txt_num(campo(at, campos_tab)) or ("Lote %d" % (i + 1))
-        div = txt_num(campo(at, ["DIVISION_C", "DIVISION", "DIV"]))
+        div = txt_num(campo(at, campos_div))
+        if not div:
+            # sin campo de division: se toma del ID de la pieza (ADM + DIV + DIST + TABLON(4) + PIEZA(3))
+            idp = campo(at, campos_id).split(".")[0]
+            if idp.isdigit() and len(idp) >= 9:
+                div = idp.zfill(11)[1]
         grupos.setdefault((div, tab), []).append((anillos, at))
+    # Un mismo numero de tablon puede repetirse en otra division o zona: se separan los poligonos
+    # que estan lejos entre si (mas de 1.5 km), para no crear una malla gigante entre ellos.
+    def separar_lejanos(feats, gap=1500.0):
+        cajas = []
+        for f in feats:
+            pts = np.vstack(f[0])
+            cajas.append([pts[:, 0].min(), pts[:, 1].min(), pts[:, 0].max(), pts[:, 1].max(), [f]])
+        unido = True
+        while unido and len(cajas) > 1:
+            unido = False
+            for a_ in range(len(cajas)):
+                for b_ in range(a_ + 1, len(cajas)):
+                    A, B = cajas[a_], cajas[b_]
+                    if A[0] - gap <= B[2] and B[0] - gap <= A[2] and A[1] - gap <= B[3] and B[1] - gap <= A[3]:
+                        cajas[a_] = [min(A[0], B[0]), min(A[1], B[1]), max(A[2], B[2]), max(A[3], B[3]), A[4] + B[4]]
+                        del cajas[b_]
+                        unido = True
+                        break
+                if unido:
+                    break
+        return [c[4] for c in cajas]
+    g2 = {}
+    for (div, tab), feats in grupos.items():
+        partes = separar_lejanos(feats) if len(feats) > 1 else [feats]
+        for k_, fs in enumerate(partes):
+            g2[(div, tab if len(partes) == 1 else "%s (zona %d)" % (tab, k_ + 1))] = fs
+    grupos = g2
     nombres_tab = {}
     cuenta = {}
     for div, tab in grupos:
@@ -665,6 +700,10 @@ def main():
         else:
             bx0, by0, bx1, by1 = gx0.min(), gy0.min(), gx1.max(), gy1.max()
         if not ((gx1 >= bx0) & (gx0 <= bx1) & (gy1 >= by0) & (gy0 <= by1)).any():
+            continue
+        if (bx1 - bx0 + 2 * marg) * (by1 - by0 + 2 * marg) / RESOLUCION_M ** 2 > 60e6:
+            print("Aviso: %s ocupa un área demasiado grande para analizar (%.0f x %.0f m); se omite."
+                  % (nombres_tab.get(clave, clave[1]), bx1 - bx0, by1 - by0))
             continue
         malla = Malla(bx0 - marg, by0 - marg, bx1 + marg, by1 + marg, RESOLUCION_M)
         etiqueta = np.zeros((malla.nf, malla.nc), np.int16)
