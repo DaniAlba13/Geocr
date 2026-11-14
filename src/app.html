@@ -810,7 +810,7 @@ body.splashing{overflow:hidden}
         <label>Archivos de resultados</label><input type="file" id="caRes" multiple accept=".csv,.pdf"><div class="status" id="caSt2"></div>
         <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
         <h2>Cómo se califica cada tablón</h2>
-        <p class="note"><b style="color:#1E8E3E">Bien</b>: cobertura ≥ 95 % y uniformidad ≥ 85 %.<br><b style="color:#E08600">Atención</b>: cobertura 85–95 %, uniformidad 70–85 % o sobreaplicación &gt; 5 %.<br><b style="color:#D32F2F">Alerta</b>: cobertura &lt; 85 % o uniformidad &lt; 70 %.<br>Mismos umbrales del semáforo de tu informe.</p></div>
+        <p class="note"><b style="color:#1E8E3E">Bien</b>: cobertura ≥ 95 % y uniformidad &gt; 80 %.<br><b style="color:#E08600">Atención</b>: cobertura 85–95 %, uniformidad 70–80 % o sobreaplicación &gt; 5 %.<br><b style="color:#D32F2F">Alerta</b>: cobertura &lt; 85 % o uniformidad &lt; 70 %.<br>Mismos umbrales del semáforo de tu informe.</p></div>
     </div>
     <div class="card" id="caPrev" style="margin-top:16px;display:none"><h2>Resultado de la evaluación</h2><div id="caPrevBody"></div>
       <div class="dl"><button class="btn" id="caSave">Guardar en el tablero</button><button class="btn sec" id="caDlPdf">Descargar informe PDF</button><button class="btn sec" id="caDlZip">Descargar CSV y capas SIG (.zip)</button><span class="status" id="caSt3"></span></div></div>
@@ -2054,7 +2054,7 @@ DASH.mu={mapT:'Tablones muestreados',s1T:'Puntos por ambiente',monT:'Puntos de m
   s2:(s,R)=>{const g=new Map();R.forEach(r=>{const d=r.division||'—';g.set(d,(g.get(d)||0)+r.acres)});hbars(s,[...g].sort((a,b)=>b[1]-a[1]).map(([t,v])=>[t,v,'#0070C9']),v=>fmt(v))},
   table:R=>'<tr><th>Fecha</th><th>Tablón(es)</th><th class="n">Acres</th><th class="n">Puntos</th><th>Por ambiente</th><th></th></tr>'+R.map(r=>`<tr><td>${r.fecha}</td><td>${(r.tablones||[]).join(', ')}</td><td class="n">${fmt(r.acres,1)}</td><td class="n">${r.puntos}</td><td class="note">${Object.entries(r.ambientes||{}).map(([a,n])=>a+': '+n).join(' · ')}</td><td>${delBtn('mu',r)}</td></tr>`).join(''),
   demo:()=>{const r=rng(41);return demoPieces(16,41).map(p=>{const nA=3,pts=nA*3,amb={};for(let i=1;i<=nA;i++)amb['Ambiente '+i]=3;return{fecha:demoDate(r),tablones:[p[1]+' ('+DIVN[p[0]]+')'],division:DIVN[p[0]],recs:[...(TABDIV.get(p[0]+'|'+p[1])||[])],puntos:pts,acres:30+r()*120,ambientes:amb}}).sort((a,b)=>b.fecha.localeCompare(a.fecha))}};
-function caEstado(t){return t.cob<85||t.unif<70?['Alerta',BAD]:t.cob<95||t.unif<85||t.sob>5?['Atención',WARN]:['Bien',GOOD]}
+function caEstado(t){return t.cob<85||t.unif<70?['Alerta',BAD]:t.cob<95||t.unif<=80||t.sob>5?['Atención',WARN]:['Bien',GOOD]}
 function caTabs(R){return R.flatMap(r=>(r.tabs||[]).map(t=>({...t,fecha:r.fecha,rid:r.id,pdf:r.pdfParts,equipos:r.equipos})))}
 function caLatest(R){const m=new Map();caTabs(R).forEach(t=>{const k=t.division+'|'+t.tablon;if(!m.has(k)||m.get(k).fecha<t.fecha)m.set(k,t)});return[...m.values()]}
 DASH.ca={mapT:'Estado de la última aplicación por tablón',s1T:'Tablones por estado',monT:'Cobertura media por mes',per:'Cobertura media',s2T:'Tablones con menor cobertura',tblT:'Evaluaciones por tablón',

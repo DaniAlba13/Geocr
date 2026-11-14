@@ -691,6 +691,37 @@ def main():
     gx1 = np.maximum(todos_segs[:, 0], todos_segs[:, 2]) + hw_max
     gy0 = np.minimum(todos_segs[:, 1], todos_segs[:, 3]) - hw_max
     gy1 = np.maximum(todos_segs[:, 1], todos_segs[:, 3]) + hw_max
+    # --- un solo campo por informe: el tablon donde cae la mayor parte de las pasadas de aplicacion ---
+    if len(grupos) > 1:
+        mx_ = (todos_segs[:, 0] + todos_segs[:, 2]) / 2
+        my_ = (todos_segs[:, 1] + todos_segs[:, 3]) / 2
+        lg_ = np.hypot(todos_segs[:, 2] - todos_segs[:, 0], todos_segs[:, 3] - todos_segs[:, 1])
+        mejor, mejor_l = None, 0.0
+        for clave, feats in grupos.items():
+            if not feats:
+                continue
+            pts = np.vstack([an for anillos, _ in feats for an in anillos])
+            x0_, y0_ = pts.min(0)
+            x1_, y1_ = pts.max(0)
+            cand = (mx_ >= x0_) & (mx_ <= x1_) & (my_ >= y0_) & (my_ <= y1_)
+            if not cand.any():
+                continue
+            P_ = np.column_stack([mx_[cand], my_[cand]])
+            dentro = np.zeros(len(P_), bool)
+            for anillos, _ in feats:
+                par = np.zeros(len(P_), bool)
+                for an in anillos:
+                    if len(an) >= 3:
+                        par ^= MplPath(an).contains_points(P_)
+                dentro |= par
+            L_ = float(lg_[cand][dentro].sum())
+            if L_ > mejor_l:
+                mejor, mejor_l = clave, L_
+        if mejor is not None:
+            print("Campo del informe: tablón %s (%.0f m de pasadas dentro); los demás tablones del shapefile se ignoran."
+                  % (nombres_tab.get(mejor, mejor[1]), mejor_l))
+            grupos = {mejor: grupos[mejor]}
+
     geo = []
     for clave, feats in sorted(grupos.items(), key=lambda kv: (kv[0][0], kv[0][1].zfill(12))):
         if feats:
@@ -1618,7 +1649,7 @@ def main():
             r = len(filas_tab)
             cb = pct(T["A_apl"] + T["A_sob"], T["A_lote"])
             colores[(r, 3)] = semaforo(cb, 95, 85)
-            colores[(r, 10)] = semaforo(T["unif"], 85, 70)
+            colores[(r, 10)] = semaforo(T["unif"], 80.05, 70)
             filas_tab.append([T["nombre"], T["n_piezas"], "%.2f" % a_unidad(T["A_lote"]), "%.1f" % cb,
                               "%.2f" % a_unidad(T["A_no"]), "%.1f" % pct(T["A_no"], T["A_lote"]),
                               "%.1f" % pct(T["A_sob"], T["A_lote"]), "%.1f" % T["L_in"], "%.2f" % T["dosis_cub"],
@@ -1685,7 +1716,7 @@ def main():
                 ("No aplicado", "%.1f %%" % pct(T["A_no"], T["A_lote"]), "%.2f %s" % (a_unidad(T["A_no"]), U_TXT), None),
                 ("Sobreaplicado", "%.1f %%" % pct(T["A_sob"], T["A_lote"]), "%.2f %s" % (a_unidad(T["A_sob"]), U_TXT), None),
                 ("Dosis cubierta", "%.2f L/%.0s§" % (T["dosis_cub"], U_TXT), "%.1f L/ha" % (T["dosis_cub"] / M2_POR_UNIDAD * 1e4), None),
-                (("Unif. vs prescripción" if TASA_VARIADA else "Uniformidad"), "%.1f %%" % T["unif"], "CV %.1f %%" % T["cv"], semaforo(T["unif"], 85, 70)),
+                (("Unif. vs prescripción" if TASA_VARIADA else "Uniformidad"), "%.1f %%" % T["unif"], "CV %.1f %%" % T["cv"], semaforo(T["unif"], 80.05, 70)),
                 ("Litros", "%.1f L" % T["L_in"], "%.1f L en calles" % T["L_calle"], None),
             ]
             for i, (t, val, sub, acento) in enumerate(fila):
