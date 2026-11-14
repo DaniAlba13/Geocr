@@ -288,10 +288,13 @@ def _aplicar_riego(df):
     (eso es un error de datos, contado aparte por _contar_anomalias_riego). De paso,
     agrega COLUMNA_ES_REGADO (0/1) para TODA la operacion, sin importar la division -
     se usa en el analisis de TCA por riego vs secano."""
+    # Las demas divisiones (1-7) son todas de secano: se marcan siempre con (S).
+    df = df.copy()
+    secano = df[COLUMNA_DIVISION].isin([d for d in ORDEN_DIVISIONES if d not in DIVISIONES_CON_RIEGO])
+    df.loc[secano, COLUMNA_DIVISION] = df.loc[secano, COLUMNA_DIVISION] + " (S)"
     if COLUMNA_IRRIGATION_ORIGEN not in df.columns:
         df[COLUMNA_ES_REGADO] = None
         return df
-    df = df.copy()
     riego = df[COLUMNA_IRRIGATION_ORIGEN].apply(_valor_riego_a_binario)
     df[COLUMNA_ES_REGADO] = riego
     aplica = df[COLUMNA_DIVISION].isin(DIVISIONES_CON_RIEGO)

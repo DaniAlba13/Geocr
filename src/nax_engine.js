@@ -31,7 +31,7 @@ function nxNormalize(csv){const H=csv.h,ix=n=>H.indexOf(n),get=(r,n)=>{const i=i
   const recs=csv.rows.map(r=>{const nm=hasName?nxName(get(r,'name')):null;let tab=hasTab?String(get(r,'grouping_unit_04')||'').replace(/\.0$/,''):'',pz=String(get(r,'grouping_unit_05')??'N/D').replace(/\.0$/,'')||'N/D';
     if(nm&&nm.length<=11){tab=nm.slice(4,8);pz=nm.slice(8,11)}
     let div=ix('grouping_unit_02')>=0?(nxDiv(get(r,'grouping_unit_02'))||'Todos los tablones'):'Todos los tablones';
-    const reg=hasIrr?nxRiego(get(r,'irrigation')):null;if(hasIrr&&NX_RIEGO.includes(div))div+=reg?' (R)':' (S)';
+    const reg=hasIrr?nxRiego(get(r,'irrigation')):null;if(hasIrr&&NX_RIEGO.includes(div))div+=reg?' (R)':' (S)';else if(NX_DIVORD.includes(div)&&!NX_RIEGO.includes(div))div+=' (S)'; /* las demás divisiones son todas de secano */
     const o={id:nm||tab,tab,pz,div,reg,var:get(r,'variety')||'N/D',ac:nxNum(get(r,'effective_area')),fi:nxDate(get(r,'start_date')),ts:nxDate(get(r,'timestamp')),
       tcaN:tshCol?nxNum(get(r,tshCol))/NX_FAC:NaN,tcaI:nxNum(get(r,'estimated_crop_yield'))/NX_FAC,tcaR:nxNum(get(r,'crop_yield'))/NX_FAC,mad:madCol?nxNum(get(r,madCol)):NaN};
     mets.forEach(m=>o[m]=nxNum(get(r,colDe[m])));return o});
