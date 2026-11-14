@@ -57,7 +57,7 @@ async function coProcesar(fp,fg,n){const P=coLeerPiezas(await fp.text());if(!P.r
   let conG=0,conN=0,arr=0;
   const rows=P.rows.map(r=>{const k11=r.id.padStart(11,'0');let gg=G&&(G.m.get(r.id+'|'+r.var)||G.m.get(r.id));if(gg&&gg[2]){r.brix=+(gg[0]/gg[2]).toFixed(3);r.sac=+(gg[1]/gg[2]).toFixed(3);conG++}else{r.brix=null;r.sac=null}
     r.peso=gg?+gg[4].toFixed(2):null;const old=pm.get(`${r.id}|${r.var}|${r.fin}`);
-    if(old){r.tN=old.tN;r.mad=old.mad;r.q=old.q;arr++}else{const p=nx.get(k11);r.tN=p&&p.tN!=null?p.tN:null;r.mad=p&&p.mad!=null?p.mad:null;r.q=n}
+    if(old){const p=nx.get(k11);r.tN=old.tN!=null?old.tN:(p&&p.tN!=null?p.tN:null);r.mad=old.mad!=null?old.mad:(p&&p.mad!=null?p.mad:null);r.q=old.q;arr++}else{const p=nx.get(k11);r.tN=p&&p.tN!=null?p.tN:null;r.mad=p&&p.mad!=null?p.mad:null;r.q=n}
     if(r.tN!=null)conN++;const c=CAMPO&&CAMPO.d&&CAMPO.d[k11];r.ccl=c?c[3]:null;return r});
   const ff=rows.map(r=>r.ffin).filter(Boolean).sort();
   return{zafra:P.zafra,n,rows,fecha:ff[ff.length-1]||null,desde:ff[0]||null,conG,conN,arr,guias:G?G.n:0,nuevas:rows.filter(r=>r.q===n).length,nx:!!(NX&&NX.P)}}
@@ -121,13 +121,14 @@ function coBarras(svg,F){const H=280,W=svgSize(svg,H),L=40,B=78,Tp=26,S=[['tcae'
     const cx=L+i*gw+gw/2;h+=`<text transform="translate(${cx},${H-B+12}) rotate(-35)" font-size="9.5" text-anchor="end" fill="#1F2933">${f.lab}</text>`});
   h+=S.map(([k,n,c],j)=>`<rect x="${L+j*130}" y="2" width="12" height="12" fill="${c}"/><text x="${L+j*130+17}" y="12" font-size="11" fill="#1F2933">${n}</text>`).join('');svg.innerHTML=h}
 function coMadSvg(svg,M){const H=260,W=svgSize(svg,H),L=46,R=60,B=34,Tp=22;if(!M.f.length){svg.innerHTML=`<text x="6" y="24" font-size="12" fill="#5B6673">Sin índice de maduración NAX para estas piezas.</text><text x="6" y="42" font-size="12" fill="#5B6673">El robot NAX diario lo descarga desde ahora:</text><text x="6" y="60" font-size="12" fill="#5B6673">las próximas quincenas ya lo traen.</text>`;return}
-  const mr=Math.max(...M.f.map(f=>f.r96).filter(isFinite))*1.15,mt=Math.max(...M.f.map(f=>f.ton))*1.15,gw=(W-L-R)/M.f.length;let h='';
-  niceBreaks(mr*100,5).forEach(t=>{const y=H-B-(H-B-Tp)*t/100/mr;if(y<Tp)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#EEF1F5"/><text x="${L-5}" y="${y+4}" font-size="10" text-anchor="end" fill="#5B6673">${fmt(t,1)}%</text>`});
-  niceBreaks(mt,5).forEach(t=>{const y=H-B-(H-B-Tp)*t/mt;if(y<Tp)return;h+=`<text x="${W-R+5}" y="${y+4}" font-size="10" fill="#0070C9">${fmt(t/1000,0)}k</text>`});
-  let d='';M.f.forEach((f,i)=>{const x=L+i*gw;if(isFinite(f.r96)){const bh=(H-B-Tp)*f.r96/mr;h+=`<rect x="${x+gw*.18}" y="${H-B-bh}" width="${gw*.64}" height="${bh}" fill="#0E2A47"><title>${f.lab}: REND 96 ${fmt(f.r96*100,2)}% · ${fmt(f.n)} filas</title></rect>`}
-    const y=H-B-(H-B-Tp)*f.ton/mt;d+=(i?'L':'M')+(x+gw/2)+' '+y;h+=`<text x="${x+gw/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#1F2933">${f.lab}</text>`});
-  h+=`<path d="${d}" fill="none" stroke="#0070C9" stroke-width="2.5"/>`+M.f.map((f,i)=>`<circle cx="${L+i*gw+gw/2}" cy="${H-B-(H-B-Tp)*f.ton/mt}" r="3.5" fill="#0070C9"><title>${f.lab}: ${fmt(f.ton)} t</title></circle>`).join('');
-  h+=`<rect x="${L}" y="2" width="12" height="12" fill="#0E2A47"/><text x="${L+17}" y="12" font-size="11">Promedio de REND 96</text><line x1="${L+170}" x2="${L+186}" y1="8" y2="8" stroke="#0070C9" stroke-width="2.5"/><text x="${L+191}" y="12" font-size="11">Suma de TON_MOL</text>`;svg.innerHTML=h}
+  const rv=M.f.map(f=>f.r96).filter(isFinite),r0=Math.max(0,Math.min(...rv)-(Math.max(...rv)-Math.min(...rv)||0.01)*0.6),r1=Math.max(...rv)+(Math.max(...rv)-Math.min(...rv)||0.01)*0.25,mt=Math.max(...M.f.map(f=>f.ton))*1.15,gw=(W-L-R)/M.f.length,OR='#F08C00';let h='';
+  const yR=v=>H-B-(H-B-Tp)*(v-r0)/(r1-r0);
+  niceBreaks(mt,5).forEach(t=>{const y=H-B-(H-B-Tp)*t/mt;if(y<Tp)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#EEF1F5"/><text x="${L-5}" y="${y+4}" font-size="10" text-anchor="end" fill="#5B6673">${fmt(t/1000,0)}k</text>`});
+  for(let k=0;k<=4;k++){const v=r0+(r1-r0)*k/4,y=yR(v);h+=`<text x="${W-R+5}" y="${y+4}" font-size="10" fill="${OR}">${fmt(v*100,2)}%</text>`}
+  let d='';M.f.forEach((f,i)=>{const x=L+i*gw,bh=(H-B-Tp)*f.ton/mt;h+=`<rect x="${x+gw*.18}" y="${H-B-bh}" width="${gw*.64}" height="${bh}" fill="#1F4E79"><title>${f.lab}: ${fmt(f.ton)} t · ${fmt(f.n)} filas</title></rect><text x="${x+gw/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#1F2933">${f.lab}</text>`;
+    if(isFinite(f.r96))d+=(d?'L':'M')+(x+gw/2)+' '+yR(f.r96)});
+  h+=`<path d="${d}" fill="none" stroke="${OR}" stroke-width="2.5"/>`+M.f.filter(f=>isFinite(f.r96)).map(f=>{const i=M.f.indexOf(f);return`<circle cx="${L+i*gw+gw/2}" cy="${yR(f.r96)}" r="3.5" fill="${OR}"><title>${f.lab}: REND 96 ${fmt(f.r96*100,2)}%</title></circle>`}).join('');
+  h+=`<rect x="${L}" y="2" width="12" height="12" fill="#1F4E79"/><text x="${L+17}" y="12" font-size="11">Suma de TON_MOL</text><line x1="${L+150}" x2="${L+166}" y1="8" y2="8" stroke="${OR}" stroke-width="2.5"/><text x="${L+171}" y="12" font-size="11">Promedio de REND 96</text>`;svg.innerHTML=h}
 
 /* ---------- carga de la quincena ---------- */
 function coSigN(z){const L=[...CO.qs.values()].filter(q=>!z||q.zafra===z);return L.length?Math.max(...L.map(q=>q.n))+1:1}
@@ -195,14 +196,14 @@ $('#coXls').onclick=async()=>{const st=$('#coDlSt');if(!CO.data)return;if(!windo
       ['División (S/R)','Suma de ACRES_REAL','Suma de TON_MOL','Promedio de TCA','Promedio de TCA_EST','Promedio de TCA NAX','Promedio de DIFERENCIA','Promedio de % DIF','Promedio de REND 96'],
       ...[...D.filas,D.tot].map(f=>[f.lab,nm(f.ac),nm(f.ton),nm(f.tca),nm(f.tcae),nm(f.tN),nm(f.dif),nm(f.pdif),nm(f.r96)])];
     const w2=XLSX.utils.aoa_to_sheet(t1);w2['!cols']=[{wch:22},...Array(8).fill({wch:15})];for(let i=4;i<t1.length;i++){[1,2].forEach(c=>{const a=XLSX.utils.encode_cell({r:i,c});if(w2[a])w2[a].z='#,##0'});[3,4,5,6].forEach(c=>{const a=XLSX.utils.encode_cell({r:i,c});if(w2[a])w2[a].z='0.00'});[7,8].forEach(c=>{const a=XLSX.utils.encode_cell({r:i,c});if(w2[a])w2[a].z='0.0%'})}
-    const t3=[['Índice de maduración NAX'],[],['Etiquetas de fila','Promedio de REND 96','Suma de TON_MOL'],...M.f.map(f=>[f.lab,nm(f.r96),nm(f.ton)]),['Total general',nm(M.tot.r96),nm(M.tot.ton)]];
+    const t3=[['Índice de maduración NAX'],[],['Etiquetas de fila','Promedio de REND 96','Suma de TON_MOL'],...M.f.map(f=>[f.lab,nm(f.r96),nm(f.ton)]),['Total general',nm(M.tot.r96),nm(M.tot.ton)],...(M.f.length?[]:[[],['Sin índice de maduración NAX para las piezas de esta quincena: el robot NAX todavía no tenía el índice al cargarla. Vuelve a cargar la quincena cuando el robot lo traiga y aparecerá el gráfico.']])];
     const w3=XLSX.utils.aoa_to_sheet(t3);w3['!cols']=[{wch:18},{wch:20},{wch:18}];for(let i=3;i<t3.length;i++){const a=XLSX.utils.encode_cell({r:i,c:1});if(w3[a])w3[a].z='0.00%';const b=XLSX.utils.encode_cell({r:i,c:2});if(w3[b])w3[b].z='#,##0'}
     XLSX.utils.book_append_sheet(wb,ws,'Datos');XLSX.utils.book_append_sheet(wb,w2,'Dinámica');XLSX.utils.book_append_sheet(wb,w3,'Maduración');
     const n1=D.filas.length,last=4+n1,buf=XLSX.write(wb,{bookType:'xlsx',type:'array',compression:true});
     const charts=[{sheet:2,from:[10,3],to:[22,26],xml:coChartXml({title:'TCA promedio por división y régimen',cats:`'Dinámica'!$A$5:$A$${last}`,yTitle:'TCA (t/acre)',yFmt:'0',
       ser:[{name:`'Dinámica'!$E$4`,ref:`'Dinámica'!$E$5:$E$${last}`,color:'A6A6A6',lbl:'0.0'},{name:`'Dinámica'!$D$4`,ref:`'Dinámica'!$D$5:$D$${last}`,color:'0E2A47',lbl:'0.0'},{name:`'Dinámica'!$F$4`,ref:`'Dinámica'!$F$5:$F$${last}`,color:'0070C9',lbl:'0.0'}]})}];
-    if(M.f.length){const l3=3+M.f.length;charts.push({sheet:3,from:[5,2],to:[16,22],xml:coChartXml({title:'Índice de maduración NAX',cats:`'Maduración'!$A$4:$A$${l3}`,yTitle:'REND 96',yFmt:'0.0%',y2Title:'Toneladas',y2Fmt:'#,##0',lblPos:'inEnd',
-      ser:[{name:`'Maduración'!$B$3`,ref:`'Maduración'!$B$4:$B$${l3}`,color:'0E2A47'},{name:`'Maduración'!$C$3`,ref:`'Maduración'!$C$4:$C$${l3}`,color:'0070C9',line:true}]})})}
+    if(M.f.length){const l3=3+M.f.length;charts.push({sheet:3,from:[5,2],to:[16,22],xml:coChartXml({title:'Índice de maduración NAX',cats:`'Maduración'!$A$4:$A$${l3}`,yTitle:'Toneladas',yFmt:'#,##0',y2Title:'REND 96',y2Fmt:'0.00%',
+      ser:[{name:`'Maduración'!$C$3`,ref:`'Maduración'!$C$4:$C$${l3}`,color:'1F4E79'},{name:`'Maduración'!$B$3`,ref:`'Maduración'!$B$4:$B$${l3}`,color:'F08C00',line:true}]})})}
     const blob=await coXlsxChart(buf,charts);saveFile(`Cosecha_quincena_${meta.n}_zafra_${meta.zafra}.xlsx`,blob,st)}catch(e){st.textContent='No se pudo armar el Excel: '+(e.message||e)}};
 
 /* ---------- PDF "Informe quincena N" (formato del informe Ingenio vs NAX) ---------- */
@@ -245,14 +246,15 @@ $('#coPdf').onclick=async()=>{const st=$('#coDlSt');if(!CO.data)return;if(!windo
     const pages=[cv];
     if(M.f.length){const p2=coPdfPagina(2,pags,meta);const c2=p2.c;c2.fillStyle='#1F4E79';c2.font='700 40px Inter, Arial';c2.textAlign='left';c2.fillText('Índice de maduración NAX',X,140);
       c2.fillStyle='#1F2933';c2.font='27px Inter, Arial';let y2=coWrap(c2,`Rendimiento (REND 96 promedio) y toneladas molidas según el índice de maduración que reportaba NAX para cada pieza al momento de cargar la quincena en que se cosechó. ${fmt(M.tot.n)} filas con índice de maduración.`,X,200,CW,40)+20;
-      const L=110,R2=130,PH=700,ch=y2+40,gw=(CW-L-R2)/M.f.length,mr=Math.max(...M.f.map(f=>f.r96).filter(isFinite))*1.15,mt=Math.max(...M.f.map(f=>f.ton))*1.15;
-      c2.font='22px Inter, Arial';[['#1F4E79','Promedio de REND 96'],['#0070C9','Suma de TON_MOL']].forEach(([col,n],j)=>{const lx=X+CW/2-300+j*330;c2.fillStyle=col;c2.fillRect(lx,y2,40,20);c2.fillStyle='#1F2933';c2.fillText(n,lx+50,y2+19)});
-      niceBreaks(mr*100,6).forEach(t=>{const yy=ch+PH-PH*t/100/mr;if(yy<ch)return;c2.strokeStyle='#E5E8EC';c2.lineWidth=1.5;c2.beginPath();c2.moveTo(X+L,yy);c2.lineTo(X+CW-R2,yy);c2.stroke();c2.fillStyle='#5B6673';c2.textAlign='right';c2.fillText(fmt(t,1)+'%',X+L-12,yy+7)});
-      niceBreaks(mt,6).forEach(t=>{const yy=ch+PH-PH*t/mt;if(yy<ch)return;c2.fillStyle='#0070C9';c2.textAlign='left';c2.fillText(fmt(t),X+CW-R2+12,yy+7)});
-      M.f.forEach((f,i)=>{const x=X+L+i*gw;if(isFinite(f.r96)){const bh=PH*f.r96/mr;c2.fillStyle='#1F4E79';c2.fillRect(x+gw*.18,ch+PH-bh,gw*.64,bh);c2.fillStyle='#1F2933';c2.textAlign='center';c2.font='19px Inter, Arial';c2.fillText(fmt(f.r96*100,2)+'%',x+gw/2,ch+PH-bh-10)}
+      const L=130,R2=130,PH=700,ch=y2+40,gw=(CW-L-R2)/M.f.length,OR='#F08C00',rv=M.f.map(f=>f.r96).filter(isFinite),sp=(Math.max(...rv)-Math.min(...rv))||0.01,r0=Math.max(0,Math.min(...rv)-sp*0.6),r1=Math.max(...rv)+sp*0.25,mt=Math.max(...M.f.map(f=>f.ton))*1.15,yR=v=>ch+PH-PH*(v-r0)/(r1-r0);
+      c2.font='22px Inter, Arial';[['#1F4E79','Suma de TON_MOL',0],[OR,'Promedio de REND 96',1]].forEach(([col,n,ln],j)=>{const lx=X+CW/2-300+j*330;c2.fillStyle=col;if(ln)c2.fillRect(lx,y2+7,40,6);else c2.fillRect(lx,y2,40,20);c2.fillStyle='#1F2933';c2.textAlign='left';c2.fillText(n,lx+50,y2+19)});
+      niceBreaks(mt,6).forEach(t=>{const yy=ch+PH-PH*t/mt;if(yy<ch)return;c2.strokeStyle='#E5E8EC';c2.lineWidth=1.5;c2.beginPath();c2.moveTo(X+L,yy);c2.lineTo(X+CW-R2,yy);c2.stroke();c2.fillStyle='#5B6673';c2.textAlign='right';c2.fillText(fmt(t),X+L-12,yy+7)});
+      for(let k=0;k<=5;k++){const v=r0+(r1-r0)*k/5;c2.fillStyle=OR;c2.textAlign='left';c2.fillText(fmt(v*100,2)+'%',X+CW-R2+12,yR(v)+7)}
+      M.f.forEach((f,i)=>{const x=X+L+i*gw,bh=PH*f.ton/mt;c2.fillStyle='#1F4E79';c2.fillRect(x+gw*.18,ch+PH-bh,gw*.64,bh);
         c2.fillStyle='#1F2933';c2.textAlign='center';c2.font='21px Inter, Arial';c2.fillText(f.lab,x+gw/2,ch+PH+34)});
-      c2.strokeStyle='#0070C9';c2.lineWidth=4;c2.beginPath();M.f.forEach((f,i)=>{const xx=X+L+i*gw+gw/2,yy=ch+PH-PH*f.ton/mt;i?c2.lineTo(xx,yy):c2.moveTo(xx,yy)});c2.stroke();
-      M.f.forEach((f,i)=>{c2.fillStyle='#0070C9';c2.beginPath();c2.arc(X+L+i*gw+gw/2,ch+PH-PH*f.ton/mt,8,0,7);c2.fill()});
+      const pts=M.f.map((f,i)=>[X+L+i*gw+gw/2,f.r96]).filter(p=>isFinite(p[1]));
+      c2.strokeStyle=OR;c2.lineWidth=4;c2.beginPath();pts.forEach(([xx,v],i)=>i?c2.lineTo(xx,yR(v)):c2.moveTo(xx,yR(v)));c2.stroke();
+      pts.forEach(([xx,v])=>{c2.fillStyle=OR;c2.beginPath();c2.arc(xx,yR(v),8,0,7);c2.fill();c2.fillStyle='#1F2933';c2.font='19px Inter, Arial';c2.textAlign='center';c2.fillText(fmt(v*100,2)+'%',xx,yR(v)-16)});
       c2.fillStyle='#1F2933';c2.textAlign='center';c2.font='22px Inter, Arial';c2.fillText('Índice de maduración NAX',X+L+(CW-L-R2)/2,ch+PH+80);
       let y3=ch+PH+140;c2.fillStyle='#1F4E79';c2.font='700 32px Inter, Arial';c2.textAlign='left';c2.fillText('Tabla de maduración',X,y3);y3+=24;
       coPdfTabla(c2,X,y3,[{t:'Índice de maduración',w:500,a:'left'},{t:'Promedio de REND 96',w:450},{t:'Suma de TON_MOL',w:502}],[...M.f.map(f=>[f.lab,isFinite(f.r96)?fmt(f.r96*100,2)+'%':'–',fmt(f.ton)]),Object.assign([M.tot.lab,fmt(M.tot.r96*100,2)+'%',fmt(M.tot.ton)],{_tot:true})],{rh:48});pages.push(p2.cv)}

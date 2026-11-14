@@ -198,6 +198,9 @@ def download_products():
     productos_confirmados.append("lai_level_2_20m")
     # Índice de maduración (para el informe de cosecha de GeoCR).
     productos_confirmados.append("ripening_level_2")
+    # La campaña actual (2470) no publica "ripening_level_2", solo "ripening": se piden
+    # los dos; el que no exista en una campaña se omite solo.
+    productos_confirmados.append("ripening")
 
     # Anomalias: "anomalies" SÍ está confirmado en la lista oficial (Anexo III).
     productos_confirmados.append("anomalies")
