@@ -2,7 +2,7 @@ name: Alertas NAX diarias
 
 on:
   schedule:
-    # GitHub puede atrasar o saltarse corridas programadas en hora en punto; por eso hay
+    # GitHub puede atrasar o saltarse corridas programadas en hora en punto; por eso hay.
     # una corrida principal (~6:07 a. m. RD) y una de respaldo (~7:37 a. m. RD). Repetir no daña nada.
     - cron: '7 10 * * *'
     - cron: '37 11 * * *'
