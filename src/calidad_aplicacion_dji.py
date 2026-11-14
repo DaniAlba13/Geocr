@@ -455,6 +455,60 @@ def rumbos_candidatos(vuelos):
     return ref
 
 
+
+def diagnostico_tablon(T, vuelos):
+    """Hallazgos que explican un tablón en Atención/Alerta: [(color, título, texto, filas_vuelos)]."""
+    ROJO, AMB = "#c62828", "#f2a900"
+    out = []
+    vd = []
+    for v in vuelos:
+        if T["nombre"] not in v.get("tablones", []) and len(vuelos) > 0 and SOLO_TABLON is None:
+            continue
+        a = v["area_dji_ha"] * 2.4710538
+        if a > 0.05 and v["litros"] > 0:
+            vd.append((v["fecha"].strftime("%d/%m %H:%M"), a, v["litros"], v["litros"] / a, v["fecha"]))
+    area = T["A_lote"] / 4046.8564224
+    cob, no, sob = T["cobertura"], T["A_no"] / T["A_lote"] * 100, T["A_sob"] / T["A_lote"] * 100
+    con_filas = False
+    if len(vd) >= 3:
+        med = float(np.median([x[3] for x in vd]))
+        hi = [x for x in vd if x[3] > 1.8 * med]
+        lo = [x for x in vd if x[3] < 0.5 * med]
+        if hi:
+            out.append((ROJO, "Vuelos con sobredosis", "%d vuelo(s) aplicaron mucho más producto por acre que el resto "
+                        "(la dosis típica de la jornada fue %.2f L/acre). Suele ser una descarga del tanque o una aplicación "
+                        "puntual dentro del tablón; conviene revisarlo con el operador. Estos vuelos bajan la uniformidad "
+                        "aunque el resto esté bien." % (len(hi), med), hi))
+        if lo:
+            out.append((AMB, "Vuelos con dosis baja", "%d vuelo(s) aplicaron menos de la mitad de la dosis típica "
+                        "(%.2f L/acre). Puede ser un tanque casi vacío, una boquilla tapada o un cambio de tasa." % (len(lo), med), lo))
+        r = sorted([x for x in vd if x not in hi and x not in lo], key=lambda x: x[4])
+        if len(r) >= 4:
+            n = int(math.ceil(len(r) / 3.0))
+            a_, b_ = np.mean([x[3] for x in r[:n]]), np.mean([x[3] for x in r[-n:]])
+            ch = (b_ - a_) / med
+            if abs(ch) >= 0.15:
+                out.append((AMB, "Cambio de dosis durante la jornada", "La dosis %s de %.2f a %.2f L/acre (%+.0f %%) entre los "
+                            "primeros y los últimos vuelos. Puede deberse a un cambio de tasa, de caudal o de calibración entre "
+                            "vuelos; cada vuelo puede estar bien, pero el tablón no queda parejo."
+                            % ("bajó" if ch < 0 else "subió", a_, b_, ch * 100), r))
+        con_filas = bool(out)
+    if cob < 85:
+        out.append((ROJO, "Aplicación incompleta", "Quedaron %.1f acres sin aplicar (%.1f %% del tablón). Si el tablón se "
+                    "terminó en otra jornada, procese esos vuelos junto con estos para que el informe refleje la aplicación "
+                    "completa." % (area * no / 100, no), None))
+    elif cob < 95:
+        out.append((AMB, "Cobertura por debajo de la meta", "Cobertura de %.1f %% (meta 95 %%): %.1f acres sin aplicar, "
+                    "normalmente en bordes, esquinas o entre pasadas." % (cob, area * no / 100), None))
+    if sob > 5:
+        out.append((AMB, "Sobreaplicación por traslape", "%.1f %% del tablón recibió dos pasadas o más. Revisar la "
+                    "separación entre pasadas y los giros en cabeceras." % sob, None))
+    if T["unif"] <= 80 and not con_filas:
+        out.append((ROJO if T["unif"] < 70 else AMB, "Dosis irregular dentro de las pasadas",
+                    "No se detectó un vuelo puntual que explique la baja uniformidad (CV %.1f %%); la variación está "
+                    "repartida entre pasadas (viento, velocidad o altura irregulares)." % T["cv"], None))
+    return out
+
 def clasificar_segmentos(v, cands, tol):
     L, ang = rumbos(v["xy"])
     w = v["ancho_m"]
@@ -1609,6 +1663,41 @@ def main():
         fig.text(0.55, 0.13, "Total aplicado: %.1f L en %d vuelos" % (L_tot, len(vuelos)), fontsize=10,
                  color=CR_MARINO, weight="bold")
         cerrar_pagina(pdf, fig)
+
+        # =========================== DIAGNÓSTICO ===========================
+        # Explica por qué un tablón queda en Atención/Alerta (misma lógica que la plataforma).
+        import textwrap as _tw
+        for T in tablones:
+            hallaz = diagnostico_tablon(T, vuelos)
+            if not hallaz:
+                continue
+            fig = plt.figure(figsize=A4)
+            encabezado(fig, "Diagnóstico de la aplicación", "Tablón %s  ·  cobertura %.1f %%  ·  uniformidad %.1f %%  ·  CV %.1f %%"
+                       % (T["nombre"], T["cobertura"], T["unif"], T["cv"]))
+            y = 0.82
+            for col_h, tit_h, txt_h, filas_h in hallaz:
+                alto_txt = 0.028 * len(_tw.wrap(txt_h, 150))
+                alto_tab = (0.024 * (min(len(filas_h), 12) + 1)) if filas_h else 0
+                if y - (0.04 + alto_txt + alto_tab) < 0.07:
+                    cerrar_pagina(pdf, fig)
+                    fig = plt.figure(figsize=A4)
+                    encabezado(fig, "Diagnóstico de la aplicación (cont.)", "Tablón %s" % T["nombre"])
+                    y = 0.82
+                y0 = y
+                fig.text(0.055, y, tit_h, fontsize=12.5, weight="bold", color=CR_MARINO, va="top")
+                y -= 0.04
+                for ln in _tw.wrap(txt_h, 150):
+                    fig.text(0.055, y, ln, fontsize=9.5, color="#33475b", va="top")
+                    y -= 0.028
+                if filas_h:
+                    y -= 0.008
+                    tabla(fig, [0.055, y - alto_tab, 0.5, alto_tab], ["Hora", "Acres (equipo)", "Litros", "L/acre"],
+                          [[f[0], "%.2f" % f[1], "%.1f" % f[2], "%.2f" % f[3]] for f in filas_h[:12]], fs=8)
+                    y -= alto_tab
+                fig.add_artist(plt.Rectangle((0.04, y - 0.005), 0.005, y0 - y + 0.01, transform=fig.transFigure,
+                                             color=col_h))
+                y -= 0.035
+            cerrar_pagina(pdf, fig)
 
         # =========================== TRAZAS DE VUELO (KML) ===========================
         # clasificacion de toda la traza: aplicacion / giros / traslados (despegue, ida y regreso)
