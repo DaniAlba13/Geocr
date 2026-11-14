@@ -1497,7 +1497,7 @@ function drawPiecesLayout(cv,T){
   let bb=bboxPts((colored.length?colored.flatMap(p=>p[3]):polyPts(clip)).map(q=>UT(q[0],q[1])));if(colored.length){const m=Math.max(4000-(bb[2]-bb[0]),4000-(bb[3]-bb[1]),0)/2;bb=[bb[0]-m,bb[1]-m,bb[2]+m,bb[3]+m]}const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*(colored.length?.08:.05);bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
   const sc=Math.min(F.w/(bb[2]-bb[0]),F.h/(bb[3]-bb[1])),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;
   const toPx=(E,N)=>[F.x+F.w/2+(E-cx)*sc,F.y+F.h/2-(N-cy)*sc],px=(lon,lat)=>toPx(...UT(lon,lat));
-  const ring=r=>{r.forEach((q,i)=>{const[x,y]=px(q[0],q[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.closePath()};
+  const ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)};
   const path=Pl=>{ctx.beginPath();for(const p of Pl)for(const r of p)ring(r)};
   ctx.save();ctx.beginPath();ctx.rect(F.x,F.y,F.w,F.h);ctx.clip();
   // cuadrícula
@@ -1666,13 +1666,13 @@ const DV={};
 /* centroides de piezas (para etiquetas al acercar) */
 let PZC=null;const pzCent=()=>PZC||(PZC=EMBED_PIECES.map(p=>{let x=0,y=0;p[3].forEach(q=>{x+=q[0];y+=q[1]});return[x/p[3].length,y/p[3].length]}));
 function imPieceLabels(v,ctx,which){const z=v.scale/(v.home||v.scale);const C=pzCent();ctx.font='700 11px Inter';ctx.textAlign='center';ctx.textBaseline='middle';
-  EMBED_PIECES.forEach((p,i)=>{if(which&&!which.has(i))return;const[x,y]=v.px(C[i][0],C[i][1]);if(x<-20||y<-20||x>v.W+20||y>v.H+20)return;const t=`${p[1]}-${p[2]}`;ctx.lineWidth=3;ctx.strokeStyle='rgba(14,42,71,.85)';ctx.strokeText(t,x,y);ctx.fillStyle='#fff';ctx.fillText(t,x,y)})}
+  EMBED_PIECES.forEach((p,i)=>{if(which&&!which.has(i)||!v.vis(i))return;const[x,y]=v.px(C[i][0],C[i][1]);if(x<-20||y<-20||x>v.W+20||y>v.H+20)return;const t=`${p[1]}-${p[2]}`;ctx.lineWidth=3;ctx.strokeStyle='rgba(14,42,71,.85)';ctx.strokeText(t,x,y);ctx.fillStyle='#fff';ctx.fillText(t,x,y)})}
 function dashMap(k,colors){const cv=$('#'+k+'Map'),im=imap(cv);
-  im.draw=v=>{const ctx=v.ctx,ring=r=>{r.forEach((q,i)=>{const[x,y]=v.px(q[0],q[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.closePath()},zr=im.home?v.scale/im.home.sc:1;v.home=im.home&&im.home.sc;
+  im.draw=v=>{const ctx=v.ctx,ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=v.px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)},zr=im.home?v.scale/im.home.sc:1;v.home=im.home&&im.home.sc;
     if(!v.sat){ctx.beginPath();EMBED_LAYERS.mask.forEach(p=>p.forEach(ring));ctx.fillStyle='#fff';ctx.fill('evenodd')}
-    const grp=new Map();EMBED_PIECES.forEach(p=>{const c=colors.get(p[4])||'#E6E9ED';if(!grp.has(c))grp.set(c,[]);grp.get(c).push(p[3])});
+    const grp=new Map();EMBED_PIECES.forEach((p,i)=>{if(!v.vis(i))return;const c=colors.get(p[4])||'#E6E9ED';if(!grp.has(c))grp.set(c,[]);grp.get(c).push(p[3])});
     ctx.globalAlpha=v.sat?.8:1;[...grp].sort((a,b)=>a[0]==='#E6E9ED'?-1:1).forEach(([c,rs])=>{ctx.beginPath();rs.forEach(ring);ctx.fillStyle=imFill(v,c);ctx.fill()});ctx.globalAlpha=1;
-    ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle=v.sat?'rgba(255,255,255,.55)':'rgba(255,255,255,.6)';ctx.lineWidth=Math.min(1.4,.3*Math.sqrt(zr));ctx.stroke();
+    ctx.beginPath();EMBED_PIECES.forEach((p,i)=>{if(v.vis(i))ring(p[3])});ctx.strokeStyle=v.sat?'rgba(255,255,255,.55)':'rgba(255,255,255,.6)';ctx.lineWidth=Math.min(1.4,.3*Math.sqrt(zr));ctx.stroke();
     EMBED_LAYERS.divs.forEach(d=>{ctx.beginPath();d.polys.forEach(p=>p.forEach(ring));ctx.strokeStyle=v.sat?'#fff':'#0E2A47';ctx.lineWidth=1.3;ctx.stroke()});
     if(zr>7)imPieceLabels(v,ctx);
     else{ctx.font='700 12px Inter';ctx.textAlign='center';EMBED_LAYERS.divs.forEach(d=>{const[x,y]=v.px(d.lab[0],d.lab[1]);ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.strokeText(d.name,x,y);ctx.fillStyle='#0E2A47';ctx.fillText(d.name,x,y)})}};
@@ -1933,13 +1933,13 @@ let CG_S=null;
 function cgMap(S,keep){CG_S=S;const cv=$('#cgMap'),im=imap(cv,{maxH:640}),sel=new Set(S.flatMap(u=>u.pis)),all=sel.size===EMBED_PIECES.length;
   let bb=all?bboxPts(EMBED_LAYERS.mask.flatMap(p=>p[0])):bboxPts([...sel].flatMap(i=>EMBED_PIECES[i][3]));
   if(!all){const w=bb[2]-bb[0],h=bb[3]-bb[1],pd=Math.max(w,h)*.18+.004;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd]}
-  im.draw=v=>{const ctx=v.ctx,ring=r=>{r.forEach((q,i)=>{const[x,y]=v.px(q[0],q[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.closePath()},zr=im.home?v.scale/im.home.sc:1;v.home=im.home&&im.home.sc;
+  im.draw=v=>{const ctx=v.ctx,ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=v.px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)},zr=im.home?v.scale/im.home.sc:1;v.home=im.home&&im.home.sc;
     if(!v.sat){ctx.beginPath();EMBED_LAYERS.mask.forEach(p=>p.forEach(ring));ctx.fillStyle='#fff';ctx.fill('evenodd')}
-    ctx.beginPath();EMBED_PIECES.forEach((p,i)=>{if(!sel.has(i))ring(p[3])});ctx.fillStyle=v.sat?'rgba(230,233,237,.12)':'#E6E9ED';ctx.fill();
+    ctx.beginPath();EMBED_PIECES.forEach((p,i)=>{if(!sel.has(i)&&v.vis(i))ring(p[3])});ctx.fillStyle=v.sat?'rgba(230,233,237,.12)':'#E6E9ED';ctx.fill();
     ctx.globalAlpha=v.sat?.55:1;ctx.beginPath();sel.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.fillStyle='#0070C9';ctx.fill();ctx.globalAlpha=1;
     const mk=CG_MK?S.find(u=>u.k===CG_MK):null;$('#cgLegMk').style.display=mk?'':'none';if(mk){ctx.globalAlpha=v.sat?.75:1;ctx.beginPath();mk.pis.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.fillStyle='#EE3B33';ctx.fill();ctx.globalAlpha=1;
       if(v.sat){ctx.beginPath();mk.pis.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.strokeStyle='#EE3B33';ctx.lineWidth=2.5;ctx.stroke()}}
-    ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=all?Math.min(1.2,.3*Math.sqrt(zr)):1;ctx.stroke();
+    ctx.beginPath();EMBED_PIECES.forEach((p,i)=>{if(v.vis(i))ring(p[3])});ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=all?Math.min(1.2,.3*Math.sqrt(zr)):1;ctx.stroke();
     if(v.sat&&!all){ctx.beginPath();sel.forEach(i=>ring(EMBED_PIECES[i][3]));ctx.strokeStyle='#7FC1FF';ctx.lineWidth=1.6;ctx.stroke()}
     EMBED_LAYERS.divs.forEach(d=>{ctx.beginPath();d.polys.forEach(p=>p.forEach(ring));ctx.strokeStyle=v.sat?'#fff':'#0E2A47';ctx.lineWidth=1.3;ctx.stroke()});
     ctx.textAlign='center';ctx.textBaseline='middle';
