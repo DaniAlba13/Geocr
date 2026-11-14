@@ -143,6 +143,9 @@ footer{border-top:6px solid var(--navy2);background:#fff;text-align:center;color
 .xdw{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.xsel{width:15px;height:15px;cursor:pointer;accent-color:var(--blue)}
 .msel{display:flex;align-items:center;gap:14px;margin:4px 0 10px;font-size:13px}.msel label{display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--navy);font-weight:600}.msel .btn{padding:6px 12px;font-size:12.5px}.btn.danger-o:not(:disabled){color:#C62828;border-color:#C62828}
 .xdel{border:0;background:none;color:#9AA5B1;cursor:pointer;font-size:12px}.xdel:hover{color:var(--red)}
+.pbar{margin-top:12px}.pbar-t{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--navy);margin-bottom:6px;gap:12px}.pbar-t b{font-size:15px;font-variant-numeric:tabular-nums}
+.pbar-o{height:12px;border-radius:99px;background:#E6ECF2;overflow:hidden}.pbar-o i{display:block;height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#0070C9,#0E2A47);transform-origin:left center;transform:scaleX(0);will-change:transform}
+.pbar.done .pbar-o i{background:#2E7D32}.pbar.err .pbar-o i{background:#C62828}.pbar>a{display:inline-block;margin-top:6px;font-size:12px;color:var(--muted)}
 .log{background:#0E2A47;color:#D9E6F5;font-size:11px;border-radius:6px;padding:8px;max-height:180px;overflow:auto;white-space:pre-wrap;margin-top:10px}.log:empty{display:none}
 .msub{margin-top:10px}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}@media(max-width:1000px){.tiles{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.tiles{grid-template-columns:1fr}}
@@ -809,7 +812,9 @@ body.splashing{overflow:hidden}
         <label>KML / KMZ / ZIP del drone (y shp de tablones, opcional)</label><input type="file" id="caFiles" multiple accept=".kml,.kmz,.zip,.shp,.dbf,.shx,.prj,.cpg">
         <label>Dosis objetivo (L/acre, opcional)</label><input type="number" id="caObj" step="0.01" placeholder="vacío = promedio real">
         <div class="row" style="margin-top:14px"><button class="btn" id="caRun">Procesar</button></div>
-        <div class="status" id="caSt"></div><pre class="log" id="caLog"></pre></div>
+        <div class="status" id="caSt"></div>
+        <div class="pbar" id="caBar" hidden><div class="pbar-t"><span id="caBarTx">Preparando…</span><b id="caBarPct">0 %</b></div><div class="pbar-o"><i id="caBarFill"></i></div><a href="#" id="caLogT">Ver detalle</a></div>
+        <pre class="log" id="caLog" hidden></pre></div>
       <div class="card"><h2>Opción 2 · Subir los resultados del script</h2>
         <p class="note">Si ya corriste el script en tu PC, sube de la carpeta <b>Calidad_Aplicacion_&lt;fecha&gt;</b>: <code>resumen_tablones.csv</code>, <code>resumen_vuelos.csv</code> y <code>Informe_Calidad_Aplicacion.pdf</code> (puedes seleccionar los tres a la vez).</p>
         <label>Archivos de resultados</label><input type="file" id="caRes" multiple accept=".csv,.pdf"><div class="status" id="caSt2"></div>
@@ -2214,34 +2219,43 @@ function showCaPreview(){if(!CARS.length||!CARS.includes(CAR)){CARS=[CAR];CARI=0
   $$('#caPrevBody [data-inc]').forEach(a=>a.onclick=e=>{e.preventDefault();const on=a.dataset.inc==='1';CARS.forEach(c=>c.skip=!on);$$('#caPrevBody [data-cinc]').forEach(x=>x.checked=on);caIncUpd()});caIncUpd();
   $('#caDlPdf').textContent=CARS.length>1?`Descargar informe PDF (tablón ${CAR.nombre})`:'Descargar informe PDF';
   $('#caDlPdf').style.display=CAR.pdf?'':'none';$('#caDlZip').style.display=CAR.zip?'':'none';$('#caSt3').textContent='';$('#caPrev').scrollIntoView({behavior:'smooth',block:'start'})}
+/* Barra de progreso: la animación corre en el compositor, así sigue avanzando aunque Python ocupe la página */
+const caBar={set(p,tx,to,secs){const f=$('#caBarFill');$('#caBar').hidden=false;$('#caBar').classList.remove('done','err');if(tx)$('#caBarTx').textContent=tx;$('#caBarPct').textContent=Math.round(p*100)+' %';
+    f.style.transition='none';f.style.transform=`scaleX(${p})`;void f.offsetWidth;if(to!=null&&to>p){f.style.transition=`transform ${secs||6}s cubic-bezier(.25,.6,.35,1)`;f.style.transform=`scaleX(${to})`}},
+  fin(tx,err){const f=$('#caBarFill');f.style.transition='transform .3s';f.style.transform='scaleX(1)';$('#caBar').classList.add(err?'err':'done');$('#caBarTx').textContent=tx;$('#caBarPct').textContent=err?'':'100 %'}};
+$('#caLogT').onclick=e=>{e.preventDefault();const l=$('#caLog');l.hidden=!l.hidden;e.target.textContent=l.hidden?'Ver detalle':'Ocultar detalle'};
 $('#caRun').onclick=async()=>{const files=[...$('#caFiles').files],say=t=>{$('#caSt').className='status';$('#caSt').textContent=t};const btn=$('#caRun');
   try{if(!files.length)throw new Error('Sube primero los KML del drone.');btn.disabled=true;let hasShp=files.some(f=>/\.shp$/i.test(f.name)),bb=[1e9,1e9,-1e9,-1e9],nk=0;
     const scan=t=>{nk++;for(const m of t.matchAll(/<coordinates>([^<]+)<\/coordinates>/g))m[1].trim().split(/\s+/).forEach(s=>{const[a,b]=s.split(',').map(Number);if(isFinite(a)&&isFinite(b)){bb=[Math.min(bb[0],a),Math.min(bb[1],b),Math.max(bb[2],a),Math.max(bb[3],b)]}})};
     for(const f of files){if(/\.kml$/i.test(f.name))scan(await f.text());else if(/\.(kmz|zip)$/i.test(f.name)&&window.JSZip){const z=await JSZip.loadAsync(await f.arrayBuffer());for(const n of Object.keys(z.files)){if(/\.kml$/i.test(n))scan(await z.files[n].async('string'));if(/\.shp$/i.test(n))hasShp=true}}}
     if(!nk)throw new Error('No encontré archivos KML (sueltos, .kmz o .zip).');
-    const py=await getPy(say);py.runPython("import os,shutil\nshutil.rmtree('/w',ignore_errors=True)\nos.makedirs('/w')");
+    $('#caLog').textContent='';caBar.set(0.01,'Preparando el procesador…',0.06,20);
+    const py=await getPy(t=>caBar.set(0.02,t,0.06,20));py.runPython("import os,shutil\nshutil.rmtree('/w',ignore_errors=True)\nos.makedirs('/w')");
     for(const f of files)py.FS.writeFile('/w/'+f.name.replace(/[\/\\]/g,'_'),new Uint8Array(await f.arrayBuffer()));
     if(!hasShp){const g=new Map();EMBED_PIECES.forEach((p,i)=>{const b=PBB[i];if(p[4]===undefined||b[2]<bb[0]-.01||b[0]>bb[2]+.01||b[3]<bb[1]-.01||b[1]>bb[3]+.01)return;if(!g.has(p[4]))g.set(p[4],{rings:[],attrs:{TAB:p[1],PIEZA:p[2],PIEZ:String(p[2]).padStart(3,'0'),DIVISION_C:p[0],VARIEDAD_N:ATT.var[ATT.rec[p[4]][3]]||''}});g.get(p[4]).rings.push(p[3])});
       if(!g.size)throw new Error('Los vuelos no caen sobre la capa CR. Sube el shapefile de tablones junto con los KML.');
       py.globals.set('FEATS',JSON.stringify([...g.values()]));py.runPython(CA_GLUE+"\nimport json\nescribir_shp('/w/tablones_capa_cr',json.loads(FEATS))")}
     let base=CA_SCRIPT;const obj=parseFloat($('#caObj').value);if(obj>0)base=base.replace('DOSIS_OBJETIVO = None','DOSIS_OBJETIVO = '+obj);
-    const log=[];py.setStdout({batched:s=>{log.push(s);$('#caLog').textContent=log.slice(-14).join('\n')}});py.setStderr({batched:()=>{}});
+    const log=[];py.setStdout({batched:s=>{log.push(s);$('#caLog').textContent=log.slice(-40).join('\n')}});py.setStderr({batched:()=>{}});
     const correr=async scr=>{py.FS.writeFile('/w/calidad_aplicacion_dji.py',scr);await new Promise(r=>setTimeout(r,60));await py.runPythonAsync("import runpy,sys\nsys.argv=['x','/w']\nrunpy.run_path('/w/calidad_aplicacion_dji.py',run_name='__main__')")};
     /* 1) detectar los tablones con aplicación; 2) un informe independiente por tablón */
-    say('Reconociendo los tablones aplicados…');await correr(base.replace('MODO_DETECCION = False','MODO_DETECCION = True'));
+    $('#caSt').textContent='';caBar.set(0.06,'Reconociendo los tablones aplicados…',0.1,4);await correr(base.replace('MODO_DETECCION = False','MODO_DETECCION = True'));
     let det=[];try{det=JSON.parse(new TextDecoder().decode(py.FS.readFile('/w/tablones_detectados.json')))}catch(e){}
     if(!det.length)throw new Error(log.filter(l=>/ERROR|AVISO/.test(l)).join(' ')||'No encontré tablones con aplicación en los KML.');
     py.runPython("import shutil,os\nshutil.rmtree('/out',ignore_errors=True)\nos.makedirs('/out')\nos.remove('/w/tablones_detectados.json')");
     const rd=p=>py.FS.readFile(p),txt=p=>new TextDecoder().decode(rd(p));CARS=[];
-    for(let k=0;k<det.length;k++){const d0=det[k];say(`Procesando tablón ${d0.nombre} (${k+1} de ${det.length})… 1 a 3 minutos por tablón`);
+    let est=8;
+    for(let k=0;k<det.length;k++){const d0=det[k],p0=0.1+0.9*k/det.length,p1=0.1+0.9*(k+1)/det.length,t0=performance.now();
+      caBar.set(p0,`Procesando tablón ${d0.nombre} · ${k+1} de ${det.length}`,p0+(p1-p0)*0.92,est);
       await correr(base.replace('SOLO_TABLON = None','SOLO_TABLON = '+JSON.stringify([d0.div,d0.tab])));
       const d=py.FS.readdir('/w').find(n=>n.startsWith('Calidad_Aplicacion_'));if(!d){log.push(`(sin resultado para ${d0.nombre})`);continue}
       const dst=`/out/t${k}`;py.FS.rename('/w/'+d,dst);const z=new JSZip(),nom=`${d}_Tablon_${String(d0.nombre).replace(/[^\w-]+/g,'_')}`;
       const walk=(dir,pre)=>py.FS.readdir(dir).filter(n=>n!=='.'&&n!=='..').forEach(n=>{const p=dir+'/'+n;if(py.FS.isDir(py.FS.stat(p).mode))walk(p,pre+n+'/');else z.file(pre+n,rd(p))});walk(dst,nom+'/');
+      est=Math.max(2,(performance.now()-t0)/1000);
       CARS.push({tabsCSV:txt(`${dst}/resumen_tablones.csv`),vuelosCSV:txt(`${dst}/resumen_vuelos.csv`),pdf:new Blob([rd(`${dst}/Informe_Calidad_Aplicacion.pdf`)],{type:'application/pdf'}),zip:await z.generateAsync({type:'blob'}),dir:nom,nombre:d0.nombre,note:hasShp?'':'tablones tomados de la capa CR de la plataforma'})}
     if(!CARS.length)throw new Error(log.filter(l=>/ERROR|AVISO/.test(l)).join(' ')||'El script no generó resultados.');
     CARI=0;CAR=CARS[0];
-    say(CARS.length>1?`Listo: ${CARS.length} informes, uno por tablón.`:'Listo.');showCaPreview()}catch(e){$('#caSt').className='status err';$('#caSt').textContent=(e.message||String(e)).split('\n').filter(Boolean).slice(-2).join(' ')}finally{btn.disabled=false}};
+    caBar.fin(CARS.length>1?`Listo: ${CARS.length} informes, uno por tablón.`:'Listo.');showCaPreview()}catch(e){if(!$('#caBar').hidden)caBar.fin('No se pudo terminar el procesamiento',true);$('#caSt').className='status err';$('#caSt').textContent=(e.message||String(e)).split('\n').filter(Boolean).slice(-2).join(' ')}finally{btn.disabled=false}};
 $('#caRes').onchange=async e=>{const fs=[...e.target.files],st=$('#caSt2');try{const t=fs.find(f=>/resumen_tablones/i.test(f.name)),v=fs.find(f=>/resumen_vuelos/i.test(f.name)),p=fs.find(f=>/\.pdf$/i.test(f.name));
   if(!t)throw new Error('Falta resumen_tablones.csv.');CAR={tabsCSV:await t.text(),vuelosCSV:v?await v.text():'',pdf:p||null,zip:null,note:v?'':'sin resumen_vuelos.csv'};st.className='status';st.textContent='Resultados leídos.';showCaPreview()}catch(err){st.className='status err';st.textContent=err.message}};
 $('#caDlPdf').onclick=()=>CAR&&CAR.pdf&&saveFile(`Informe_Calidad_Aplicacion_${CAR.nombre?'Tablon_'+String(CAR.nombre).replace(/[^\w-]+/g,'_')+'_':''}${CAR.rec.fecha}.pdf`,CAR.pdf,$('#caSt3'));
