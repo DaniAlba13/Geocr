@@ -1069,9 +1069,9 @@ def _tabla_resumen_modelos(resumenes_modelo):
     """Tabla compacta, estilo dashboard: una fila por modelo con sus numeros clave.
     Reemplaza los parrafos largos - el detalle real esta en cada apartado."""
     data = [[_celda("Modelo", negrita=True, blanco=True, centrado=False),
-             _celda("Tablones con dato", negrita=True, blanco=True),
+             _celda("Piezas con dato", negrita=True, blanco=True),
              _celda("% en buena condición", negrita=True, blanco=True),
-             _celda("Requieren atención", negrita=True, blanco=True)]]
+             _celda("Tablones que requieren atención", negrita=True, blanco=True)]]
     for r in resumenes_modelo:
         if r["con_dato"] == 0:
             continue
@@ -1083,7 +1083,7 @@ def _tabla_resumen_modelos(resumenes_modelo):
                 textColor=colors.HexColor(color_atencion), alignment=TA_CENTER))
         data.append([
             _celda(r["nombre"], centrado=False),
-            _celda(r["con_dato"]),
+            _celda(r["piezas"]),
             _celda(f"{r['pct_bien']}%"),
             celda_atencion,
         ])
@@ -1126,8 +1126,10 @@ def _resumen_por_modelo(df_ultima, metrica):
     if con_dato:
         todas_en_mejor = con_dato_df.groupby(COLUMNA_TABLON)[col_cat].apply(lambda s: s.isin(buenas).all())
         en_mejor = int(todas_en_mejor.sum())
-    pct_bien = round(100 * en_mejor / con_dato) if con_dato else 0
-    return {"nombre": info["nombre"], "con_dato": con_dato, "en_mejor": en_mejor,
+    # % en buena condicion = PIEZAS en categorias buenas / piezas con dato (igual que el grafico).
+    piezas = len(con_dato_df)
+    pct_bien = round(100 * con_dato_df[col_cat].isin(buenas).sum() / piezas) if piezas else 0
+    return {"nombre": info["nombre"], "con_dato": con_dato, "piezas": piezas, "en_mejor": en_mejor,
             "en_peor": en_peor, "peor_etiqueta": peor, "pct_bien": pct_bien}
 
 
@@ -1959,7 +1961,8 @@ def generar_reporte_pdf(df_historico, ruta_pdf):
             texto = f"{intro_fecha}{info.get('descripcion', '')}"
             if resumen_m["con_dato"] > 0:
                 texto += (
-                    f" Del total de {resumen_m['con_dato']} tablones analizados en este período, "
+                    f" Del total de {resumen_m['piezas']} piezas analizadas en este período "
+                    f"({resumen_m['con_dato']} tablones), "
                     f"{resumen_m['pct_bien']}% se encuentran en buena condición."
                 )
             df_criticos = df_ultima[df_ultima[col_cat] == categoria_critica]
@@ -2182,8 +2185,8 @@ def generar_reporte_pdf(df_historico, ruta_pdf):
 
         # --- Excel de casos criticos (detalle completo, separado del PDF) ---
         resumen_modelos_df = pd.DataFrame([
-            {"Modelo": r["nombre"], "Tablones con dato": r["con_dato"],
-             "% en buena condición": r["pct_bien"], "Requieren atención": r["en_peor"]}
+            {"Modelo": r["nombre"], "Piezas con dato": r["piezas"],
+             "% en buena condición": r["pct_bien"], "Tablones que requieren atención": r["en_peor"]}
             for r in resumenes_modelo
         ])
         ruta_excel = os.path.splitext(ruta_pdf)[0] + "_casos_criticos.xlsx"

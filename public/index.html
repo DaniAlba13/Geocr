@@ -1861,9 +1861,10 @@ const nxQ=(s,q)=>{const p=(s.length-1)*q,b=Math.floor(p);return s[b+1]!==undefin
 /* 'bien' = categorías buenas: la mejor y, en modelos de 4 categorías (NDVI, biomasa), también la normal */
 const nxBuenas=k=>{const t=NX_BYK[k].t;return new Set(t.slice(0,t.length>=4?2:1).map(x=>x[1]))};
 function nxResumen(P,k){const worst=NX_BYK[k].t.at(-1)[1],best=NX_BYK[k].t[0][1],ok=nxBuenas(k);const g=new Map();
-  P.forEach(p=>{const c=nxCat(k,p[k]);if(c==='Sin dato')return;if(!g.has(p.tab))g.set(p.tab,[]);g.get(p.tab).push(c)});
+  let np=0,okp=0;P.forEach(p=>{const c=nxCat(k,p[k]);if(c==='Sin dato')return;np++;if(ok.has(c))okp++;if(!g.has(p.tab))g.set(p.tab,[]);g.get(p.tab).push(c)});
   let peor=0,mejor=0;g.forEach(a=>{if(a.includes(worst))peor++;if(a.every(c=>ok.has(c)))mejor++});
-  return{con:g.size,peor,mejor,pct:g.size?Math.round(100*mejor/g.size):0,worst,best}}
+  /* % en buena condición = piezas en categorías buenas / piezas con dato (el mismo conteo de la leyenda) */
+  return{con:g.size,np,peor,mejor,pct:np?Math.round(100*okp/np):0,worst,best}}
 function nxHumEdad(P){const hoy=Date.now(),al=NX_BYK.hum.t.at(-1)[1],m=[],e=[];P.forEach(p=>{if(nxCat('hum',p.hum)!==al)return;const em=nxEdadM(p,hoy);if(!isFinite(em))return;if(em>=8.5&&em<=9.5)m.push([p,em]);if(em>=4&&em<=6)e.push([p,em])});return{m,e}}
 let NX=null,NXPDF=null;const NXF={div:'',mod:'hum',cas:''};
 const nxDivs=S=>{const set=new Set(S.P.map(p=>p.div));return[...NX_DIVORD.flatMap(d=>[d,d+' (S)',d+' (R)']).filter(d=>set.has(d)),...[...set].filter(d=>!NX_DIVORD.some(x=>d.startsWith(x))).sort()]};
@@ -1939,7 +1940,7 @@ function drawAlerts(){alPubChip();const sec=$('#alertas-tab');if(!sec)return;con
   const R=Object.fromEntries(mets.map(k=>[k,nxResumen(P,k)])),HE=nxHumEdad(P);
   $('#alK1').textContent=fmt(sumBy(P,p=>p.ac),0);$('#alK2').textContent=fmt(new Set(P.map(p=>p.tab)).size);
   $('#alK3').textContent=fmt(mets.reduce((s,k)=>s+R[k].peor,0));$('#alK4').textContent=mets.includes('hum')?fmt(HE.m.length):'–';$('#alK5').textContent=mets.includes('hum')?fmt(HE.e.length):'–';
-  $('#alRes').innerHTML=`<table><tr><th>Modelo</th><th class="num">Tablones con dato</th><th class="num">% en buena condición</th><th class="num">Requieren atención</th></tr>${mets.map(k=>{const r=R[k];return`<tr><td>${NX_BYK[k].n}</td><td class="num">${r.con?fmt(r.con):'–'}</td><td class="num">${r.con?r.pct+'%':'Sin dato'}</td><td class="num" style="${r.peor?'color:#C62828;font-weight:700':''}">${r.con?fmt(r.peor):'–'}</td></tr>`}).join('')}</table>`;
+  $('#alRes').innerHTML=`<table><tr><th>Modelo</th><th class="num">Piezas con dato</th><th class="num">% en buena condición</th><th class="num">Tablones que requieren atención</th></tr>${mets.map(k=>{const r=R[k];return`<tr><td>${NX_BYK[k].n}</td><td class="num">${r.con?fmt(r.np):'–'}</td><td class="num">${r.con?r.pct+'%':'Sin dato'}</td><td class="num" style="${r.peor?'color:#C62828;font-weight:700':''}">${r.con?fmt(r.peor):'–'}</td></tr>`}).join('')}</table>`;
   nxMap(P);
   /* tarjetas por modelo */
   const ant=S.ant&&S.ant.obs||{};
@@ -1949,11 +1950,11 @@ function drawAlerts(){alPubChip();const sec=$('#alertas-tab');if(!sec)return;con
     const items=[...cats,'Sin dato'].filter(c=>cnt.get(c)).map(c=>[c,cnt.get(c),nxColor(k,c)]);
     const crit=P.filter(p=>nxCat(k,p[k])===r.worst),dg=new Map();crit.forEach(p=>dg.set(p.div,(dg.get(p.div)||0)+1));const top=[...dg].sort((a,b)=>b[1]-a[1]).slice(0,3).map(d=>d[0]);
     let t=(ix===0?`En las fechas comprendidas entre ${fd(S.rango[0])} y ${fd(S.rango[1])}, correspondientes a esta descarga, se evidenciaron las siguientes tendencias. `:'')+NX_BYK[k].d;
-    if(r.con)t+=` Del total de ${fmt(r.con)} tablones analizados en este período, <b>${r.pct}%</b> se encuentran en buena condición.`;
+    if(r.con)t+=` Del total de ${fmt(r.np)} piezas analizadas en este período (${fmt(r.con)} tablones), <b>${r.pct}%</b> se encuentran en buena condición.`;
     t+=crit.length?` Además, se evidencian <b style="color:#C62828">${fmt(crit.length)} piezas</b> en la categoría “${r.worst}”${top.length?', principalmente en '+prosa(top):''}. El detalle está en la lista de casos críticos y en el Excel.`:r.con?` No se evidenciaron piezas en la categoría más crítica (“${r.worst}”).`:' Esta descarga no trae lecturas de este modelo.';
     if(k==='hum'){const pz=[];if(HE.m.length)pz.push(`${fmt(HE.m.length)} pieza(s) de 8.5–9.5 meses de edad clasifican para aplicar madurante`);if(HE.e.length)pz.push(`${fmt(HE.e.length)} pieza(s) de 4–6 meses muestran posible estrés hídrico por falta de lluvia`);
       t+=' Cruzando la humedad con la edad del cultivo: '+(pz.length?pz.join('; ')+'.':'ninguna pieza en alerta cae en las edades de madurante (8.5–9.5 meses) ni de posible estrés (4–6 meses).')}
-    $('#alN_'+k).innerHTML=t;donut(svgEl('alD_'+k),items,r.con?r.pct+'%':'–','tablones bien');
+    $('#alN_'+k).innerHTML=t;donut(svgEl('alD_'+k),items,r.con?r.pct+'%':'–','en buena condición');
     const obsP=P.filter(p=>p[k+'o']==='Satelital'&&p[k]!=null),cur=obsP.map(p=>p[k]),prev=ant[k]?ant[k].filter(a=>!NXF.div||a[0]===NXF.div).map(a=>a[1]):null;
     nxBox(svgEl('alB_'+k),k,cur,prev);$('#alS_'+k).innerHTML=cur.length?nxStatsTbl(cur,prev):'';
     const pr=P.filter(p=>p[k+'o']==='Proyectado').length;$('#alO_'+k).textContent=pr?`${fmt(pr)} pieza(s) sin imagen reciente tienen valor proyectado (mediana de piezas similares por división, riego y edad). La distribución usa solo valores observados.`:''});
@@ -1981,7 +1982,7 @@ function drawAlerts(){alPubChip();const sec=$('#alertas-tab');if(!sec)return;con
   pb.onclick=async()=>{$('#alDl').textContent='Preparando PDF…';const b=NXPDF||await nxPdfB64();if(!b){$('#alDl').textContent='No se encontró el PDF.';return}NXPDF=b;const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);saveFile(`reporte_NAX_${S.rango[1]}.pdf`,new Blob([u],{type:'application/pdf'}),$('#alDl'))}}
 let NX_HOJAS={};
 function nxHojas(P,R,HE){const H={},n2=v=>v==null?'':+(+v).toFixed(4);
-  H.Resumen={cols:['Modelo','Tablones con dato','% en buena condición','Requieren atención'],rows:Object.entries(R).map(([k,r])=>[NX_BYK[k].n,r.con,r.con?r.pct:'',r.peor])};
+  H.Resumen={cols:['Modelo','Piezas con dato','% en buena condición','Tablones que requieren atención'],rows:Object.entries(R).map(([k,r])=>[NX_BYK[k].n,r.np,r.con?r.pct:'',r.peor])};
   Object.entries(R).forEach(([k,r])=>{const c=P.filter(p=>nxCat(k,p[k])===r.worst);if(c.length)H[NX_BYK[k].n.split(' (')[0]+' - Críticos']={cols:['Name','Variedad','Tablón','Pieza',NX_BYK[k].n,'Categoría','Origen','División'],rows:c.map(p=>[p.id,p.v,p.tab,p.pz,n2(p[k]),r.worst,p[k+'o'],p.div])}});
   const ed=(a,t)=>{if(a.length)H[t]={cols:['Name','Variedad','Tablón','Pieza','Humedad','Edad (meses)','División'],rows:a.map(([p,e])=>[p.id,p.v,p.tab,p.pz,n2(p.hum),+e.toFixed(1),p.div])}};ed(HE.m,'Humedad - Madurante');ed(HE.e,'Humedad - Estrés Hídrico');
   const tr=P.filter(p=>p.tR!=null&&p.tN!=null).map(p=>[p,(p.tR-p.tN)/p.tN*100]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]));
