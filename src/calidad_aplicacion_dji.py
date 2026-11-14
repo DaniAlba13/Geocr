@@ -469,12 +469,27 @@ def clasificar_segmentos(v, cands, tol):
             err = -area
         if err_min is None or err < err_min:
             mejor, err_min = c, err
+    # Si los rumbos globales no explican el área que reporta el equipo (vuelo en un tablón con
+    # surcos en otra dirección), se prueban los rumbos dominantes del propio vuelo.
+    if v["area_dji_ha"] > 0 and (err_min is None or err_min > 0.5) and L.sum() > 0:
+        h = np.bincount((ang % 180).astype(int) % 180, weights=L, minlength=180)
+        hs = h + np.roll(h, 1) + np.roll(h, -1)
+        for c in [float(k) for k in np.argsort(hs)[::-1][:6]]:
+            area = L[dif_ang(ang, c) <= tol].sum() * w / 10000.0
+            err = abs(area - v["area_dji_ha"]) / v["area_dji_ha"]
+            if err_min is None or err < err_min:
+                mejor, err_min = c, err
     v["rumbo"] = mejor
     if mejor is None:
         v["es_pasada"] = np.zeros(len(L), bool)
     else:
         da = dif_ang(ang, mejor)
         v["es_pasada"] = da <= tol
+    # Último recurso: si aun así las pasadas no llegan ni a la mitad del área del equipo,
+    # se usa la traza completa para no concentrar todo el producto en unos metros.
+    if v["area_dji_ha"] > 0 and L[v["es_pasada"]].sum() * w / 10000.0 < 0.5 * v["area_dji_ha"] \
+            and L.sum() * w / 10000.0 >= 0.5 * v["area_dji_ha"]:
+        v["es_pasada"] = np.ones(len(L), bool)
     v["long_pasadas_m"] = float(L[v["es_pasada"]].sum())
     v["long_total_m"] = float(L.sum())
 
@@ -1531,6 +1546,12 @@ def main():
         fig.text(0.047, 0.478, "Departamento de Investigaciones Agrícolas", fontsize=15, color=CR_GRIS, va="center")
         fig.text(0.047, 0.395, fecha_informe, fontsize=13, color=CR_MARINO,
                  va="center")
+        if SOLO_TABLON is not None:
+            _divn = {"1": "Higueral", "2": "Guaymate", "3": "La Higuera", "4": "Chavón Abajo", "5": "Cuyá",
+                     "6": "Lechugas", "7": "Baigua"}.get(str(SOLO_TABLON[0]), "")
+            fig.text(0.047, 0.34, "Tablón %s%s  ·  aplicación del %s" % (str(SOLO_TABLON[1]),
+                     ("  ·  División " + _divn) if _divn else "", fecha_apl),
+                     fontsize=17, weight="bold", color=CR_MARINO, va="center")
         bandas(fig, 0.225)
         pdf.savefig(fig, facecolor=fig.get_facecolor()); plt.close(fig)
 
