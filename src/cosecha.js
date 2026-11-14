@@ -75,7 +75,7 @@ async function coGuardar(imp,archivos){const js=coPack(imp.rows),sid='c'+Date.no
     for(let i=0;i<parts.length;i++){$('#coSt').textContent=`Guardando ${i+1}/${parts.length}…`;await DB.collection('cosecha_snap').doc(sid+'-'+i).set({i,s:parts[i]})}
     await DB.collection('cosecha_q').doc(id).set(meta);if(prev&&prev.sid)for(let i=0;i<(prev.parts||0);i++)DB.collection('cosecha_snap').doc(prev.sid+'-'+i).delete().catch(()=>{})}
   else{try{localStorage.setItem('geocr-co-'+sid,js);const L=JSON.parse(localStorage.getItem('geocr-coq')||'{}');if(L[id])localStorage.removeItem('geocr-co-'+L[id].sid);L[id]=meta;localStorage.setItem('geocr-coq',JSON.stringify(L))}
-    catch(e){throw new Error('No cabe en este navegador; en GeoCR publicado se guarda en la base.')}CO.qs.set(id,{...meta,id})}
+    catch(e){throw new Error('No cabe en este navegador; en AgroAP-CR publicado se guarda en la base.')}CO.qs.set(id,{...meta,id})}
   CO.cache.set(sid,imp.rows);CO.cur=id;return id}
 async function coBorrar(id){const q=CO.qs.get(id);if(!q)return;
   if(!await askConfirm('¿Desea eliminar el elemento seleccionado?',`Se eliminará la quincena ${q.n} de la zafra ${q.zafra} (${fmt(q.filas)} filas${q.archivos?' · '+q.archivos:''}). El tablero se actualizará sin esa información.`))return;
