@@ -52,6 +52,8 @@ from matplotlib.patches import Patch
 # =====================================================================================
 # CONFIGURACION (cambiar aqui si hace falta)
 # =====================================================================================
+SOLO_TABLON = None             # (division, tablon): informe solo de ese tablon (lo pone AgroAP-CR)
+MODO_DETECCION = False        # True: solo lista los tablones con aplicacion (tablones_detectados.json)
 DOSIS_OBJETIVO = None         # dosis teorica en L por UNIDAD_AREA (ej. 6.2 L/ac). None = usa la dosis
                               # promedio real como referencia para la uniformidad.
 UNIDAD_AREA = "ac"            # "ac" (acres) o "ha"
@@ -691,36 +693,78 @@ def main():
     gx1 = np.maximum(todos_segs[:, 0], todos_segs[:, 2]) + hw_max
     gy0 = np.minimum(todos_segs[:, 1], todos_segs[:, 3]) - hw_max
     gy1 = np.maximum(todos_segs[:, 1], todos_segs[:, 3]) + hw_max
-    # --- un solo campo por informe: el tablon donde cae la mayor parte de las pasadas de aplicacion ---
-    if len(grupos) > 1:
-        mx_ = (todos_segs[:, 0] + todos_segs[:, 2]) / 2
-        my_ = (todos_segs[:, 1] + todos_segs[:, 3]) / 2
-        lg_ = np.hypot(todos_segs[:, 2] - todos_segs[:, 0], todos_segs[:, 3] - todos_segs[:, 1])
-        mejor, mejor_l = None, 0.0
+    # --- deteccion de tablones aplicados / informe individual por tablon ---
+    def largo_en(feats, segs):
+        if not len(segs) or not feats:
+            return 0.0
+        mx_ = (segs[:, 0] + segs[:, 2]) / 2
+        my_ = (segs[:, 1] + segs[:, 3]) / 2
+        lg_ = np.hypot(segs[:, 2] - segs[:, 0], segs[:, 3] - segs[:, 1])
+        pts = np.vstack([an for anillos, _ in feats for an in anillos])
+        x0_, y0_ = pts.min(0)
+        x1_, y1_ = pts.max(0)
+        cand = (mx_ >= x0_) & (mx_ <= x1_) & (my_ >= y0_) & (my_ <= y1_)
+        if not cand.any():
+            return 0.0
+        P_ = np.column_stack([mx_[cand], my_[cand]])
+        dentro = np.zeros(len(P_), bool)
+        for anillos, _ in feats:
+            par = np.zeros(len(P_), bool)
+            for an in anillos:
+                if len(an) >= 3:
+                    par ^= MplPath(an).contains_points(P_)
+            dentro |= par
+        return float(lg_[cand][dentro].sum())
+
+    def segs_de(v):
+        idx = v["_idx"]
+        xy = v["xy"]
+        return np.column_stack([xy[idx, 0], xy[idx, 1], xy[idx + 1, 0], xy[idx + 1, 1]]) if len(idx) else np.zeros((0, 4))
+
+    if MODO_DETECCION:
+        L_total = float(np.hypot(todos_segs[:, 2] - todos_segs[:, 0], todos_segs[:, 3] - todos_segs[:, 1]).sum())
+        det = []
         for clave, feats in grupos.items():
-            if not feats:
-                continue
-            pts = np.vstack([an for anillos, _ in feats for an in anillos])
-            x0_, y0_ = pts.min(0)
-            x1_, y1_ = pts.max(0)
-            cand = (mx_ >= x0_) & (mx_ <= x1_) & (my_ >= y0_) & (my_ <= y1_)
-            if not cand.any():
-                continue
-            P_ = np.column_stack([mx_[cand], my_[cand]])
-            dentro = np.zeros(len(P_), bool)
-            for anillos, _ in feats:
-                par = np.zeros(len(P_), bool)
-                for an in anillos:
-                    if len(an) >= 3:
-                        par ^= MplPath(an).contains_points(P_)
-                dentro |= par
-            L_ = float(lg_[cand][dentro].sum())
-            if L_ > mejor_l:
-                mejor, mejor_l = clave, L_
-        if mejor is not None:
-            print("Campo del informe: tablón %s (%.0f m de pasadas dentro); los demás tablones del shapefile se ignoran."
-                  % (nombres_tab.get(mejor, mejor[1]), mejor_l))
-            grupos = {mejor: grupos[mejor]}
+            L_ = largo_en(feats, todos_segs)
+            # tablon aplicado: recibe al menos 5 % de las pasadas (y 200 m); los vecinos tocados al girar no cuentan
+            if L_ >= max(200.0, 0.05 * L_total):
+                det.append(dict(div=clave[0], tab=clave[1], nombre=nombres_tab[clave], largo_m=round(L_)))
+        det.sort(key=lambda d: -d["largo_m"])
+        with open(os.path.join(base, "tablones_detectados.json"), "w") as fh:
+            json.dump(det, fh)
+        print("Tablones con aplicación detectados: %d (%s)" % (len(det), ", ".join(d["nombre"] for d in det)))
+        return
+
+    if SOLO_TABLON is not None:
+        clave = tuple(SOLO_TABLON)
+        if clave not in grupos:
+            print("ERROR: no encontré el tablón %s en el shapefile." % (clave,))
+            return
+        feats_t = grupos[clave]
+        grupos = {clave: feats_t}
+        sel = []
+        for v in vuelos:
+            sg = segs_de(v)
+            Lv = float(np.hypot(sg[:, 2] - sg[:, 0], sg[:, 3] - sg[:, 1]).sum()) if len(sg) else 0.0
+            if Lv > 0 and largo_en(feats_t, sg) >= 0.10 * Lv:
+                sel.append(v)
+        if not sel:
+            print("ERROR: ningún vuelo aplicó en el tablón %s." % nombres_tab[clave])
+            return
+        vuelos = sel
+        for k, v in enumerate(vuelos, 1):
+            v["n"] = k
+        A_dji = sum(v["area_dji_ha"] for v in vuelos) * 10000
+        L_tot = sum(v["litros"] for v in vuelos)
+        t_total = sum(v["tiempo_s"] for v in vuelos)
+        marg = max(v["ancho_m"] for v in vuelos) + 10 + MARGEN_FAJA_M
+        todos_segs = np.vstack([segs_de(v) for v in vuelos])
+        hw_max = max(v["ancho_m"] for v in vuelos) / 2 + MARGEN_FAJA_M
+        gx0 = np.minimum(todos_segs[:, 0], todos_segs[:, 2]) - hw_max
+        gx1 = np.maximum(todos_segs[:, 0], todos_segs[:, 2]) + hw_max
+        gy0 = np.minimum(todos_segs[:, 1], todos_segs[:, 3]) - hw_max
+        gy1 = np.maximum(todos_segs[:, 1], todos_segs[:, 3]) + hw_max
+        print("Informe individual del tablón %s: %d vuelo(s)" % (nombres_tab[clave], len(vuelos)))
 
     geo = []
     for clave, feats in sorted(grupos.items(), key=lambda kv: (kv[0][0], kv[0][1].zfill(12))):

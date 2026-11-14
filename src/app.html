@@ -2150,10 +2150,14 @@ function caFromCSV(tabsT,vueT){const T=csvObjs(tabsT),V=vueT?csvObjs(vueT):[];co
   const tabs=T.map(o=>({tablon:String(o.tablon||'').replace(/\s*\(Div.*$/,'').trim(),division:String(o.division||'').replace(/\.0$/,''),piezas:nz(o.piezas),area:nz(o.area_ac||o.area_ha)*f,cob:nz(o.cobertura_pct),no:nz(o.pct_no_aplicado),sob:nz(o.pct_sobreaplicado),dosis:nz(o.dosis_area_cubierta_L_ac||o.dosis_area_cubierta_L_ha)/(ha?f:1),cv:nz(o.cv_dosis_pct),unif:nz(o.uniformidad_pct),litros:nz(o.litros)}));
   const fechas=V.map(v=>(v.inicio||'').slice(0,10)).filter(Boolean).sort();
   return{fecha:fechas[0]||hoyISO(),equipos:[...new Set(V.map(v=>v.equipo).filter(Boolean))],pilotos:[...new Set(V.map(v=>v.piloto).filter(Boolean))],vuelos:V.length,litros:sumBy(V,v=>nz(v.litros))||sumBy(tabs,t=>t.litros),tabs}}
-function showCaPreview(){const r=caFromCSV(CAR.tabsCSV,CAR.vuelosCSV);CAR.rec=r;$('#caPrev').style.display='block';
-  $('#caPrevBody').innerHTML=`<div class="row" style="max-width:420px"><div><label>Fecha de aplicación</label><input type="date" id="caFecha" value="${r.fecha}"></div><div><label>Producto</label><input type="text" id="caProd2" value="Madurante"></div></div>
+let CARS=[],CARI=0;
+function showCaPreview(){if(!CARS.length||!CARS.includes(CAR)){CARS=[CAR];CARI=0}CARS.forEach(c=>{if(!c.rec)c.rec=caFromCSV(c.tabsCSV,c.vuelosCSV)});const r=CAR.rec;$('#caPrev').style.display='block';
+  const fPrev=$('#caFecha')?$('#caFecha').value:'',pPrev=$('#caProd2')?$('#caProd2').value:'';
+  $('#caPrevBody').innerHTML=(CARS.length>1?`<div class="seg" style="margin-bottom:12px">${CARS.map((c,i)=>`<button data-ci="${i}"${i===CARI?' class="on"':''}>Tablón ${c.nombre}</button>`).join('')}</div><p class="note">${CARS.length} informes independientes, uno por tablón. Al guardar se guardan todos.</p>`:'')+`<div class="row" style="max-width:420px"><div><label>Fecha de aplicación</label><input type="date" id="caFecha" value="${fPrev||r.fecha}"></div><div><label>Producto</label><input type="text" id="caProd2" value="${(pPrev||'Madurante').replace(/"/g,'&quot;')}"></div></div>
    <p class="note">${r.vuelos} vuelo(s) · ${fmt(r.litros,1)} L · equipo(s): ${r.equipos.join(', ')||'—'}${CAR.note?' · '+CAR.note:''}</p>
    <table><tr><th>Tablón</th><th>División</th><th class="n">Acres</th><th class="n">Cobertura</th><th class="n">Sin aplicar</th><th class="n">Sobreapl.</th><th class="n">Dosis L/acre</th><th class="n">Unif.</th><th>Estado</th></tr>${r.tabs.map(t=>{const e=caEstado(t);return`<tr><td><b>${t.tablon}</b></td><td>${DIVN[t.division]||t.division||'—'}</td><td class="n">${fmt(t.area,1)}</td><td class="n">${fmt(t.cob,1)}%</td><td class="n">${fmt(t.no,1)}%</td><td class="n">${fmt(t.sob,1)}%</td><td class="n">${fmt(t.dosis,2)}</td><td class="n">${fmt(t.unif,1)}%</td><td>${chip(e[0],e[1])}</td></tr>`}).join('')}</table>`;
+  $$('#caPrevBody [data-ci]').forEach(b=>b.onclick=()=>{CARI=+b.dataset.ci;CAR=CARS[CARI];showCaPreview()});
+  $('#caDlPdf').textContent=CARS.length>1?`Descargar informe PDF (tablón ${CAR.nombre})`:'Descargar informe PDF';
   $('#caDlPdf').style.display=CAR.pdf?'':'none';$('#caDlZip').style.display=CAR.zip?'':'none';$('#caSt3').textContent='';$('#caPrev').scrollIntoView({behavior:'smooth',block:'start'})}
 $('#caRun').onclick=async()=>{const files=[...$('#caFiles').files],say=t=>{$('#caSt').className='status';$('#caSt').textContent=t};const btn=$('#caRun');
   try{if(!files.length)throw new Error('Sube primero los KML del drone.');btn.disabled=true;let hasShp=files.some(f=>/\.shp$/i.test(f.name)),bb=[1e9,1e9,-1e9,-1e9],nk=0;
@@ -2165,25 +2169,35 @@ $('#caRun').onclick=async()=>{const files=[...$('#caFiles').files],say=t=>{$('#c
     if(!hasShp){const g=new Map();EMBED_PIECES.forEach((p,i)=>{const b=PBB[i];if(p[4]===undefined||b[2]<bb[0]-.01||b[0]>bb[2]+.01||b[3]<bb[1]-.01||b[1]>bb[3]+.01)return;if(!g.has(p[4]))g.set(p[4],{rings:[],attrs:{TAB:p[1],PIEZA:p[2],PIEZ:String(p[2]).padStart(3,'0'),DIVISION_C:p[0],VARIEDAD_N:ATT.var[ATT.rec[p[4]][3]]||''}});g.get(p[4]).rings.push(p[3])});
       if(!g.size)throw new Error('Los vuelos no caen sobre la capa CR. Sube el shapefile de tablones junto con los KML.');
       py.globals.set('FEATS',JSON.stringify([...g.values()]));py.runPython(CA_GLUE+"\nimport json\nescribir_shp('/w/tablones_capa_cr',json.loads(FEATS))")}
-    let scr=CA_SCRIPT;const obj=parseFloat($('#caObj').value);if(obj>0)scr=scr.replace('DOSIS_OBJETIVO = None','DOSIS_OBJETIVO = '+obj);py.FS.writeFile('/w/calidad_aplicacion_dji.py',scr);
+    let base=CA_SCRIPT;const obj=parseFloat($('#caObj').value);if(obj>0)base=base.replace('DOSIS_OBJETIVO = None','DOSIS_OBJETIVO = '+obj);
     const log=[];py.setStdout({batched:s=>{log.push(s);$('#caLog').textContent=log.slice(-14).join('\n')}});py.setStderr({batched:()=>{}});
-    say('Procesando los vuelos… (1 a 3 minutos según el número de vuelos)');await new Promise(r=>setTimeout(r,60));
-    await py.runPythonAsync("import runpy,sys\nsys.argv=['x','/w']\nrunpy.run_path('/w/calidad_aplicacion_dji.py',run_name='__main__')");
-    const d=py.FS.readdir('/w').find(n=>n.startsWith('Calidad_Aplicacion_'));if(!d)throw new Error(log.filter(l=>/ERROR|AVISO/.test(l)).join(' ')||'El script no generó resultados.');
-    const rd=p=>py.FS.readFile(p),txt=p=>new TextDecoder().decode(rd(p)),z=new JSZip();
-    const walk=(dir,pre)=>py.FS.readdir(dir).filter(n=>n!=='.'&&n!=='..').forEach(n=>{const p=dir+'/'+n;if(py.FS.isDir(py.FS.stat(p).mode))walk(p,pre+n+'/');else z.file(pre+n,rd(p))});walk('/w/'+d,d+'/');
-    CAR={tabsCSV:txt(`/w/${d}/resumen_tablones.csv`),vuelosCSV:txt(`/w/${d}/resumen_vuelos.csv`),pdf:new Blob([rd(`/w/${d}/Informe_Calidad_Aplicacion.pdf`)],{type:'application/pdf'}),zip:await z.generateAsync({type:'blob'}),dir:d,note:hasShp?'':'tablones tomados de la capa CR de la plataforma'};
-    say('Listo.');showCaPreview()}catch(e){$('#caSt').className='status err';$('#caSt').textContent=(e.message||String(e)).split('\n').filter(Boolean).slice(-2).join(' ')}finally{btn.disabled=false}};
+    const correr=async scr=>{py.FS.writeFile('/w/calidad_aplicacion_dji.py',scr);await new Promise(r=>setTimeout(r,60));await py.runPythonAsync("import runpy,sys\nsys.argv=['x','/w']\nrunpy.run_path('/w/calidad_aplicacion_dji.py',run_name='__main__')")};
+    /* 1) detectar los tablones con aplicación; 2) un informe independiente por tablón */
+    say('Reconociendo los tablones aplicados…');await correr(base.replace('MODO_DETECCION = False','MODO_DETECCION = True'));
+    let det=[];try{det=JSON.parse(new TextDecoder().decode(py.FS.readFile('/w/tablones_detectados.json')))}catch(e){}
+    if(!det.length)throw new Error(log.filter(l=>/ERROR|AVISO/.test(l)).join(' ')||'No encontré tablones con aplicación en los KML.');
+    py.runPython("import shutil,os\nshutil.rmtree('/out',ignore_errors=True)\nos.makedirs('/out')\nos.remove('/w/tablones_detectados.json')");
+    const rd=p=>py.FS.readFile(p),txt=p=>new TextDecoder().decode(rd(p));CARS=[];
+    for(let k=0;k<det.length;k++){const d0=det[k];say(`Procesando tablón ${d0.nombre} (${k+1} de ${det.length})… 1 a 3 minutos por tablón`);
+      await correr(base.replace('SOLO_TABLON = None','SOLO_TABLON = '+JSON.stringify([d0.div,d0.tab])));
+      const d=py.FS.readdir('/w').find(n=>n.startsWith('Calidad_Aplicacion_'));if(!d){log.push(`(sin resultado para ${d0.nombre})`);continue}
+      const dst=`/out/t${k}`;py.FS.rename('/w/'+d,dst);const z=new JSZip(),nom=`${d}_Tablon_${String(d0.nombre).replace(/[^\w-]+/g,'_')}`;
+      const walk=(dir,pre)=>py.FS.readdir(dir).filter(n=>n!=='.'&&n!=='..').forEach(n=>{const p=dir+'/'+n;if(py.FS.isDir(py.FS.stat(p).mode))walk(p,pre+n+'/');else z.file(pre+n,rd(p))});walk(dst,nom+'/');
+      CARS.push({tabsCSV:txt(`${dst}/resumen_tablones.csv`),vuelosCSV:txt(`${dst}/resumen_vuelos.csv`),pdf:new Blob([rd(`${dst}/Informe_Calidad_Aplicacion.pdf`)],{type:'application/pdf'}),zip:await z.generateAsync({type:'blob'}),dir:nom,nombre:d0.nombre,note:hasShp?'':'tablones tomados de la capa CR de la plataforma'})}
+    if(!CARS.length)throw new Error(log.filter(l=>/ERROR|AVISO/.test(l)).join(' ')||'El script no generó resultados.');
+    CARI=0;CAR=CARS[0];
+    say(CARS.length>1?`Listo: ${CARS.length} informes, uno por tablón.`:'Listo.');showCaPreview()}catch(e){$('#caSt').className='status err';$('#caSt').textContent=(e.message||String(e)).split('\n').filter(Boolean).slice(-2).join(' ')}finally{btn.disabled=false}};
 $('#caRes').onchange=async e=>{const fs=[...e.target.files],st=$('#caSt2');try{const t=fs.find(f=>/resumen_tablones/i.test(f.name)),v=fs.find(f=>/resumen_vuelos/i.test(f.name)),p=fs.find(f=>/\.pdf$/i.test(f.name));
   if(!t)throw new Error('Falta resumen_tablones.csv.');CAR={tabsCSV:await t.text(),vuelosCSV:v?await v.text():'',pdf:p||null,zip:null,note:v?'':'sin resumen_vuelos.csv'};st.className='status';st.textContent='Resultados leídos.';showCaPreview()}catch(err){st.className='status err';st.textContent=err.message}};
-$('#caDlPdf').onclick=()=>CAR&&CAR.pdf&&saveFile(`Informe_Calidad_Aplicacion_${CAR.rec.fecha}.pdf`,CAR.pdf,$('#caSt3'));
+$('#caDlPdf').onclick=()=>CAR&&CAR.pdf&&saveFile(`Informe_Calidad_Aplicacion_${CAR.nombre?'Tablon_'+String(CAR.nombre).replace(/[^\w-]+/g,'_')+'_':''}${CAR.rec.fecha}.pdf`,CAR.pdf,$('#caSt3'));
 $('#caDlZip').onclick=()=>CAR&&CAR.zip&&saveFile(`${CAR.dir||'Calidad_Aplicacion'}.zip`,CAR.zip,$('#caSt3'));
 const blobB64=b=>new Promise(ok=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]);r.readAsDataURL(b)});
-$('#caSave').onclick=async()=>{const st=$('#caSt3');try{const rec={...CAR.rec,fecha:$('#caFecha').value||CAR.rec.fecha,producto:$('#caProd2').value,pdfParts:0};
-  if(DB){const ref=DB.collection(COLL.ca).doc();if(CAR.pdf){const b=await blobB64(CAR.pdf),parts=[];for(let i=0;i<b.length;i+=180000)parts.push(b.slice(i,i+180000));if(parts.length>40)throw new Error('El PDF es demasiado grande para guardarlo.');
-      for(let i=0;i<parts.length;i++){st.textContent=`Guardando informe ${i+1}/${parts.length}…`;await DB.collection('reg_calidad_pdf').doc(ref.id+'-'+i).set({i,b64:parts[i]})}rec.pdfParts=parts.length}
-    rec.creado=new Date().toISOString();await ref.set(rec)}else await saveReg('ca',rec);
-  st.className='status';st.textContent=DB?'Guardado en el tablero.':'Guardado en este navegador (el informe PDF no se guarda en modo local).';CAR=null;$('#caPrev').style.display='none';showModSub('calidad','tab')}catch(e){st.className='status err';st.textContent=e.message||'No tienes permiso para guardar.'}};
+$('#caSave').onclick=async()=>{const st=$('#caSt3'),fecha=$('#caFecha').value,prod=$('#caProd2').value,L=CARS.length?CARS:[CAR];
+  try{for(let k=0;k<L.length;k++){const C=L[k],rec={...C.rec,fecha:fecha||C.rec.fecha,producto:prod,pdfParts:0};
+    if(DB){const ref=DB.collection(COLL.ca).doc();if(C.pdf){const b=await blobB64(C.pdf),parts=[];for(let i=0;i<b.length;i+=180000)parts.push(b.slice(i,i+180000));if(parts.length>40)throw new Error('El PDF es demasiado grande para guardarlo.');
+        for(let i=0;i<parts.length;i++){st.textContent=`Guardando informe ${k+1} de ${L.length} (${i+1}/${parts.length})…`;await DB.collection('reg_calidad_pdf').doc(ref.id+'-'+i).set({i,b64:parts[i]})}rec.pdfParts=parts.length}
+      rec.creado=new Date().toISOString();await ref.set(rec)}else await saveReg('ca',rec)}
+  st.className='status';st.textContent=DB?(L.length>1?`${L.length} informes guardados en el tablero.`:'Guardado en el tablero.'):'Guardado en este navegador (el informe PDF no se guarda en modo local).';CAR=null;CARS=[];$('#caPrev').style.display='none';showModSub('calidad','tab')}catch(e){st.className='status err';st.textContent=e.message||'No tienes permiso para guardar.'}};
 async function downloadStoredPdf(id,n,btn){try{btn.textContent='…';let b='';for(let i=0;i<n;i++){const d=await DB.collection('reg_calidad_pdf').doc(id+'-'+i).get();if(!d.exists)throw 0;b+=d.data().b64}
   const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);const r=STORE.ca.find(x=>x.id===id);await saveFile(`Informe_Calidad_Aplicacion_${r?r.fecha:id}.pdf`,new Blob([u],{type:'application/pdf'}),null);btn.textContent='PDF'}catch(e){btn.textContent='No disponible'}}
 // --- surcos y despoblación ---
