@@ -1113,13 +1113,15 @@ def _resumen_por_modelo(df_ultima, metrica):
     col_cat = f"{metrica}_categoria"
     mejor = info["tiers"][0][1]
     peor = info["tiers"][-1][1]
+    # "Bien" = la mejor categoria y, en modelos de 4 categorias (NDVI, biomasa), tambien la normal.
+    buenas = {t[1] for t in info["tiers"][:2 if len(info["tiers"]) >= 4 else 1]}
 
     con_dato_df = df_ultima[df_ultima[col_cat] != "Sin dato"]
     con_dato = con_dato_df[COLUMNA_TABLON].nunique()
     en_peor = con_dato_df.loc[con_dato_df[col_cat] == peor, COLUMNA_TABLON].nunique()
     en_mejor = 0
     if con_dato:
-        todas_en_mejor = con_dato_df.groupby(COLUMNA_TABLON)[col_cat].apply(lambda s: (s == mejor).all())
+        todas_en_mejor = con_dato_df.groupby(COLUMNA_TABLON)[col_cat].apply(lambda s: s.isin(buenas).all())
         en_mejor = int(todas_en_mejor.sum())
     pct_bien = round(100 * en_mejor / con_dato) if con_dato else 0
     return {"nombre": info["nombre"], "con_dato": con_dato, "en_mejor": en_mejor,

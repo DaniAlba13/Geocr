@@ -1707,9 +1707,11 @@ const nxEdadM=(p,hoy)=>p.fi?(hoy-Date.parse(p.fi))/864e5/NX_DPM:NaN;
 const nxStd=a=>{if(a.length<2)return NaN;const m=a.reduce((s,x)=>s+x,0)/a.length;return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))};
 const nxMean=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;
 const nxQ=(s,q)=>{const p=(s.length-1)*q,b=Math.floor(p);return s[b+1]!==undefined?s[b]+(p-b)*(s[b+1]-s[b]):s[b]};
-function nxResumen(P,k){const worst=NX_BYK[k].t.at(-1)[1],best=NX_BYK[k].t[0][1];const g=new Map();
+/* 'bien' = categorías buenas: la mejor y, en modelos de 4 categorías (NDVI, biomasa), también la normal */
+const nxBuenas=k=>{const t=NX_BYK[k].t;return new Set(t.slice(0,t.length>=4?2:1).map(x=>x[1]))};
+function nxResumen(P,k){const worst=NX_BYK[k].t.at(-1)[1],best=NX_BYK[k].t[0][1],ok=nxBuenas(k);const g=new Map();
   P.forEach(p=>{const c=nxCat(k,p[k]);if(c==='Sin dato')return;if(!g.has(p.tab))g.set(p.tab,[]);g.get(p.tab).push(c)});
-  let peor=0,mejor=0;g.forEach(a=>{if(a.includes(worst))peor++;if(a.every(c=>c===best))mejor++});
+  let peor=0,mejor=0;g.forEach(a=>{if(a.includes(worst))peor++;if(a.every(c=>ok.has(c)))mejor++});
   return{con:g.size,peor,mejor,pct:g.size?Math.round(100*mejor/g.size):0,worst,best}}
 function nxHumEdad(P){const hoy=Date.now(),al=NX_BYK.hum.t.at(-1)[1],m=[],e=[];P.forEach(p=>{if(nxCat('hum',p.hum)!==al)return;const em=nxEdadM(p,hoy);if(!isFinite(em))return;if(em>=8.5&&em<=9.5)m.push([p,em]);if(em>=4&&em<=6)e.push([p,em])});return{m,e}}
 let NX=null,NXPDF=null;const NXF={div:'',mod:'hum',cas:''};
