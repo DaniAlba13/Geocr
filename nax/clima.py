@@ -110,12 +110,19 @@ def serie_nax():
     if not os.path.exists(ruta):
         return {}
     d = pd.read_csv(ruta, low_memory=False)
+    # Formato largo (una fila por producto: product_name + mean): se pasa a una columna por producto.
+    if "product_name" in d.columns and "mean" in d.columns:
+        base = [c for c in ("name", "timestamp", "grouping_unit_02", "effective_area") if c in d.columns]
+        d["_v"] = pd.to_numeric(d["mean"], errors="coerce")
+        d = d.dropna(subset=["_v"]).pivot_table(index=base, columns="product_name", values="_v", aggfunc="mean").reset_index()
+        d.columns = [str(c) for c in d.columns]
+        print("NAX (formato largo), productos:", [c for c in d.columns if c not in base])
     cols = {c: c.lower() for c in d.columns}
     num = lambda c: pd.to_numeric(d[c], errors="coerce")
     def elegir(*claves, excluir=("optimal", "evolution", "median", "anomal")):
         cand = [c for c, l in cols.items() if any(k in l for k in claves) and not any(x in l for x in excluir)]
         return max(cand, key=lambda c: num(c).notna().sum()) if cand else None
-    V = {"hum": elegir("moisture", "humid"), "wc": elegir("water_content"), "ins": elegir("irrigation_need"),
+    V = {"hum": elegir("moisture_percentage_ai") or elegir("moisture", "humid"), "wc": elegir("water_content"), "ins": elegir("irrigation_need"),
          "et": elegir("evapotrans"), "aw": elegir("available_water")}
     V = {k: c for k, c in V.items() if c}
     print("NAX, columnas de agua usadas:", V)
