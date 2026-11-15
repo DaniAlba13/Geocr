@@ -874,7 +874,7 @@ body.splashing{overflow:hidden}
   <h1>Balance hídrico y riego <span class="beta">BETA</span></h1>
   <p class="sub">Estima cada día cuánta agua le queda al suelo en la zona de raíces de cada pieza, con la lluvia de los pluviómetros, la evapotranspiración y la edad del cultivo de NAX. Señala qué tablones de riego necesitan agua hoy, cuánta, y cuáles llegarán al umbral en los próximos 7 días.</p>
   <p class="area">Área de Agricultura de Precisión</p>
-  <div class="subnav msub"><button data-v="tab" class="on">Tablero</button><button data-v="met">Cómo se calcula</button><button data-v="par">Riego aplicado y parámetros</button></div>
+  <div class="subnav msub"><button data-v="tab" class="on">Tablero</button><button data-v="met">Cómo se calcula</button><button data-v="fue">Fuentes y correlación</button><button data-v="par">Riego aplicado y parámetros</button></div>
   <div class="subv on" id="riego-tab">
     <div class="cobar"><label>División <select id="rgDiv"></select></label><label>Régimen <select id="rgReg"><option value="1">Riego (R)</option><option value="0">Secano (S)</option><option value="">Todos</option></select></label><label>Unidad <select id="rgUn"><option value="in">pulgadas</option><option value="mm">mm</option></select></label>
       <span style="flex:1"></span><button class="btn sec" id="rgRef">Actualizar clima</button><button class="btn" id="rgXls">Descargar Excel</button><span class="status" id="rgSt2"></span></div>
@@ -896,9 +896,9 @@ body.splashing{overflow:hidden}
       <h3>Qué es cada término, de dónde sale y qué valor se usa</h3>
       <div class="rgx"><table><tr><th>Término</th><th>Qué es</th><th>De dónde sale</th><th>Valor en la beta</th></tr>
         <tr><td><b>D<sub>r</sub></b></td><td>Agotamiento de la zona de raíces: agua que le falta al suelo para llegar a capacidad de campo (mm)</td><td>Resultado del balance, día a día</td><td>Arranca en 0 (suelo lleno) <span data-pv="dias"></span> días atrás; ese arranque pierde peso con las lluvias</td></tr>
-        <tr><td><b>P</b></td><td>Lluvia del día (mm)</td><td>Pluviómetros registrados en AgroAP-CR (Mapas › Registro de lluvias): promedio de los pluviómetros de la división. Si ese día la división no tiene lectura, lluvia del modelo meteorológico</td><td>Lectura diaria (pulgadas × 25.4)</td></tr>
+        <tr><td><b>P</b></td><td>Lluvia del día (mm)</td><td>1) Pluviómetros registrados en AgroAP-CR (Mapas › Registro de lluvias): promedio de los pluviómetros de la división. 2) Si ese día no hay lectura: lluvia satelital GPM IMERG de NASA. 3) Si tampoco hay: lluvia del modelo meteorológico</td><td>Lectura diaria (pulgadas × 25.4)</td></tr>
         <tr><td><b>I</b></td><td>Riego aplicado (mm)</td><td>Archivo de riego aplicado que se carga en la pestaña "Riego aplicado y parámetros" (fecha, división, tablón, pieza, lámina)</td><td>0 si no se ha cargado</td></tr>
-        <tr><td><b>ET<sub>o</sub></b></td><td>Evapotranspiración de referencia: lo que consume un pasto de referencia con el clima del día (mm)</td><td>Open-Meteo, FAO Penman-Monteith (radiación, temperatura, humedad y viento), en el centro de cada división. Incluye el pronóstico de 7 días</td><td>Diaria, por división</td></tr>
+        <tr><td><b>ET<sub>o</sub></b></td><td>Evapotranspiración de referencia: lo que consume un pasto de referencia con el clima del día (mm)</td><td>1) NASA POWER: el robot diario calcula la ETo FAO-56 con la temperatura, humedad, viento y radiación de NASA (2–3 días de atraso). 2) Días recientes y pronóstico de 7 días: modelo meteorológico (Open-Meteo) corregido con el factor que resulta de compararlo con NASA en los últimos 90 días</td><td>Diaria, por división</td></tr>
         <tr><td><b>K<sub>c</sub></b></td><td>Coeficiente del cultivo: cuánto consume la caña frente a la referencia según su etapa</td><td>Edad = días desde el inicio del ciclo de la pieza en NAX (siembra o último corte)</td><td>Inicial <span data-pv="kcIni"></span> · máximo <span data-pv="kcMid"></span> · maduración <span data-pv="kcEnd"></span> (FAO-56, caña de azúcar)</td></tr>
         <tr><td><b>Z<sub>r</sub></b></td><td>Profundidad de raíces (m)</td><td>Crece con la edad hasta el final del desarrollo</td><td>De <span data-pv="zr0"></span> a <span data-pv="zrMax"></span> m</td></tr>
         <tr><td><b>CAD</b></td><td>Capacidad de agua disponible del suelo: agua útil entre capacidad de campo y punto de marchitez (mm por m)</td><td>Por ahora un valor de referencia, ajustable por división; en la v1.0, del mapa de suelos</td><td><span data-pv="cad"></span> mm/m → ADT máxima <span data-pv="taw"></span></td></tr>
@@ -908,8 +908,8 @@ body.splashing{overflow:hidden}
     </div>
     <div class="card rgm" style="margin-top:16px"><h2>Cómo se calcula, paso a paso</h2>
       <ol class="rgsteps"><li><b>Piezas</b>: del último reporte NAX se toman el área, si es de riego o secano y la fecha de inicio del ciclo de cada pieza.</li>
-        <li><b>Clima</b>: se consulta la ETo diaria de los últimos <span data-pv="dias"></span> días y el pronóstico de 7 días en el centro de cada división.</li>
-        <li><b>Lluvia</b>: para cada día y división se usa el promedio de los pluviómetros registrados; si falta, la lluvia del modelo.</li>
+        <li><b>Clima</b>: ETo diaria de los últimos <span data-pv="dias"></span> días de NASA POWER (calculada por el robot) y pronóstico de 7 días del modelo meteorológico calibrado con NASA, en el centro de cada división.</li>
+        <li><b>Lluvia</b>: para cada día y división se usa el promedio de los pluviómetros registrados; si falta, la lluvia satelital IMERG; si tampoco hay, la del modelo.</li>
         <li><b>Cultivo</b>: con la edad de la pieza se obtienen K<sub>c</sub> y Z<sub>r</sub>, y con ellos la ADT y la AFA.</li>
         <li><b>Balance</b>: se aplica la ecuación día por día y se obtiene el agua disponible de hoy.</li>
         <li><b>Pronóstico</b>: se sigue el balance 7 días con la ETo y la lluvia pronosticadas, sin riego, para saber cuándo llega al umbral.</li>
@@ -921,8 +921,9 @@ body.splashing{overflow:hidden}
       <li>La lluvia que supera la capacidad de campo se da por perdida (drenaje o escorrentía); no se modela la intercepción.</li>
       <li>Sin archivo de riego aplicado, el balance de las piezas de riego subestima el agua del suelo.</li>
       <li>El inicio del ciclo viene de NAX; una pieza sin fecha se calcula con el K<sub>c</sub> de máximo desarrollo.</li>
-      <li>La ETo es del modelo meteorológico, no de una estación en campo. Open-Meteo es gratuito para uso no comercial; para uso en producción hay que contratar su plan comercial o usar la evapotranspiración de NAX o de una estación propia.</li></ul></div>
+      <li>La ETo viene de NASA POWER (reanálisis y satélite) y del modelo meteorológico calibrado con ella, no de una estación en campo; una estación propia permitiría calibrar las dos. El pronóstico usa Open-Meteo, gratuito solo para uso no comercial: en producción hay que contratar su plan comercial.</li><li>La pestaña "Fuentes y correlación" mide cuánto coinciden NASA, el modelo, los pluviómetros y la humedad de NAX, por día y por semana.</li></ul></div>
   </div>
+  <div class="subv" id="riego-fue"><div id="rgFueBody"><p class="note">Calculando…</p></div></div>
   <div class="subv" id="riego-par">
     <div class="layout">
       <div class="card"><h2>Riego aplicado</h2><div class="req"><div class="reqh"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>Formato del archivo</div><ul>
@@ -1791,7 +1792,7 @@ function demoPieces(n,seed,div){const r=rng(seed),c=EMBED_PIECES.filter(p=>p[4]!
 const demoDate=(r,maxD=170)=>iso(new Date(Date.now()-Math.floor(r()*maxD)*864e5));
 /* --- sub-navegación de cada módulo --- */
 function showModSub(mod,v){$$(`#s-${mod} .msub button`).forEach(b=>b.classList.toggle('on',b.dataset.v===v));$$(`#s-${mod} > .subv`).forEach(d=>d.classList.toggle('on',d.id.endsWith('-'+v)));
-  if(mod==='alertas'){if(v==='tab')drawAlerts();return}if(mod==='cosecha'){if(v==='tab')coDraw();return}if(mod==='riego'){if(v==='tab')rgDraw();else if(v==='met'){rgMetodo();if(!RG.res)rgDraw()}else{rgParForm();rgRiegoLista()}return}const k={'tasa-variada':'tv',muestreo:'mu',calidad:'ca',surcos:'su'}[mod];if(v==='tab')drawDash(k);else{if(mod==='tasa-variada')drawTv();if(mod==='muestreo'){if(!MU&&TV.fc)runMuestreo();else drawMu()}}}
+  if(mod==='alertas'){if(v==='tab')drawAlerts();return}if(mod==='cosecha'){if(v==='tab')coDraw();return}if(mod==='riego'){if(v==='tab')rgDraw();else if(v==='met'){rgMetodo();if(!RG.res)rgDraw()}else if(v==='fue')rgFuentes();else{rgParForm();rgRiegoLista()}return}const k={'tasa-variada':'tv',muestreo:'mu',calidad:'ca',surcos:'su'}[mod];if(v==='tab')drawDash(k);else{if(mod==='tasa-variada')drawTv();if(mod==='muestreo'){if(!MU&&TV.fc)runMuestreo();else drawMu()}}}
 $$('.msub button').forEach(b=>b.onclick=()=>showModSub(b.closest('section').id.slice(2),b.dataset.v));
 const sumBy=(a,f)=>a.reduce((s,x)=>s+(+f(x)||0),0);
 __NAXENGINE__

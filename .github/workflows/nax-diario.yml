@@ -68,6 +68,14 @@ jobs:
           GEOCR_INGEST_TOKEN: ${{ secrets.GEOCR_INGEST_TOKEN }}
         run: node nax/publicar.mjs
 
+      - name: Clima diario (NASA POWER + agua de NAX) para el balance hídrico
+        if: always()
+        continue-on-error: true
+        env:
+          GEOCR_URL: ${{ vars.GEOCR_URL }}
+          GEOCR_INGEST_TOKEN: ${{ secrets.GEOCR_INGEST_TOKEN }}
+        run: python nax/clima.py
+
       - name: Guardar el PDF y el Excel del día (descargables 14 días)
         if: always()
         uses: actions/upload-artifact@v4

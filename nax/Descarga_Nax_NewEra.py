@@ -205,6 +205,14 @@ def download_products():
     # Anomalias: "anomalies" SÍ está confirmado en la lista oficial (Anexo III).
     productos_confirmados.append("anomalies")
 
+    # Agua del suelo, para el balance hídrico de AgroAP-CR (se correlacionan con NASA POWER).
+    # La campaña 2470 trae irrigation_needs_soil y water_content; la 1415 traía además
+    # evapotranspiration, available_water_percentage y days_until_next_watering. Se piden todos:
+    # el que no exista en la campaña se omite solo.
+    for _p in ("irrigation_needs_soil", "water_content", "evapotranspiration",
+               "available_water_percentage", "days_until_next_watering"):
+        productos_confirmados.append(_p)
+
     
     
     # La API ya no acepta "products" (nombres) en /geoserver/downloads - ahora exige
