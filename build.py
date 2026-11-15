@@ -11,6 +11,7 @@ rep = {'__NAXENGINE__': open(s('nax_engine.js'), encoding='utf-8').read(), '__SH
        '__IMAP__': open(s('imap.js'), encoding='utf-8').read(),
        '__INTRO__': open(s('intro.js'), encoding='utf-8').read(),
        '__COSECHA__': open(s('cosecha.js'), encoding='utf-8').read(),
+       '__RIEGO__': open(s('riego.js'), encoding='utf-8').read(),
        '__CAMPO__': open(s('campo.json'), encoding='utf-8').read().replace('</', '<\\/')}
 for k, v in rep.items():
     assert k in h, k

@@ -123,6 +123,9 @@ footer{border-top:6px solid var(--navy2);background:#fff;text-align:center;color
 .mmc{align-items:center;gap:8px}.mmc span{margin-left:auto}.mmpdf{border:1px solid var(--blue);background:#fff;color:var(--blue);font:inherit;font-size:11px;font-weight:700;border-radius:3px;padding:2px 7px;cursor:pointer}.mmpdf:hover{background:var(--blue);color:#fff}
 .fbar{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px}
 .fbar>div{min-width:170px}.fbar label{margin-top:0}
+.beta{display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.06em;color:#fff;background:#EE3B33;border-radius:4px;padding:1px 5px;vertical-align:middle;margin-left:4px}h1 .beta{font-size:12px;padding:2px 7px;vertical-align:4px}
+.rgm h3{font-size:14px;color:var(--navy);margin:18px 0 8px}.rgm p,.rgm li{line-height:1.55}.eq{font-family:'Cambria Math','Times New Roman',serif;font-size:24px;color:var(--navy);background:#F4F7FA;border-left:4px solid var(--blue);border-radius:6px;padding:14px 18px;margin:12px 0;line-height:1.6}.eq.sm{font-size:16.5px;padding:10px 18px}.eq .eqn{font-size:14px;color:var(--muted);margin-left:22px;white-space:nowrap}.eq sub{font-size:.62em}.rgx{overflow-x:auto}
+.rgsteps{padding-left:20px}.rgsteps li{margin:6px 0}.rgpar{display:grid;grid-template-columns:1fr 120px;gap:6px 12px;align-items:center}.rgpar label{margin:0;font-size:13px}.rgpar input{padding:6px 8px}
 .kpi5{grid-template-columns:repeat(5,1fr)}.kpi6{grid-template-columns:repeat(6,1fr)}@media(max-width:1000px){.kpi6{grid-template-columns:repeat(3,1fr)}}.cobar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}.cobar select{padding:7px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;font-size:13px}.cobar label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin:0}@media(max-width:900px){.kpi5{grid-template-columns:repeat(2,1fr)}}
 .agrid{display:grid;grid-template-columns:2fr 1fr;gap:16px}@media(max-width:920px){.agrid{grid-template-columns:1fr}}
 .dleg{display:grid;gap:6px;margin-top:8px;font-size:13px}.dleg div{display:flex;align-items:center;gap:8px;cursor:pointer;padding:3px 6px;border-radius:4px}.dleg div:hover{background:#F5F7FA}.dleg i{width:12px;height:12px;border-radius:2px}.dleg b{margin-left:auto;color:var(--navy)}
@@ -425,7 +428,7 @@ body.splashing{overflow:hidden}
   <div class="hbar">
     <a class="brand" href="#inicio"><span class="mark"><span class="a">Agro</span><span class="ap">AP</span><span class="dsh">-</span><span class="crw"><span class="c">C</span><span class="r">R</span></span></span></a>
     <nav id="nav">
-      <a href="#inicio">Inicio</a><a href="#cartografia">Cartografía</a><a href="#mapas">Mapas</a><a href="#alertas">Monitoreo NAX</a><a href="#tasa-variada">Prescripción</a><a href="#calidad">Calidad</a><a href="#muestreo">Muestreo</a><a href="#surcos">Teledetección</a><a href="#cosecha">Cosecha</a>
+      <a href="#inicio">Inicio</a><a href="#cartografia">Cartografía</a><a href="#mapas">Mapas</a><a href="#alertas">Monitoreo NAX</a><a href="#tasa-variada">Prescripción</a><a href="#calidad">Calidad</a><a href="#muestreo">Muestreo</a><a href="#surcos">Teledetección</a><a href="#cosecha">Cosecha</a><a href="#riego">Riego <span class="beta">BETA</span></a>
     </nav>
   </div>
   <div class="stripe"></div>
@@ -466,6 +469,8 @@ body.splashing{overflow:hidden}
       <b>Teledetección de surcos y despoblación</b><p>Convierte un vuelo de drone en un conteo de plantas: población por acre y despoblación de cada tablón y pieza, comparadas entre variedades.</p></div>
     <div class="tile"><svg viewBox="0 0 300 160" class="ill"><rect width="300" height="160" fill="#F3F5F8"/><g><rect x="18" y="30" width="26" height="100" fill="#0E2A47" opacity="0.55"/><rect x="52" y="36" width="26" height="94" fill="#0E2A47" opacity="0.63"/><rect x="86" y="42" width="26" height="88" fill="#0E2A47" opacity="0.7100000000000001"/><rect x="120" y="30" width="26" height="100" fill="#0E2A47" opacity="0.79"/><rect x="154" y="36" width="26" height="94" fill="#0E2A47" opacity="0.55"/><rect x="188" y="42" width="26" height="88" fill="#C5D9EC" opacity="0.63"/><rect x="222" y="30" width="26" height="100" fill="#C5D9EC" opacity="0.7100000000000001"/><rect x="256" y="36" width="26" height="94" fill="#C5D9EC" opacity="0.79"/></g><path d="M14 132 L286 132" stroke="#8A94A3" stroke-width="2"/><polyline points="31,70 65,62 99,74 133,55 167,60 201,48 235,52 269,44" fill="none" stroke="#EE3B33" stroke-width="3"/><g fill="#EE3B33"><circle cx="31" cy="70" r="4"/><circle cx="133" cy="55" r="4"/><circle cx="269" cy="44" r="4"/></g></svg>
       <b>Cosecha</b><p>Sigue qué campos se van cosechando y compara el TCA real con el estimado del ingenio y NAX; genera el Excel y el informe PDF de cada quincena.</p></div>
+    <div class="tile"><svg viewBox="0 0 300 160" class="ill"><rect width="300" height="160" fill="#EAF2FB"/><rect x="30" y="98" width="240" height="44" fill="#C9B48A" opacity=".55"/><rect x="30" y="98" width="240" height="20" fill="#0070C9" opacity=".35"/><path d="M30 60 C80 40 120 92 170 70 S250 52 270 64" fill="none" stroke="#0E2A47" stroke-width="3"/><line x1="30" y1="84" x2="270" y2="84" stroke="#EE3B33" stroke-width="2" stroke-dasharray="6 5"/><g fill="#0070C9"><path d="M70 20c-5 8-8 12-8 16a8 8 0 0 0 16 0c0-4-3-8-8-16z"/><path d="M120 28c-4 6-6 9-6 12a6 6 0 0 0 12 0c0-3-2-6-6-12z" opacity=".7"/></g><circle cx="225" cy="30" r="13" fill="#F2A900"/></svg>
+      <b>Balance hídrico y riego <span class="beta">BETA</span></b><p>Estima el agua disponible del suelo en cada pieza con lluvia, evapotranspiración y edad del cultivo, y prioriza qué tablones regar.</p></div>
   </div>
   </div>
   <div class="flow2">
@@ -865,6 +870,71 @@ body.splashing{overflow:hidden}
     </div>
   </div>
 </section>
+<section id="s-riego">
+  <h1>Balance hídrico y riego <span class="beta">BETA</span></h1>
+  <p class="sub">Estima cada día cuánta agua le queda al suelo en la zona de raíces de cada pieza, con la lluvia de los pluviómetros, la evapotranspiración y la edad del cultivo de NAX. Señala qué tablones de riego necesitan agua hoy, cuánta, y cuáles llegarán al umbral en los próximos 7 días.</p>
+  <p class="area">Área de Agricultura de Precisión</p>
+  <div class="subnav msub"><button data-v="tab" class="on">Tablero</button><button data-v="met">Cómo se calcula</button><button data-v="par">Riego aplicado y parámetros</button></div>
+  <div class="subv on" id="riego-tab">
+    <div class="cobar"><label>División <select id="rgDiv"></select></label><label>Régimen <select id="rgReg"><option value="1">Riego (R)</option><option value="0">Secano (S)</option><option value="">Todos</option></select></label><label>Unidad <select id="rgUn"><option value="in">pulgadas</option><option value="mm">mm</option></select></label>
+      <span style="flex:1"></span><button class="btn sec" id="rgRef">Actualizar clima</button><button class="btn" id="rgXls">Descargar Excel</button><span class="status" id="rgSt2"></span></div>
+    <p class="note" id="rgSt" style="margin:0 0 10px"></p>
+    <div id="rgEmpty" class="card empty" style="display:none"></div>
+    <div id="rgBody">
+      <div class="kpis kpi5" id="rgK"></div>
+      <div class="agrid" style="margin-top:16px"><div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Agua disponible hoy por pieza</h2><span class="note">Clic en una pieza</span></div><div class="mapwrap"><canvas class="map" id="rgMap"></canvas><div class="tip" id="rgTip"></div></div><div class="legend" id="rgLeg"></div></div>
+        <div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2>Balance diario por división</h2><select id="rgChDiv" style="padding:5px 8px;border:1px solid var(--line);border-radius:6px"></select></div><div class="legend" id="rgChLeg"></div><svg class="chart" id="rgCh"></svg><p class="note">Últimos 60 días y 7 de pronóstico (fondo gris). Línea: agua disponible promedio de la división (ponderada por área). Barras: lluvia diaria y riego aplicado. Por debajo de la línea roja el cultivo entra en estrés.</p></div></div>
+      <div class="card" style="margin-top:16px"><h2 id="rgTblT">Prioridad de riego por tablón</h2><p class="note" style="margin-top:-4px">Ordenado por los días que faltan para llegar al umbral. Lámina a aplicar = déficit para volver a capacidad de campo. Volumen = lámina × área.</p><div class="scroll"><table id="rgTbl"></table></div></div>
+    </div>
+  </div>
+  <div class="subv" id="riego-met">
+    <div class="card rgm"><h2>La ecuación</h2>
+      <p>Cada pieza se trata como un depósito: la zona de raíces guarda agua hasta su capacidad de campo. Cada día entra lluvia y riego, y sale lo que consume el cultivo. Se sigue el <b>agotamiento</b>, es decir, cuánto le falta al suelo para estar lleno (método FAO-56, Allen et al., 1998).</p>
+      <div class="eq">D<sub>r,i</sub> = D<sub>r,i−1</sub> − P<sub>i</sub> − I<sub>i</sub> + ET<sub>c,i</sub><span class="eqn">con 0 ≤ D<sub>r</sub> ≤ ADT</span></div>
+      <div class="eq sm">ET<sub>c</sub> = K<sub>s</sub> · K<sub>c</sub> · ET<sub>o</sub> &nbsp;&nbsp;·&nbsp;&nbsp; ADT = CAD · Z<sub>r</sub> &nbsp;&nbsp;·&nbsp;&nbsp; AFA = p · ADT &nbsp;&nbsp;·&nbsp;&nbsp; K<sub>s</sub> = (ADT − D<sub>r</sub>) / ((1 − p) · ADT) si D<sub>r</sub> &gt; AFA, si no 1</div>
+      <div class="eq sm">Agua disponible (%) = 100 · (1 − D<sub>r</sub> / ADT) &nbsp;&nbsp;·&nbsp;&nbsp; <b>Regar</b> cuando D<sub>r</sub> ≥ AFA, es decir, agua disponible ≤ <span data-pv="raw"></span></div>
+      <h3>Qué es cada término, de dónde sale y qué valor se usa</h3>
+      <div class="rgx"><table><tr><th>Término</th><th>Qué es</th><th>De dónde sale</th><th>Valor en la beta</th></tr>
+        <tr><td><b>D<sub>r</sub></b></td><td>Agotamiento de la zona de raíces: agua que le falta al suelo para llegar a capacidad de campo (mm)</td><td>Resultado del balance, día a día</td><td>Arranca en 0 (suelo lleno) <span data-pv="dias"></span> días atrás; ese arranque pierde peso con las lluvias</td></tr>
+        <tr><td><b>P</b></td><td>Lluvia del día (mm)</td><td>Pluviómetros registrados en AgroAP-CR (Mapas › Registro de lluvias): promedio de los pluviómetros de la división. Si ese día la división no tiene lectura, lluvia del modelo meteorológico</td><td>Lectura diaria (pulgadas × 25.4)</td></tr>
+        <tr><td><b>I</b></td><td>Riego aplicado (mm)</td><td>Archivo de riego aplicado que se carga en la pestaña "Riego aplicado y parámetros" (fecha, división, tablón, pieza, lámina)</td><td>0 si no se ha cargado</td></tr>
+        <tr><td><b>ET<sub>o</sub></b></td><td>Evapotranspiración de referencia: lo que consume un pasto de referencia con el clima del día (mm)</td><td>Open-Meteo, FAO Penman-Monteith (radiación, temperatura, humedad y viento), en el centro de cada división. Incluye el pronóstico de 7 días</td><td>Diaria, por división</td></tr>
+        <tr><td><b>K<sub>c</sub></b></td><td>Coeficiente del cultivo: cuánto consume la caña frente a la referencia según su etapa</td><td>Edad = días desde el inicio del ciclo de la pieza en NAX (siembra o último corte)</td><td>Inicial <span data-pv="kcIni"></span> · máximo <span data-pv="kcMid"></span> · maduración <span data-pv="kcEnd"></span> (FAO-56, caña de azúcar)</td></tr>
+        <tr><td><b>Z<sub>r</sub></b></td><td>Profundidad de raíces (m)</td><td>Crece con la edad hasta el final del desarrollo</td><td>De <span data-pv="zr0"></span> a <span data-pv="zrMax"></span> m</td></tr>
+        <tr><td><b>CAD</b></td><td>Capacidad de agua disponible del suelo: agua útil entre capacidad de campo y punto de marchitez (mm por m)</td><td>Por ahora un valor de referencia, ajustable por división; en la v1.0, del mapa de suelos</td><td><span data-pv="cad"></span> mm/m → ADT máxima <span data-pv="taw"></span></td></tr>
+        <tr><td><b>p</b></td><td>Fracción de la ADT que el cultivo puede usar sin estrés</td><td>FAO-56, caña de azúcar</td><td><span data-pv="p"></span> → AFA máxima <span data-pv="afa"></span></td></tr>
+        <tr><td><b>K<sub>s</sub></b></td><td>Reducción del consumo por estrés hídrico</td><td>Se calcula cuando D<sub>r</sub> pasa la AFA</td><td>Entre 0 y 1</td></tr></table></div>
+      <h3>Curva de K<sub>c</sub> según la edad de la caña</h3><svg class="chart" id="rgKc"></svg>
+    </div>
+    <div class="card rgm" style="margin-top:16px"><h2>Cómo se calcula, paso a paso</h2>
+      <ol class="rgsteps"><li><b>Piezas</b>: del último reporte NAX se toman el área, si es de riego o secano y la fecha de inicio del ciclo de cada pieza.</li>
+        <li><b>Clima</b>: se consulta la ETo diaria de los últimos <span data-pv="dias"></span> días y el pronóstico de 7 días en el centro de cada división.</li>
+        <li><b>Lluvia</b>: para cada día y división se usa el promedio de los pluviómetros registrados; si falta, la lluvia del modelo.</li>
+        <li><b>Cultivo</b>: con la edad de la pieza se obtienen K<sub>c</sub> y Z<sub>r</sub>, y con ellos la ADT y la AFA.</li>
+        <li><b>Balance</b>: se aplica la ecuación día por día y se obtiene el agua disponible de hoy.</li>
+        <li><b>Pronóstico</b>: se sigue el balance 7 días con la ETo y la lluvia pronosticadas, sin riego, para saber cuándo llega al umbral.</li>
+        <li><b>Recomendación</b>: piezas por debajo de la AFA = regar; lámina = déficit para volver a capacidad de campo; se resume por tablón ponderando por área.</li></ol></div>
+    <div class="card rgm" style="margin-top:16px"><h2>Ejemplo con un tablón, día por día</h2><div class="row" style="gap:8px;align-items:center;margin-bottom:8px"><label style="margin:0">Tablón o tablón-pieza</label><input id="rgEjTab" style="max-width:160px"></div><div id="rgEj" class="note">Calculando…</div></div>
+    <div class="card rgm" style="margin-top:16px"><h2>¿Coincide con lo que ve el satélite?</h2><p class="note" style="margin-top:-4px">Contraste del balance con la humedad del suelo que estima NAX, con los filtros del tablero.</p><div id="rgVal"></div></div>
+    <div class="card rgm" style="margin-top:16px"><h2>Supuestos y límites de esta beta</h2><ul>
+      <li>La CAD es un valor de referencia igual para todo el suelo de una división; la v1.0 la tomará del mapa de suelos.</li>
+      <li>La lluvia que supera la capacidad de campo se da por perdida (drenaje o escorrentía); no se modela la intercepción.</li>
+      <li>Sin archivo de riego aplicado, el balance de las piezas de riego subestima el agua del suelo.</li>
+      <li>El inicio del ciclo viene de NAX; una pieza sin fecha se calcula con el K<sub>c</sub> de máximo desarrollo.</li>
+      <li>La ETo es del modelo meteorológico, no de una estación en campo. Open-Meteo es gratuito para uso no comercial; para uso en producción hay que contratar su plan comercial o usar la evapotranspiración de NAX o de una estación propia.</li></ul></div>
+  </div>
+  <div class="subv" id="riego-par">
+    <div class="layout">
+      <div class="card"><h2>Riego aplicado</h2><div class="req"><div class="reqh"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M9 14h6M9 17h4"/></svg>Formato del archivo</div><ul>
+        <li><span class="rq o">Obligatorio</span><div><b>FECHA, DIVISION, TABLON y LAMINA_MM o LAMINA_IN</b><small>Una fila por riego. División por código (1–7) o nombre. Excel o CSV.</small></div></li>
+        <li><span class="rq">Opcional</span><div><b>PIEZA</b><small>Si falta, el riego se aplica a todas las piezas del tablón.</small></div></li></ul></div>
+        <label>Archivo de riego aplicado</label><input type="file" id="rgFile" accept=".xlsx,.xls,.csv"><div class="status" id="rgRSt"></div>
+        <h3 style="margin:16px 0 6px;font-size:14px">Archivos cargados</h3><div id="rgCargas"></div></div>
+      <div class="card"><h2>Parámetros del balance</h2><p class="note" style="margin-top:-4px">Valores de referencia FAO-56 para caña de azúcar. Se guardan en este navegador para probar escenarios.</p><div id="rgPar"></div>
+        <div class="row" style="margin-top:14px;gap:8px"><button class="btn" id="rgParSave">Guardar parámetros</button><button class="btn sec" id="rgParDef">Restablecer</button></div><div class="status" id="rgParSt"></div></div>
+    </div>
+  </div>
+</section>
 <section id="s-surcos">
   <h1>Teledetección de surcos y despoblación</h1>
   <p class="sub">Convierte un vuelo de drone en un conteo de plantas y compara la población y la despoblación de cada tablón y pieza. Despoblación = huecos mayores de 1 m.</p>
@@ -949,10 +1019,10 @@ async function readGeo(file){
 }
 
 /* ---------------- navegación ---------------- */
-const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','muestreo','surcos','cosecha'];
+const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','muestreo','surcos','cosecha','riego'];
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));
-  if(v==='mapas')showSub(['lluvias','registro','otros','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
+  if(v==='mapas')showSub(['lluvias','registro','otros','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 
 /* Intro de agricultura de precisión (canvas): campo en perspectiva, tractor con guiado RTK,
    estación RTK, satélite, dron que escanea y revela el NDVI, nube con lluvia y pluviómetro, HUD. */
@@ -1555,6 +1625,7 @@ const HOME_APPS=[
   {id:'calidad',t:'Informes de calidad de aplicación',ic:'<rect x="3" y="4" width="3.2" height="16" fill="#2E7D32" opacity=".8"/><rect x="7" y="4" width="3.2" height="16" fill="#2E7D32" opacity=".8"/><rect x="11" y="4" width="3.2" height="16" fill="#C62828" opacity=".85"/><rect x="15" y="4" width="3.2" height="16" fill="#2E7D32" opacity=".8"/><circle cx="17.5" cy="16.5" r="4.6" fill="#fff" stroke="#0070C9" stroke-width="1.6"/><path d="M15.4 16.6l1.5 1.5 2.8-3" stroke="#0070C9" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'},
   {id:'muestreo',t:'Puntos de muestreo aleatorio',ic:'<path d="M3 5l18 1-1 14-16-1z" fill="#C5E1A5"/><path d="M3 5l7 .4c.6 4-1.6 6-6.6 6.4z" fill="#EF9A9A"/><g><path d="M12 15c-3-3.6-4.4-5.6-4.4-7.4a4.4 4.4 0 0 1 8.8 0c0 1.8-1.4 3.8-4.4 7.4z" fill="#EE3B33"/><circle cx="12" cy="7.6" r="1.7" fill="#fff"/></g><circle cx="6" cy="16" r="1.3" fill="#0E2A47"/><circle cx="17.5" cy="17" r="1.3" fill="#0E2A47"/>'},
   {id:'surcos',t:'Teledetección de surcos y despoblación',ic:'<g stroke="#C9B48A" stroke-width="2.2" stroke-linecap="round"><path d="M3 9h18M3 15h18M3 21h18"/></g><g stroke="#2E7D32" stroke-width="1.6" stroke-linecap="round"><path d="M5 9l-1.5-4M5 9V4M5 9l1.5-4M11 9l-1.5-4M11 9V4M11 9l1.5-4M5 15l-1.5-4M5 15v-5M5 15l1.5-4M17 15l-1.5-4M17 15v-5M17 15l1.5-4"/></g><rect x="14" y="4.6" width="6" height="4.4" rx="1" fill="none" stroke="#C62828" stroke-width="1.3" stroke-dasharray="1.6 1.2"/>'},
+  {id:'riego',t:'Balance hídrico y riego (beta)',ic:'<path d="M12 3c-4 6-6 9-6 12a6 6 0 0 0 12 0c0-3-2-6-6-12z" fill="#0070C9"/><path d="M4 21h16" stroke="#0E2A47" stroke-width="2"/>'},
   {id:'cosecha',t:'Cosecha',ic:'<rect x="3" y="10" width="3.5" height="10" fill="#0E2A47"/><rect x="8.5" y="7" width="3.5" height="13" fill="#0E2A47"/><rect x="14" y="11" width="3.5" height="9" fill="#85B4DF"/><path d="M3 6l5.5-2 5.5 3 6-3" fill="none" stroke="#EE3B33" stroke-width="1.8"/>'}];
 (function(){
   const show=$('#show'),car=$('#car'),src=$('#homeSrc'),tiles=[...src.querySelectorAll('.tile')],DUR=7000,apps=HOME_APPS.slice(1);let cur=0,tm=null,paused=false;
@@ -1850,7 +1921,7 @@ function demoPieces(n,seed,div){const r=rng(seed),c=EMBED_PIECES.filter(p=>p[4]!
 const demoDate=(r,maxD=170)=>iso(new Date(Date.now()-Math.floor(r()*maxD)*864e5));
 /* --- sub-navegación de cada módulo --- */
 function showModSub(mod,v){$$(`#s-${mod} .msub button`).forEach(b=>b.classList.toggle('on',b.dataset.v===v));$$(`#s-${mod} > .subv`).forEach(d=>d.classList.toggle('on',d.id.endsWith('-'+v)));
-  if(mod==='alertas'){if(v==='tab')drawAlerts();return}if(mod==='cosecha'){if(v==='tab')coDraw();return}const k={'tasa-variada':'tv',muestreo:'mu',calidad:'ca',surcos:'su'}[mod];if(v==='tab')drawDash(k);else{if(mod==='tasa-variada')drawTv();if(mod==='muestreo'){if(!MU&&TV.fc)runMuestreo();else drawMu()}}}
+  if(mod==='alertas'){if(v==='tab')drawAlerts();return}if(mod==='cosecha'){if(v==='tab')coDraw();return}if(mod==='riego'){if(v==='tab')rgDraw();else if(v==='met'){rgMetodo();if(!RG.res)rgDraw()}else{rgParForm();rgRiegoLista()}return}const k={'tasa-variada':'tv',muestreo:'mu',calidad:'ca',surcos:'su'}[mod];if(v==='tab')drawDash(k);else{if(mod==='tasa-variada')drawTv();if(mod==='muestreo'){if(!MU&&TV.fc)runMuestreo();else drawMu()}}}
 $$('.msub button').forEach(b=>b.onclick=()=>showModSub(b.closest('section').id.slice(2),b.dataset.v));
 const sumBy=(a,f)=>a.reduce((s,x)=>s+(+f(x)||0),0);
 /* ================= ALERTAS NAX (lógica de reporte.py) ================= */
@@ -2809,6 +2880,171 @@ $('#coPdf').onclick=async()=>{const st=$('#coDlSt');if(!CO.data)return;if(!windo
     const{jsPDF}=window.jspdf,pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'letter'});pdf.setProperties({title:`Informe quincena ${meta.n}`});
     pages.forEach((p,i)=>{if(i)pdf.addPage('letter','portrait');pdf.addImage(p.toDataURL('image/jpeg',0.93),'JPEG',0,0,215.9,279.4,undefined,'SLOW')});
     saveFile(`Informe_quincena_${meta.n}_zafra_${meta.zafra}.pdf`,pdf.output('blob'),st)}catch(e){st.textContent='No se pudo armar el PDF: '+(e.message||e)}};
+
+/* ================= RIEGO · BALANCE HÍDRICO (beta) ================= */
+/* Balance hídrico diario del suelo por pieza (método FAO-56, coeficiente simple):
+     Dr(i) = Dr(i-1) − P(i) − I(i) + ETc(i)        con 0 ≤ Dr ≤ ADT
+     ETc   = Ks · Kc · ETo
+   Dr = agotamiento de la zona de raíces (mm), P = lluvia, I = riego aplicado, ETo = evapotranspiración de referencia,
+   Kc = coeficiente del cultivo según la edad de la caña (días desde el inicio del ciclo en NAX), Ks = estrés hídrico,
+   ADT = agua disponible total = CAD × Zr, AFA = p × ADT (agua fácilmente aprovechable).
+   Lluvia: pluviómetros de AgroAP-CR (promedio de la división ese día); si la división no tiene lectura ese día, lluvia del modelo
+   meteorológico (Open-Meteo). ETo y pronóstico de 7 días: Open-Meteo (FAO Penman-Monteith), en el centro de cada división. */
+const RG_DEF={cad:140,zr0:0.3,zrMax:1.2,p:0.65,kcIni:0.40,kcMid:1.25,kcEnd:0.75,lIni:30,lDev:90,lMid:180,lLate:65,dias:90,vig:60,cadDiv:{}};
+const RG={par:null,clima:null,climaErr:null,cargando:false,res:null,div:'',reg:'1',un:'in',riego:new Map(),ej:''};
+const RG_COL={ok:'#2E7D32',vig:'#F2A900',reg:'#C62828',sin:'#E6E9ED'};
+try{RG.par={...RG_DEF,...JSON.parse(localStorage.getItem('geocr-riego-par')||'{}')}}catch(e){RG.par={...RG_DEF}}
+try{RG.un=localStorage.getItem('geocr-riego-un')||'in'}catch(e){}
+const rgDivBase=d=>String(d||'').replace(/\s*\((R|S)\)\s*$/,'').trim();
+const rgL=mm=>RG.un==='in'?mm/25.4:mm, rgU=()=>RG.un==='in'?'in':'mm', rgF=(mm,d)=>isFinite(mm)?fmt(rgL(mm),d==null?(RG.un==='in'?2:0):d):'–';
+const rgISO=t=>new Date(t).toISOString().slice(0,10), rgHoy=()=>{const d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())};
+/* Kc y profundidad de raíces según la edad (días desde el inicio del ciclo) */
+function rgKc(e,P){if(!isFinite(e))return{kc:P.kcMid,zr:P.zrMax,et:'sin fecha'};const a=P.lIni,b=a+P.lDev,c=b+P.lMid,d=c+P.lLate;
+  const zr=Math.min(P.zrMax,P.zr0+(P.zrMax-P.zr0)*Math.max(0,e)/Math.max(1,b));
+  if(e<a)return{kc:P.kcIni,zr,et:'inicial'};if(e<b)return{kc:P.kcIni+(P.kcMid-P.kcIni)*(e-a)/P.lDev,zr,et:'desarrollo'};
+  if(e<c)return{kc:P.kcMid,zr,et:'máximo desarrollo'};if(e<d)return{kc:P.kcMid+(P.kcEnd-P.kcMid)*(e-c)/P.lLate,zr,et:'maduración'};return{kc:P.kcEnd,zr,et:'maduración'}}
+/* centro de cada división (para pedir el clima) */
+function rgDivs(){return EMBED_LAYERS.divs.map(d=>({name:d.name,lon:d.lab[0],lat:d.lab[1]}))}
+/* clima: ETo y lluvia del modelo, 92 días atrás + 7 de pronóstico, una sola consulta para las 7 divisiones */
+async function rgClima(force){const k='geocr-riego-clima';if(!force){try{const c=JSON.parse(sessionStorage.getItem(k)||'null');if(c&&Date.now()-c.t<3*3600e3){RG.clima=c;return c}}catch(e){}}
+  const D=rgDivs(),u=`https://api.open-meteo.com/v1/forecast?latitude=${D.map(d=>d.lat.toFixed(4)).join(',')}&longitude=${D.map(d=>d.lon.toFixed(4)).join(',')}&daily=et0_fao_evapotranspiration,precipitation_sum&past_days=92&forecast_days=7&timezone=America%2FSanto_Domingo`;
+  const r=await fetch(u);if(!r.ok)throw new Error('El servicio de clima respondió '+r.status);let j=await r.json();if(!Array.isArray(j))j=[j];
+  const c={t:Date.now(),fuente:'Open-Meteo (FAO Penman-Monteith)',divs:{}};D.forEach((d,i)=>{const x=j[i]&&j[i].daily;if(!x)return;c.divs[d.name]={f:x.time,eto:x.et0_fao_evapotranspiration,p:x.precipitation_sum}});
+  try{sessionStorage.setItem(k,JSON.stringify(c))}catch(e){}RG.clima=c;return c}
+/* lluvia diaria de los pluviómetros por división (pulgadas → mm) */
+function rgLluviaPluv(){const m=new Map();if(typeof R==='undefined'||!R.recs)return m;const gd=new Map([...R.gauges.values()].map(g=>[g.id,g.div]));
+  R.recs.forEach(r=>{if(r.src!=='dia'||r.s!==r.e)return;const dv=gd.get(r.p);if(!dv||!isFinite(r.v))return;const k=dv+'|'+r.s;if(!m.has(k))m.set(k,[]);m.get(k).push(r.v*25.4)});
+  const o=new Map();m.forEach((a,k)=>o.set(k,a.reduce((s,x)=>s+x,0)/a.length));return o}
+/* riego aplicado: Map clave(div|tab|pz o div|tab|*) → Map(fecha → mm) */
+function rgRiegoDe(p,f){const a=RG.riego.get(rgDivBase(p.div)+'|'+(+p.tab)+'|'+(+p.pz)),b=RG.riego.get(rgDivBase(p.div)+'|'+(+p.tab)+'|*');return((a&&a.get(f))||0)+((b&&b.get(f))||0)}
+/* corre el balance de todas las piezas */
+function rgCorrer(){if(!NX||!NX.P||!RG.clima)return null;const P=RG.par,C=RG.clima,hoy=rgHoy(),hoyS=rgISO(hoy),pl=rgLluviaPluv();
+  const dias={};let usoPl=0,totPl=0;
+  Object.entries(C.divs).forEach(([dv,c])=>{const L=[];c.f.forEach((f,i)=>{const t=Date.parse(f);if(t<hoy-P.dias*864e5)return;const fut=f>hoyS,kp=pl.get(dv+'|'+f);
+      let p=+c.p[i]||0,src='modelo';if(!fut&&kp!==undefined){p=kp;src='pluviómetro';usoPl++}if(!fut)totPl++;L.push({f,eto:+c.eto[i]||0,p,src,fut})});dias[dv]=L});
+  const out=[],serie={};
+  NX.P.forEach(p=>{const dv=rgDivBase(p.div),L=dias[dv];if(!L||!L.length)return;const cad=+(P.cadDiv[dv]||P.cad),fi=p.fi?Date.parse(p.fi):NaN;
+    let Dr=0,hoyR=null,dUmb=null,et30=0,p30=0,i30=0;const tr=[];
+    L.forEach(d=>{const e=(Date.parse(d.f)-fi)/864e5,k=rgKc(e,P),TAW=cad*k.zr,RAW=P.p*TAW,I=d.fut?0:rgRiegoDe(p,d.f);
+      const Ks=Dr>RAW?Math.max(0,(TAW-Dr)/((1-P.p)*TAW)):1,ETc=Ks*k.kc*d.eto;Dr=Math.min(TAW,Math.max(0,Dr-d.p-I+ETc));
+      const ad=100*(1-Dr/TAW);if(!d.fut&&Date.parse(d.f)>hoy-30*864e5){et30+=ETc;p30+=d.p;i30+=I}
+      if(d.f<=hoyS)hoyR={f:d.f,Dr,TAW,RAW,ad,kc:k.kc,zr:k.zr,et:k.et,e,ks:Ks};else if(dUmb===null&&Dr>=RAW)dUmb=Math.round((Date.parse(d.f)-hoy)/864e5);
+      tr.push({f:d.f,fut:d.fut,p:d.p,src:d.src,I,eto:d.eto,kc:k.kc,ks:Ks,etc:ETc,Dr,TAW,RAW,ad})});
+    if(!hoyR)return;if(hoyR.Dr>=hoyR.RAW)dUmb=0;
+    const est=hoyR.Dr>=hoyR.RAW?'reg':hoyR.ad<P.vig?'vig':'ok';
+    out.push({p,dv,ac:+p.ac||0,reg:p.reg===1||/\(R\)/.test(p.div),...hoyR,est,dUmb,et30,p30,i30,hum:p.hum,tr});
+    const sk=dv;if(!serie[sk])serie[sk]=new Map();tr.forEach(t=>{const s=serie[sk].get(t.f)||{f:t.f,fut:t.fut,p:t.p,src:t.src,w:0,ad:0,I:0,etc:0,eto:t.eto};const w=+p.ac||1;s.w+=w;s.ad+=t.ad*w;s.I+=t.I*w;s.etc+=t.etc*w;serie[sk].set(t.f,s)})});
+  return{out,serie,usoPl,totPl,hoy:hoyS,fecha:new Date().toISOString()}}
+/* ---------- dibujo ---------- */
+function rgEstadoTxt(o){return o.est==='reg'?(o.reg?'Regar':'Estrés'):o.est==='vig'?'Vigilar':'Adecuada'}
+async function rgDraw(force){const st=$('#rgSt');if(!$('#s-riego'))return;if(DB&&!RG.sub)rgRiegoCargas();
+  if(!NX||!NX.P){$('#rgBody').style.display='none';$('#rgEmpty').style.display='';$('#rgEmpty').innerHTML='Para calcular el balance hace falta el reporte NAX publicado (edad del cultivo, riego/secano y área de cada pieza). Se toma del Monitoreo NAX en cuanto esté disponible.';return}
+  if(!RG.clima||force){if(RG.cargando)return;RG.cargando=true;st.textContent='Consultando el clima (ETo y pronóstico)…';
+    try{await rgClima(force);RG.climaErr=null}catch(e){RG.climaErr=e.message||String(e)}finally{RG.cargando=false}}
+  if(!RG.clima){$('#rgBody').style.display='none';$('#rgEmpty').style.display='';$('#rgEmpty').innerHTML=`No se pudo consultar el clima (${RG.climaErr||'sin conexión'}). El balance necesita la ETo diaria; revisa la conexión y vuelve a intentar. <button class="btn sec" onclick="rgDraw(true)">Reintentar</button>`;st.textContent='';return}
+  RG.res=rgCorrer();const S=RG.res;if(!S||!S.out.length){$('#rgEmpty').style.display='';$('#rgEmpty').textContent='No hay piezas con datos suficientes para el balance.';$('#rgBody').style.display='none';return}
+  $('#rgEmpty').style.display='none';$('#rgBody').style.display='';
+  const pct=S.totPl?S.usoPl/S.totPl*100:0;
+  st.innerHTML=`Balance al ${coDF?coDF(S.hoy):S.hoy} · ETo y pronóstico: ${RG.clima.fuente}, consultado ${new Date(RG.clima.t).toLocaleString('es-DO',{dateStyle:'short',timeStyle:'short'})} · lluvia de pluviómetros en ${fmt(pct,0)} % de los días-división (el resto, lluvia del modelo) · edad y régimen: reporte NAX del ${NX.hoy?coDF(NX.hoy):''}`;
+  const dv=RG.div,F=S.out.filter(o=>(!dv||o.dv===dv)&&(RG.reg===''||(RG.reg==='1')===o.reg)),A=sumBy(F,o=>o.ac)||1;
+  const wav=f=>sumBy(F,o=>f(o)*o.ac)/A,un=rgU();
+  const regA=sumBy(F.filter(o=>o.est==='reg'),o=>o.ac),vigA=sumBy(F.filter(o=>o.est==='vig'),o=>o.ac),p30=wav(o=>o.p30),e30=wav(o=>o.et30),i30=wav(o=>o.i30),bal=p30+i30-e30;
+  const prox=sumBy(F.filter(o=>o.est!=='reg'&&o.dUmb!==null&&o.dUmb<=7),o=>o.ac);
+  $('#rgK').innerHTML=[['Lluvia 30 días',rgF(p30)+' '+un,'promedio ponderado por área'],['ETc 30 días',rgF(e30)+' '+un,`consumo del cultivo · ETo ${rgF(wav(o=>o.tr.filter(t=>!t.fut).slice(-30).reduce((s,t)=>s+t.eto,0)))} ${un}`],
+    ['Balance 30 días',(bal>=0?'+':'')+rgF(bal)+' '+un,`lluvia${i30>0?' + riego':''} − ETc`],
+    [RG.reg==='0'?'Acres en estrés hoy':'Acres para regar hoy',fmt(regA),`${fmt(regA/A*100,0)} % del área · ${fmt(vigA)} ac en vigilar`],['Llegan al umbral en 7 días',fmt(prox),'acres, según el pronóstico']]
+    .map(([t,v,s],i)=>`<div class="kpi"><small>${t}</small><div style="${i===2?`color:${bal<0?'#C62828':'#2E7D32'}`:i===3&&regA>0?'color:#C62828':''}">${v}</div><em>${s}</em></div>`).join('');
+  /* mapa */
+  const col=new Map(),info=new Map();S.out.forEach(o=>{const rs=keyMatch(String(o.p.id).padStart(11,'0'))||keyMatch(o.p.id)||[];const c=(!dv||o.dv===dv)&&(RG.reg===''||(RG.reg==='1')===o.reg)?RG_COL[o.est]:'#F3F4F6';rs.forEach(i=>{col.set(i,c);info.set(i,o)})});
+  dashMap('rg',col);RG.tip=ri=>{const o=info.get(ri);if(!o)return'';return`${o.reg?'Riego (R)':'Secano (S)'} · edad ${isFinite(o.e)?fmt(o.e/30.44,1)+' meses':'s/d'} · Kc ${fmt(o.kc,2)}<br>Agua disponible <b>${fmt(o.ad,0)} %</b> · déficit ${rgF(o.Dr)} ${rgU()} de ${rgF(o.TAW)} · <b style="color:${RG_COL[o.est]}">${rgEstadoTxt(o)}</b>${o.dUmb!==null&&o.est!=='reg'?`<br>Llega al umbral en ${o.dUmb} días`:''}${o.hum!=null?`<br>Humedad NAX ${fmt(o.hum,1)} %`:''}`};
+  $('#rgLeg').innerHTML=[[RG_COL.ok,`Adecuada (≥ ${RG.par.vig} % de agua disponible)`],[RG_COL.vig,'Vigilar'],[RG_COL.reg,`Regar / estrés (por debajo del umbral ${fmt((1-RG.par.p)*100,0)} %)`],['#F3F4F6','Fuera del filtro']].map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join('');
+  rgChart();rgTabla(F);rgValid(F);rgEjemplo()}
+function rgChart(){const S=RG.res,sel=$('#rgChDiv');const ds=Object.keys(S.serie).sort((a,b)=>(LR_DIVC[a]||9)-(LR_DIVC[b]||9));if(!sel.options.length||sel.dataset.n!==ds.join()){sel.innerHTML=ds.map(d=>`<option>${d}</option>`).join('');sel.dataset.n=ds.join();sel.value=RG.div&&ds.includes(RG.div)?RG.div:(ds.includes('Higueral')?'Higueral':ds[0])}
+  const L=[...S.serie[sel.value].values()].sort((a,b)=>a.f<b.f?-1:1).slice(-67).map(s=>({...s,ad:s.ad/s.w,I:s.I/s.w,etc:s.etc/s.w}));
+  const svg=svgEl('rgCh'),H=280,W=svgSize(svg,H),Lm=44,Rm=40,B=30,Tp=12,n=L.length,gw=(W-Lm-Rm)/n,mxP=Math.max(10,...L.map(s=>s.p+s.I))*1.1,thr=(1-RG.par.p)*100;
+  const yA=v=>Tp+(H-B-Tp)*(1-v/100),yP=v=>H-B-(H-B-Tp)*v/mxP;let h='';
+  const fi=L.findIndex(s=>s.fut);if(fi>=0)h+=`<rect x="${Lm+fi*gw}" y="${Tp}" width="${(n-fi)*gw}" height="${H-B-Tp}" fill="#F2F5F9"/><text x="${Lm+fi*gw+4}" y="${Tp+12}" font-size="10" fill="#5B6673">pronóstico</text>`;
+  [0,25,50,75,100].forEach(v=>{h+=`<line x1="${Lm}" x2="${W-Rm}" y1="${yA(v)}" y2="${yA(v)}" stroke="#EEF1F5"/><text x="${Lm-6}" y="${yA(v)+4}" font-size="10" text-anchor="end" fill="#0E2A47">${v}%</text>`});
+  niceBreaks(rgL(mxP),4).forEach(v=>{const y=H-B-(H-B-Tp)*(RG.un==='in'?v*25.4:v)/mxP;if(y<Tp)return;h+=`<text x="${W-Rm+6}" y="${y+4}" font-size="10" fill="#0070C9">${fmt(v,RG.un==='in'?1:0)}</text>`});
+  L.forEach((s,i)=>{const x=Lm+i*gw;if(s.p>0)h+=`<rect x="${x+gw*.15}" y="${yP(s.p)}" width="${gw*.7}" height="${H-B-yP(s.p)}" fill="${s.src==='pluviómetro'?'#0070C9':'#85B4DF'}"><title>${s.f}: lluvia ${rgF(s.p)} ${rgU()} (${s.src})</title></rect>`;
+    if(s.I>0.05)h+=`<rect x="${x+gw*.15}" y="${yP(s.p+s.I)}" width="${gw*.7}" height="${yP(s.p)-yP(s.p+s.I)}" fill="#2E7D32"><title>${s.f}: riego ${rgF(s.I)} ${rgU()}</title></rect>`;
+    if(i%7===0)h+=`<text x="${x+gw/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#5B6673">${s.f.slice(8,10)}/${s.f.slice(5,7)}</text>`});
+  h+=`<line x1="${Lm}" x2="${W-Rm}" y1="${yA(thr)}" y2="${yA(thr)}" stroke="#C62828" stroke-dasharray="5 4"/><text x="${Lm+4}" y="${yA(thr)+13}" font-size="10" fill="#C62828">umbral ${fmt(thr,0)} %</text>`;
+  h+=`<path d="${L.map((s,i)=>(i?'L':'M')+(Lm+i*gw+gw/2)+' '+yA(s.ad)).join('')}" fill="none" stroke="#0E2A47" stroke-width="2.5"/>`;
+  $('#rgChLeg').innerHTML=`<span><i style="background:#0E2A47;height:3px"></i>Agua disponible (% de ADT)</span><span><i style="background:#0070C9"></i>Lluvia pluviómetro</span><span><i style="background:#85B4DF"></i>Lluvia modelo</span><span><i style="background:#2E7D32"></i>Riego</span><span><i style="background:#C62828;height:2px"></i>Umbral de riego</span><span class="note">eje derecho: lluvia y riego (${rgU()})</span>`;
+  svg.innerHTML=h}
+function rgAgr(F){const g=new Map();F.forEach(o=>{const k=o.dv+'|'+(+o.p.tab);if(!g.has(k))g.set(k,[]);g.get(k).push(o)});
+  return[...g.values()].map(a=>{const A=sumBy(a,o=>o.ac)||a.length,w=f=>sumBy(a,o=>f(o)*(o.ac||1))/A,ds=a.map(o=>o.dUmb).filter(x=>x!==null);
+    const est=a.some(o=>o.est==='reg')?(sumBy(a.filter(o=>o.est==='reg'),o=>o.ac)/A>=.3?'reg':'vig'):a.some(o=>o.est==='vig')?'vig':'ok';
+    return{dv:a[0].dv,tab:+a[0].p.tab,reg:a[0].reg,ac:sumBy(a,o=>o.ac),n:a.length,e:w(o=>isFinite(o.e)?o.e:0),kc:w(o=>o.kc),ad:w(o=>o.ad),Dr:w(o=>o.Dr),TAW:w(o=>o.TAW),dUmb:ds.length?Math.min(...ds):null,hum:(()=>{const h=a.filter(o=>o.hum!=null);return h.length?sumBy(h,o=>o.hum*(o.ac||1))/(sumBy(h,o=>o.ac||1)):null})(),est,ps:a}})}
+function rgTabla(F){const T=rgAgr(F).sort((a,b)=>(a.dUmb??99)-(b.dUmb??99)||a.ad-b.ad);RG.tabla=T;const un=rgU(),reg=RG.reg!=='0';
+  $('#rgTblT').textContent=reg?'Prioridad de riego por tablón':'Tablones con más estrés hídrico';
+  $('#rgTbl').innerHTML=`<tr><th>Tablón</th><th>División</th><th class="n">Acres</th><th class="n">Edad (meses)</th><th class="n">Kc</th><th class="n">Agua disp.</th><th class="n">Déficit (${un})</th><th class="n">Días al umbral</th>${reg?`<th class="n">Lámina a aplicar (${un})</th><th class="n">Volumen (m³)</th>`:''}<th class="n">Humedad NAX</th><th>Estado</th></tr>`+
+    T.slice(0,60).map(t=>`<tr><td><b>${t.tab}</b></td><td>${t.dv} ${t.reg?'(R)':'(S)'}</td><td class="n">${fmt(t.ac,1)}</td><td class="n">${t.e?fmt(t.e/30.44,1):'–'}</td><td class="n">${fmt(t.kc,2)}</td><td class="n" style="font-weight:700;color:${RG_COL[t.est]}">${fmt(t.ad,0)} %</td><td class="n">${rgF(t.Dr)}</td><td class="n">${t.dUmb===0?'<b style="color:#C62828">hoy</b>':t.dUmb===null?'> 7':t.dUmb}</td>${reg?`<td class="n">${t.est!=='ok'?rgF(t.Dr):'–'}</td><td class="n">${t.est!=='ok'?fmt(t.Dr/1000*t.ac*4046.86,0):'–'}</td>`:''}<td class="n">${t.hum!=null?fmt(t.hum,1)+' %':'–'}</td><td>${chip(rgEstadoTxtT(t),RG_COL[t.est])}</td></tr>`).join('')+(T.length>60?`<tr><td colspan="12" class="note">… y ${T.length-60} tablones más en el Excel.</td></tr>`:'')}
+const rgEstadoTxtT=t=>t.est==='reg'?(t.reg?'Regar':'Estrés'):t.est==='vig'?'Vigilar':'Adecuada';
+/* contraste con la humedad NAX (validación de la beta) */
+function rgValid(F){const g={ok:[],vig:[],reg:[]};F.forEach(o=>{if(o.hum!=null&&isFinite(o.hum))g[o.est].push(o.hum)});const m=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;
+  const xs=F.filter(o=>o.hum!=null&&isFinite(o.hum)),n=xs.length;let r=NaN;if(n>10){const mx=m(xs.map(o=>o.ad)),my=m(xs.map(o=>o.hum));let a=0,b=0,c=0;xs.forEach(o=>{a+=(o.ad-mx)*(o.hum-my);b+=(o.ad-mx)**2;c+=(o.hum-my)**2});r=a/Math.sqrt(b*c)}
+  $('#rgVal').innerHTML=`<table><tr><th>Estado del balance</th><th class="n">Piezas con humedad NAX</th><th class="n">Humedad NAX promedio</th></tr>${[['ok','Adecuada'],['vig','Vigilar'],['reg',RG.reg==='0'?'Estrés':'Regar']].map(([k,t])=>`<tr><td>${chip(t,RG_COL[k])}</td><td class="n">${fmt(g[k].length)}</td><td class="n">${isFinite(m(g[k]))?fmt(m(g[k]),1)+' %':'–'}</td></tr>`).join('')}</table>
+  <p class="note">Si el balance va bien, la humedad satelital de NAX debería bajar de "Adecuada" a "${RG.reg==='0'?'Estrés':'Regar'}". Correlación entre agua disponible del balance y humedad NAX: <b>${isFinite(r)?fmt(r,2):'–'}</b> (${fmt(n)} piezas). Es una señal de coherencia, no una calibración: el sensor mide los primeros centímetros del suelo y el balance toda la zona de raíces.</p>`}
+/* ejemplo trabajado: un tablón, últimos 10 días, todos los términos de la ecuación */
+function rgEjemplo(){const box=$('#rgEj');if(!box||!RG.res)return;const inp=$('#rgEjTab');let T=RG.res.out;
+  const q=(inp.value||'').trim();let a=q?T.filter(o=>String(+o.p.tab)===String(+q.split('-')[0])&&(!q.includes('-')||String(+o.p.pz)===String(+q.split('-')[1]))):[];
+  if(!a.length){a=[T.filter(o=>o.reg).sort((x,y)=>y.ac-x.ac)[0]||T[0]];if(!q)inp.placeholder=`p. ej. ${+a[0].p.tab}-${+a[0].p.pz}`}
+  const o=a.sort((x,y)=>y.ac-x.ac)[0],P=RG.par,un=rgU(),rows=o.tr.filter(t=>!t.fut).slice(-10);
+  box.innerHTML=`<p><b>Tablón ${+o.p.tab}, pieza ${+o.p.pz} · ${o.dv} ${o.reg?'(R)':'(S)'}</b> · ${fmt(o.ac,1)} acres · inicio del ciclo ${o.p.fi?coDF(o.p.fi):'sin fecha'} → edad ${isFinite(o.e)?fmt(o.e,0)+' días':'s/d'} (etapa ${rgKc(o.e,P).et}) · Zr = ${fmt(o.zr,2)} m · CAD = ${fmt(+(P.cadDiv[o.dv]||P.cad),0)} mm/m → <b>ADT = ${fmt(o.TAW,0)} mm</b>, <b>AFA = ${fmt(P.p,2)} × ADT = ${fmt(o.TAW*P.p,0)} mm</b></p>
+  <div class="rgx"><table><tr><th>Fecha</th><th class="n">P lluvia (mm)</th><th>Fuente</th><th class="n">I riego (mm)</th><th class="n">ETo (mm)</th><th class="n">Kc</th><th class="n">Ks</th><th class="n">ETc = Ks·Kc·ETo</th><th class="n">Dr (mm)</th><th class="n">Agua disp.</th></tr>
+  ${rows.map(t=>`<tr><td>${coDF(t.f)}</td><td class="n">${fmt(t.p,1)}</td><td>${t.src}</td><td class="n">${fmt(t.I,1)}</td><td class="n">${fmt(t.eto,2)}</td><td class="n">${fmt(t.kc,2)}</td><td class="n">${fmt(t.ks,2)}</td><td class="n">${fmt(t.etc,2)}</td><td class="n"><b>${fmt(t.Dr,1)}</b></td><td class="n" style="color:${t.Dr>=t.RAW?RG_COL.reg:t.ad<P.vig?'#B07800':RG_COL.ok};font-weight:700">${fmt(t.ad,0)} %</td></tr>`).join('')}</table></div>
+  <p class="note">Cada fila aplica Dr(hoy) = Dr(ayer) − P − I + ETc, con Dr entre 0 (suelo a capacidad de campo; el exceso se pierde por drenaje o escorrentía) y ADT. Ks baja de 1 cuando Dr pasa la AFA: el cultivo cierra estomas y consume menos.</p>`}
+/* ---------- riego aplicado ---------- */
+function rgRiegoIndex(L){const m=new Map();L.forEach(c=>(c.filas||[]).forEach(([f,dv,tab,pz,mm])=>{const k=dv+'|'+(+tab)+'|'+(pz===''||pz==null?'*':+pz);if(!m.has(k))m.set(k,new Map());const x=m.get(k);x.set(f,(x.get(f)||0)+mm)}));RG.riego=m}
+function rgRiegoSet(L){const k=JSON.stringify(L.map(c=>c.id));RG.cargas=L;rgRiegoIndex(L);if($('#rgCargas'))rgRiegoLista();if(RG.ck!==undefined&&RG.ck!==k&&RG.clima){RG.res=null;if($('#s-riego').classList.contains('on')||location.hash.startsWith('#riego'))rgDraw()}RG.ck=k}
+async function rgRiegoCargas(){if(DB){if(!RG.sub){RG.sub=true;DB.collection('riego_aplicado').orderBy('fecha','desc').limit(300).onSnapshot(s=>rgRiegoSet(s.docs.map(d=>({id:d.id,...d.data()}))),()=>{})}return}
+  let L=[];try{L=JSON.parse(localStorage.getItem('geocr-riego-apl')||'[]')}catch(e){}rgRiegoSet(L)}
+function rgRiegoLista(){const L=RG.cargas||[];$('#rgCargas').innerHTML=L.length?`<table><tr><th>Archivo</th><th>Fechas</th><th class="n">Filas</th><th class="n">Lámina media</th><th></th></tr>${L.map(c=>{const fs=(c.filas||[]).map(r=>r[0]).sort();return`<tr><td>${c.archivo||'—'}</td><td>${fs.length?coDF(fs[0])+' – '+coDF(fs.at(-1)):'—'}</td><td class="n">${fmt((c.filas||[]).length)}</td><td class="n">${rgF(coAvg((c.filas||[]).map(r=>r[4])))} ${rgU()}</td><td><button class="xdel" title="Eliminar" onclick="rgRiegoBorrar('${c.id}',this)">✕</button></td></tr>`}).join('')}</table>`:'<p class="note">Todavía no se ha cargado riego aplicado: el balance asume que no se regó.</p>'}
+async function rgRiegoBorrar(id,b){if(!await askConfirm('¿Desea eliminar el elemento seleccionado?','Se quitará ese archivo de riego aplicado y el balance se recalculará sin él.'))return;try{if(DB){await DB.collection('riego_aplicado').doc(id).delete();rgRiegoSet((RG.cargas||[]).filter(c=>c.id!==id))}else localStorage.setItem('geocr-riego-apl',JSON.stringify((RG.cargas||[]).filter(c=>c.id!==id)))}catch(e){$('#rgRSt').textContent='No se pudo eliminar: '+e.message;return}await rgRiegoCargas();RG.res=null;if(RG.clima)rgDraw()}
+async function rgRiegoLeer(f){let rows;if(/\.(xlsx|xls)$/i.test(f.name)){const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''})}
+  else{const c=nxCSV(await f.text());rows=[c.h,...c.rows]}const H=rows.shift().map(h=>String(h).trim().toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,''));
+  const ix=(...ns)=>H.findIndex(h=>ns.some(n=>h===n||h.startsWith(n)));const iF=ix('FECHA'),iD=ix('DIVISION','DIV'),iT=ix('TABLON','TAB'),iP=ix('PIEZA','PZ'),iMM=ix('LAMINA_MM','MM','LAMINA (MM)'),iIN=ix('LAMINA_IN','PULGADAS','IN','LAMINA (IN)'),iL=ix('LAMINA');
+  if(iF<0||iT<0||iD<0||(iMM<0&&iIN<0&&iL<0))throw new Error('Faltan columnas: FECHA, DIVISION, TABLON y LAMINA_MM o LAMINA_IN (PIEZA es opcional).');
+  const fF=v=>{if(v instanceof Date)return rgISO(Date.UTC(v.getFullYear(),v.getMonth(),v.getDate()));if(typeof v==='number')return rgISO(Date.UTC(1899,11,30)+v*864e5);return coFecha(v)};
+  const fD=v=>{const t=String(v).trim();if(/^\d+$/.test(t))return DIVN[+t]||null;const n=t.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();return Object.values(DIVN).find(d=>d.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()===n)||null};
+  const out=[],mal=[];rows.forEach((r,i)=>{const f=fF(r[iF]),dv=fD(r[iD]),tab=parseInt(r[iT]),pz=iP>=0&&String(r[iP]).trim()!==''?parseInt(r[iP]):'';let mm=iMM>=0?coN(r[iMM]):iIN>=0?coN(r[iIN])*25.4:coN(r[iL]);
+    if(iMM<0&&iIN<0&&iL>=0&&!/MM/.test(H[iL]))mm=mm*25.4;if(!f||!dv||!isFinite(tab)||!(mm>0)){if(r.some(x=>String(x).trim()!==''))mal.push(i+2);return}out.push([f,dv,tab,pz,+mm.toFixed(2)])});
+  return{out,mal}}
+function rgInit(){
+  $('#rgDiv').innerHTML='<option value="">Todas</option>'+Object.values(DIVN).map(d=>`<option>${d}</option>`).join('');
+  $('#rgDiv').onchange=e=>{RG.div=e.target.value;if(RG.div)$('#rgChDiv').value=RG.div;rgDraw()};$('#rgReg').value=RG.reg;$('#rgReg').onchange=e=>{RG.reg=e.target.value;rgDraw()};
+  $('#rgUn').value=RG.un;$('#rgUn').onchange=e=>{RG.un=e.target.value;try{localStorage.setItem('geocr-riego-un',RG.un)}catch(x){}rgDraw()};
+  $('#rgChDiv').onchange=()=>rgChart();$('#rgRef').onclick=()=>rgDraw(true);$('#rgEjTab').onchange=()=>rgEjemplo();
+  $('#rgMap').addEventListener('click',e=>dashTip('rg',e,ri=>RG.tip?RG.tip(ri):''));
+  $('#rgXls').onclick=()=>{if(!RG.tabla)return;const un=rgU(),wb=XLSX.utils.book_new(),T=RG.tabla;
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Tablón','División','Régimen','Acres','Edad (meses)','Kc','Agua disponible %',`Déficit (${un})`,`ADT (${un})`,'Días al umbral',`Lámina a aplicar (${un})`,'Volumen (m3)','Humedad NAX %','Estado'],
+      ...T.map(t=>[t.tab,t.dv,t.reg?'R':'S',+t.ac.toFixed(2),t.e?+(t.e/30.44).toFixed(1):'',+t.kc.toFixed(2),+t.ad.toFixed(1),+rgL(t.Dr).toFixed(2),+rgL(t.TAW).toFixed(2),t.dUmb===null?'>7':t.dUmb,t.est!=='ok'&&t.reg?+rgL(t.Dr).toFixed(2):'',t.est!=='ok'&&t.reg?Math.round(t.Dr/1000*t.ac*4046.86):'',t.hum!=null?+t.hum.toFixed(1):'',rgEstadoTxtT(t)])]),'Tablones');
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['ID','Tablón','Pieza','División','Régimen','Acres','Inicio ciclo','Edad (días)','Kc','Zr (m)',`ADT (${un})`,`AFA (${un})`,`Dr (${un})`,'Agua disponible %','Días al umbral','Estado'],
+      ...RG.res.out.map(o=>[o.p.id,+o.p.tab,+o.p.pz,o.dv,o.reg?'R':'S',o.ac,o.p.fi||'',isFinite(o.e)?Math.round(o.e):'',+o.kc.toFixed(2),+o.zr.toFixed(2),+rgL(o.TAW).toFixed(2),+rgL(o.RAW).toFixed(2),+rgL(o.Dr).toFixed(2),+o.ad.toFixed(1),o.dUmb===null?'>7':o.dUmb,rgEstadoTxt(o)])]),'Piezas');
+    saveFile(`Balance_hidrico_${RG.res.hoy}.xlsx`,new Blob([XLSX.write(wb,{type:'array',bookType:'xlsx'})],{type:'application/octet-stream'}),$('#rgSt2'))};
+  $('#rgFile').onchange=async e=>{const f=e.target.files[0],st=$('#rgRSt');if(!f)return;try{const{out,mal}=await rgRiegoLeer(f);if(!out.length)throw new Error('No encontré filas válidas.');
+      const doc={archivo:f.name,fecha:new Date().toISOString(),filas:out};if(DB){const id='r'+Date.now();await DB.collection('riego_aplicado').doc(id).set(doc);rgRiegoSet([{id,...doc},...(RG.cargas||[])])}else{const L=JSON.parse(localStorage.getItem('geocr-riego-apl')||'[]');L.unshift({id:'r'+Date.now(),...doc});localStorage.setItem('geocr-riego-apl',JSON.stringify(L))}
+      st.className='status';st.textContent=`${out.length} riegos cargados${mal.length?` · ${mal.length} filas ignoradas (por ejemplo la ${mal.slice(0,3).join(', ')})`:''}.`;e.target.value='';await rgRiegoCargas();RG.res=null}catch(err){st.className='status err';st.textContent=err.message}};
+  $('#rgParSave').onclick=()=>{const P={...RG.par};$$('#rgPar [data-k]').forEach(x=>{const v=parseFloat(x.value);if(isFinite(v))P[x.dataset.k]=v});P.cadDiv={};$$('#rgPar [data-cd]').forEach(x=>{const v=parseFloat(x.value);if(isFinite(v)&&v>0)P.cadDiv[x.dataset.cd]=v});
+    RG.par=P;try{localStorage.setItem('geocr-riego-par',JSON.stringify(P))}catch(e){}RG.res=null;$('#rgParSt').textContent='Parámetros guardados en este navegador. El balance se recalcula con ellos.'};
+  $('#rgParDef').onclick=()=>{RG.par={...RG_DEF,cadDiv:{}};try{localStorage.removeItem('geocr-riego-par')}catch(e){}rgParForm();RG.res=null;$('#rgParSt').textContent='Valores de referencia restablecidos.'};
+  rgRiegoCargas()}
+function rgParForm(){const P=RG.par,f=(k,t,u,st)=>`<label>${t}<span class="note"> ${u}</span></label><input type="number" step="${st||'any'}" data-k="${k}" value="${P[k]}">`;
+  $('#rgPar').innerHTML=`<div class="rgpar">${f('cad','Capacidad de agua disponible del suelo (CAD)','mm por m de suelo',1)}${f('zrMax','Profundidad máxima de raíces (Zr)','m',0.05)}${f('zr0','Profundidad de raíces al inicio','m',0.05)}${f('p','Fracción de agotamiento sin estrés (p)','0–1',0.05)}${f('vig','Pasa a "Vigilar" por debajo de','% de agua disponible',1)}${f('dias','Días de historia del balance','máx. 92',1)}
+    ${f('kcIni','Kc inicial','',0.05)}${f('kcMid','Kc de máximo desarrollo','',0.05)}${f('kcEnd','Kc de maduración','',0.05)}${f('lIni','Etapa inicial','días',1)}${f('lDev','Etapa de desarrollo','días',1)}${f('lMid','Etapa de máximo desarrollo','días',1)}${f('lLate','Etapa de maduración','días',1)}</div>
+    <h3 style="margin:16px 0 6px;font-size:14px">CAD por división <span class="note">(vacío = valor general)</span></h3><div class="rgpar">${Object.values(DIVN).map(d=>`<label>${d}</label><input type="number" step="1" data-cd="${d}" value="${P.cadDiv[d]||''}" placeholder="${P.cad}">`).join('')}</div>`}
+function rgMetodo(){const P=RG.par,v=(x,d)=>`<b>${fmt(x,d==null?2:d)}</b>`;
+  $$('#riego-met [data-pv]').forEach(e=>{const k=e.dataset.pv;e.innerHTML=k==='raw'?fmt((1-P.p)*100,0)+' %':k==='taw'?fmt(P.cad*P.zrMax,0)+' mm':k==='afa'?fmt(P.cad*P.zrMax*P.p,0)+' mm':fmt(P[k],/^l|cad|vig|dias/.test(k)?0:2)});
+  /* curva de Kc */
+  const svg=svgEl('rgKc');if(!svg)return;const H=200,W=svgSize(svg,H),Lm=40,Rm=16,B=34,Tp=14,tot=P.lIni+P.lDev+P.lMid+P.lLate+40,x=d=>Lm+(W-Lm-Rm)*d/tot,y=k=>H-B-(H-B-Tp)*k/1.4;let h='';
+  [0,0.4,0.8,1.2].forEach(k=>h+=`<line x1="${Lm}" x2="${W-Rm}" y1="${y(k)}" y2="${y(k)}" stroke="#EEF1F5"/><text x="${Lm-6}" y="${y(k)+4}" font-size="10" text-anchor="end" fill="#5B6673">${k.toFixed(1)}</text>`);
+  const a=P.lIni,b=a+P.lDev,c=b+P.lMid,d=c+P.lLate;[[0,a,'inicial'],[a,b,'desarrollo'],[b,c,'máximo desarrollo'],[c,d,'maduración']].forEach(([s,e,t],i)=>h+=`<rect x="${x(s)}" y="${Tp}" width="${x(e)-x(s)}" height="${H-B-Tp}" fill="${i%2?'#F7F9FB':'#fff'}"/><text x="${(x(s)+x(e))/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#0E2A47">${t}</text><text x="${(x(s)+x(e))/2}" y="${H-B+27}" font-size="9.5" text-anchor="middle" fill="#5B6673">${e-s} d</text>`);
+  h+=`<path d="M${x(0)} ${y(P.kcIni)}L${x(a)} ${y(P.kcIni)}L${x(b)} ${y(P.kcMid)}L${x(c)} ${y(P.kcMid)}L${x(d)} ${y(P.kcEnd)}L${x(tot)} ${y(P.kcEnd)}" fill="none" stroke="#0070C9" stroke-width="2.5"/>`;
+  [[0,P.kcIni],[b,P.kcMid],[d,P.kcEnd]].forEach(([dd,k])=>h+=`<text x="${x(dd)+4}" y="${y(k)-6}" font-size="10.5" font-weight="700" fill="#0070C9">${k.toFixed(2)}</text>`);svg.innerHTML=h;rgEjemplo()}
+
+rgInit();
 
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
