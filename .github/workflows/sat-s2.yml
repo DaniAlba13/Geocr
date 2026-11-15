@@ -27,6 +27,9 @@ jobs:
         with:
           path: |
             nax/historico_actual.csv
+            nax/historico_campana_anterior.csv
+            nax/historico_retenido.csv
+            nax/estado_robot.txt
           key: nax-historico-${{ github.run_id }}
           restore-keys: nax-historico-
       - name: Índices Sentinel-2 por pieza, relleno de nubes y validación
