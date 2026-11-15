@@ -210,13 +210,29 @@ def main():
             h["fecha"] = h["timestamp"].astype(str).str.slice(0, 10)
             h["nax"] = pd.to_numeric(h[col], errors="coerce")
             h = h.dropna(subset=["nax"]).groupby(["id", "fecha"], as_index=False)["nax"].mean()
-            m = obs.merge(h, on=["id", "fecha"])
-            if len(m) > 2:
-                e = m["ndvi"] - m["nax"]
-                comp = {"n": int(len(m)), "piezas": int(m["id"].nunique()), "fechas": int(m["fecha"].nunique()), "columna_nax": col,
-                        "r": round(float(np.corrcoef(m.ndvi, m.nax)[0, 1]), 3), "sesgo_s2_menos_nax": round(float(e.mean()), 4),
+            print(f"NAX: {len(h)} pares pieza-fecha, {h['id'].nunique()} piezas, fechas {h['fecha'].min()} a {h['fecha'].max()}, columna {col}")
+            def met(a, b):
+                e = a - b
+                return {"n": int(len(a)), "r": round(float(np.corrcoef(a, b)[0, 1]), 3), "sesgo_propio_menos_nax": round(float(e.mean()), 4),
                         "rmse": round(float(np.sqrt((e ** 2).mean())), 4)}
+            comp = {"columna_nax": col, "fechas_nax": int(h["fecha"].nunique())}
+            # a) observación propia vs observación NAX, ±3 días
+            o2 = obs[["id", "fecha", "ndvi"]].copy(); o2["t"] = pd.to_datetime(o2.fecha)
+            h2 = h.copy(); h2["t"] = pd.to_datetime(h2.fecha)
+            m = pd.merge_asof(h2.sort_values("t"), o2.sort_values("t")[["id", "t", "ndvi"]], on="t", by="id",
+                              tolerance=pd.Timedelta(days=3), direction="nearest").dropna(subset=["ndvi"])
+            if len(m) > 10:
+                comp["observado_vs_nax_3dias"] = {**met(m.ndvi, m.nax), "piezas": int(m.id.nunique())}
                 m.to_csv(os.path.join(OUT, "comparacion_nax.csv"), index=False)
+            # b) serie diaria propia (observada + reconstruida) en cada fecha de NAX
+            md = h.merge(D[["id", "fecha", "ndvi", "observado", "dias_a_obs"]], on=["id", "fecha"])
+            if len(md) > 10:
+                comp["diario_vs_nax"] = {**met(md.ndvi, md.nax), "piezas": int(md.id.nunique())}
+                for a, b in [(0, 5), (6, 10), (11, 20), (21, 999)]:
+                    mm = md[(md.dias_a_obs >= a) & (md.dias_a_obs <= b)]
+                    if len(mm) > 10:
+                        comp[f"diario_vs_nax_{a}-{b if b < 999 else 'mas'}_dias"] = met(mm.ndvi, mm.nax)
+                md.to_csv(os.path.join(OUT, "comparacion_nax_diario.csv"), index=False)
     resumen = {"division": DIVN[DIV], "desde": str(ini), "hasta": str(fin), "escenas": len(items), "piezas": len(pzs),
                "piezas_con_serie": int(D["id"].nunique()) if len(D) else 0, "observaciones": int(len(obs)),
                "obs_por_pieza_mediana": float(obs.groupby("id").size().median()),
@@ -237,11 +253,11 @@ def main():
         ax[0].set_title("NDVI diario reconstruido (línea) y observado (puntos)")
         ax[1].bar([r["dias_a_obs"] for r in res], [r["rmse"] for r in res], color="#0E2A47")
         ax[1].set_title("Error del relleno (RMSE NDVI) según días a la obs. más cercana")
-        if comp:
-            mm = pd.read_csv(os.path.join(OUT, "comparacion_nax.csv"))
+        if comp and os.path.exists(os.path.join(OUT, "comparacion_nax_diario.csv")):
+            mm = pd.read_csv(os.path.join(OUT, "comparacion_nax_diario.csv")); cd = comp["diario_vs_nax"]
             ax[2].scatter(mm.nax, mm.ndvi, s=6, alpha=.4, color="#0070C9"); lo, hi = mm[["nax", "ndvi"]].min().min(), mm[["nax", "ndvi"]].max().max()
             ax[2].plot([lo, hi], [lo, hi], "r--", lw=1); ax[2].set_xlabel("NDVI NAX"); ax[2].set_ylabel("NDVI Sentinel-2 propio")
-            ax[2].set_title(f"Propio vs NAX · r={comp['r']} · RMSE={comp['rmse']}")
+            ax[2].set_title(f"Propio (diario) vs NAX · r={cd['r']} · RMSE={cd['rmse']}")
         fig.tight_layout(); fig.savefig(os.path.join(OUT, "resumen.png"), dpi=110)
     except Exception as e:
         print("Sin gráfico:", e)
