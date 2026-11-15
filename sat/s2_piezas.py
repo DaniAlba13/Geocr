@@ -204,10 +204,24 @@ def main():
     ruta = os.path.join(RAIZ, "nax", "historico_actual.csv")
     if os.path.exists(ruta):
         h = pd.read_csv(ruta, low_memory=False)
-        cand = [c for c in h.columns if "ndvi" in c.lower() and not any(x in c.lower() for x in ("optimal", "median", "anomal", "evolution"))]
-        cnt = {c: int(pd.to_numeric(h[c], errors="coerce").notna().sum()) for c in cand}
-        print("NAX, columnas NDVI y datos no vacíos:", cnt, "· columnas:", list(h.columns)[:40])
-        col = max(cnt, key=cnt.get) if cnt and max(cnt.values()) > 0 else None
+        col = None
+        if "product_name" in h.columns and "mean" in h.columns:   # formato largo: una fila por producto
+            vc = h["product_name"].astype(str).value_counts()
+            print("NAX, productos en el histórico:", vc.head(30).to_dict())
+            cand = [p for p in vc.index if "ndvi" in p.lower() and not any(x in p.lower() for x in ("optimal", "median", "anomal", "evolution", "hf"))]
+            if cand:
+                col = max(cand, key=lambda p: vc[p])
+                h = h[h["product_name"].astype(str) == col].copy()
+                h[col] = h["mean"]
+        if col is None:
+            cand = [c for c in h.columns if "ndvi" in c.lower() and not any(x in c.lower() for x in ("optimal", "median", "anomal", "evolution"))]
+            cnt = {c: int(pd.to_numeric(h[c], errors="coerce").notna().sum()) for c in cand}
+            col = max(cnt, key=cnt.get) if cnt and max(cnt.values()) > 0 else None
+        for c in ("water_capacity", "critical_water", "permited_water_deficit"):
+            if c in h.columns:
+                x = pd.to_numeric(h[c], errors="coerce").dropna()
+                if len(x):
+                    print(f"NAX {c}: n={len(x)} mediana={x.median():.3f} p10={x.quantile(.1):.3f} p90={x.quantile(.9):.3f}")
         if col and "name" in h.columns:
             h["id"] = h["name"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(11)
             h["fecha"] = h["timestamp"].astype(str).str.slice(0, 10)
