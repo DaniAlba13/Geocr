@@ -164,11 +164,15 @@ def main():
         y = np.full(len(dias), np.nan)
         for f, v in zip(g["fecha"], g["ndvi"]):
             y[idx[f]] = v
+        ym = np.full(len(dias), np.nan)
+        for f, v in zip(g["fecha"], g["ndmi"]):
+            ym[idx[f]] = v
         ob = np.where(~np.isnan(y))[0]
         if len(ob) < 4:
             continue
         w = (~np.isnan(y)).astype(float)
         z = whittaker(y, w)
+        zm = whittaker(ym, w)
         # validación: ocultar 20 % de las observaciones y reconstruirlas
         hide = rng.choice(ob, size=max(1, len(ob) // 5), replace=False)
         w2 = w.copy(); w2[hide] = 0
@@ -179,7 +183,7 @@ def main():
             val.append({"id": pid, "gap": gap, "real": y[h], "est": z2[h]})
         dist = np.array([int(np.min(np.abs(ob - i))) for i in range(len(dias))])
         for i in range(len(dias)):
-            diario.append({"id": pid, "fecha": dias[i].date().isoformat(), "ndvi": round(float(z[i]), 4),
+            diario.append({"id": pid, "fecha": dias[i].date().isoformat(), "ndvi": round(float(z[i]), 4), "ndmi": round(float(zm[i]), 4),
                            "observado": bool(w[i]), "dias_a_obs": int(dist[i])})
     D = pd.DataFrame(diario)
     V = pd.DataFrame(val)
@@ -200,58 +204,57 @@ def main():
     D.to_csv(os.path.join(OUT, "s2_diario.csv"), index=False)
 
     # ---- comparación con NAX ----
-    comp = None
-    ruta = os.path.join(RAIZ, "nax", "historico_actual.csv")
-    if os.path.exists(ruta):
+    comp = {}
+    def met(a, b):
+        e = a - b
+        return {"n": int(len(a)), "piezas": None, "r": round(float(np.corrcoef(a, b)[0, 1]), 3),
+                "sesgo": round(float(e.mean()), 4), "rmse": round(float(np.sqrt((e ** 2).mean())), 4)}
+    def largo(ruta):
+        if not os.path.exists(ruta):
+            return None
         h = pd.read_csv(ruta, low_memory=False)
-        col = None
-        if "product_name" in h.columns and "mean" in h.columns:   # formato largo: una fila por producto
-            vc = h["product_name"].astype(str).value_counts()
-            print("NAX, productos en el histórico:", vc.head(30).to_dict())
-            cand = [p for p in vc.index if "ndvi" in p.lower() and not any(x in p.lower() for x in ("optimal", "median", "anomal", "evolution", "hf"))]
-            if cand:
-                col = max(cand, key=lambda p: vc[p])
-                h = h[h["product_name"].astype(str) == col].copy()
-                h[col] = h["mean"]
-        if col is None:
-            cand = [c for c in h.columns if "ndvi" in c.lower() and not any(x in c.lower() for x in ("optimal", "median", "anomal", "evolution"))]
-            cnt = {c: int(pd.to_numeric(h[c], errors="coerce").notna().sum()) for c in cand}
-            col = max(cnt, key=cnt.get) if cnt and max(cnt.values()) > 0 else None
-        for c in ("water_capacity", "critical_water", "permited_water_deficit"):
-            if c in h.columns:
-                x = pd.to_numeric(h[c], errors="coerce").dropna()
-                if len(x):
-                    print(f"NAX {c}: n={len(x)} mediana={x.median():.3f} p10={x.quantile(.1):.3f} p90={x.quantile(.9):.3f}")
-        if col and "name" in h.columns:
-            h["id"] = h["name"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(11)
-            h["fecha"] = h["timestamp"].astype(str).str.slice(0, 10)
-            h["nax"] = pd.to_numeric(h[col], errors="coerce")
-            h = h.dropna(subset=["nax"]).groupby(["id", "fecha"], as_index=False)["nax"].mean()
-            print(f"NAX: {len(h)} pares pieza-fecha, {h['id'].nunique()} piezas, fechas {h['fecha'].min()} a {h['fecha'].max()}, columna {col}")
-            def met(a, b):
-                e = a - b
-                return {"n": int(len(a)), "r": round(float(np.corrcoef(a, b)[0, 1]), 3), "sesgo_propio_menos_nax": round(float(e.mean()), 4),
-                        "rmse": round(float(np.sqrt((e ** 2).mean())), 4)}
-            comp = {"columna_nax": col, "fechas_nax": int(h["fecha"].nunique())}
-            if h.empty:
-                comp["nota"] = "sin datos NAX en la caché"
-            # a) observación propia vs observación NAX, ±3 días
-            o2 = obs[["id", "fecha", "ndvi"]].copy(); o2["t"] = pd.to_datetime(o2.fecha).astype("datetime64[ns]")
-            h2 = h.copy(); h2["t"] = pd.to_datetime(h2.fecha).astype("datetime64[ns]")
-            m = pd.DataFrame() if h.empty else pd.merge_asof(h2.sort_values("t"), o2.sort_values("t")[["id", "t", "ndvi"]], on="t", by="id",
-                              tolerance=pd.Timedelta(days=3), direction="nearest").dropna(subset=["ndvi"])
-            if not h.empty and len(m) > 10:
-                comp["observado_vs_nax_3dias"] = {**met(m.ndvi, m.nax), "piezas": int(m.id.nunique())}
-                m.to_csv(os.path.join(OUT, "comparacion_nax.csv"), index=False)
-            # b) serie diaria propia (observada + reconstruida) en cada fecha de NAX
-            md = h.merge(D[["id", "fecha", "ndvi", "observado", "dias_a_obs"]], on=["id", "fecha"])
-            if len(md) > 10:
-                comp["diario_vs_nax"] = {**met(md.ndvi, md.nax), "piezas": int(md.id.nunique())}
-                for a, b in [(0, 5), (6, 10), (11, 20), (21, 999)]:
-                    mm = md[(md.dias_a_obs >= a) & (md.dias_a_obs <= b)]
-                    if len(mm) > 10:
-                        comp[f"diario_vs_nax_{a}-{b if b < 999 else 'mas'}_dias"] = met(mm.ndvi, mm.nax)
-                md.to_csv(os.path.join(OUT, "comparacion_nax_diario.csv"), index=False)
+        if "name" not in h.columns:
+            return None
+        h["id"] = h["name"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(11)
+        h["fecha"] = h["timestamp"].astype(str).str.slice(0, 10) if "timestamp" in h.columns else None
+        if "product_name" in h.columns and "mean" in h.columns:
+            h["valor"] = pd.to_numeric(h["mean"], errors="coerce")
+            h["prod"] = h["product_name"].astype(str)
+            print(os.path.basename(ruta), "productos:", h["prod"].value_counts().head(25).to_dict())
+            return h.dropna(subset=["valor"])[["id", "fecha", "prod", "valor"]]
+        cols = [c for c in h.columns if any(k in c.lower() for k in ("ndvi", "moisture"))]
+        print(os.path.basename(ruta), "columnas (formato ancho):", cols)
+        L = []
+        for c in cols:
+            x = h[["id", "fecha"]].copy(); x["prod"] = c; x["valor"] = pd.to_numeric(h[c], errors="coerce"); L.append(x.dropna(subset=["valor"]))
+        return pd.concat(L) if L else None
+    H = [x for x in (largo(os.path.join(RAIZ, "nax", n)) for n in ("historico_actual.csv", "historico_retenido.csv")) if x is not None]
+    if H:
+        H = pd.concat(H).drop_duplicates(["id", "fecha", "prod"])
+        H = H[H.id.isin(set(obs.id))]
+        pares = [("ndvi", lambda p: "ndvi" in p.lower() and not any(x in p.lower() for x in ("optimal", "median", "hf", "evolution"))),
+                 ("ndmi", lambda p: "moisture_percentage" in p.lower())]
+        o2 = obs.copy(); o2["t"] = pd.to_datetime(o2.fecha).astype("datetime64[ns]")
+        filas_c = []
+        for var, ok in pares:
+            for prod in sorted({p for p in H["prod"].unique() if ok(p)}):
+                h = H[H["prod"] == prod].groupby(["id", "fecha"], as_index=False)["valor"].mean()
+                if len(h) < 10:
+                    continue
+                h2 = h.copy(); h2["t"] = pd.to_datetime(h2.fecha).astype("datetime64[ns]")
+                m = pd.merge_asof(h2.sort_values("t"), o2.sort_values("t")[["id", "t", var]], on="t", by="id",
+                                  tolerance=pd.Timedelta(days=3), direction="nearest").dropna(subset=[var])
+                md = h.merge(D[["id", "fecha", var, "dias_a_obs"]], on=["id", "fecha"])
+                k = f"{var}_vs_{prod}"
+                comp[k] = {"fechas_nax": int(h.fecha.nunique()), "piezas": int(h.id.nunique())}
+                if len(m) > 10:
+                    comp[k]["observado_3dias"] = {**met(m[var], m["valor"]), "piezas": int(m.id.nunique())}
+                if len(md) > 10:
+                    comp[k]["diario"] = {**met(md[var], md["valor"]), "piezas": int(md.id.nunique())}
+                    md2 = md.assign(prod=prod, var=var); filas_c.append(md2)
+        if filas_c:
+            pd.concat(filas_c).to_csv(os.path.join(OUT, "comparacion_nax_diario.csv"), index=False)
+    comp = comp or None
     resumen = {"division": DIVN[DIV], "desde": str(ini), "hasta": str(fin), "escenas": len(items), "piezas": len(pzs),
                "piezas_con_serie": int(D["id"].nunique()) if len(D) else 0, "observaciones": int(len(obs)),
                "obs_por_pieza_mediana": float(obs.groupby("id").size().median()),
@@ -273,10 +276,10 @@ def main():
         ax[1].bar([r["dias_a_obs"] for r in res], [r["rmse"] for r in res], color="#0E2A47")
         ax[1].set_title("Error del relleno (RMSE NDVI) según días a la obs. más cercana")
         if comp and os.path.exists(os.path.join(OUT, "comparacion_nax_diario.csv")):
-            mm = pd.read_csv(os.path.join(OUT, "comparacion_nax_diario.csv")); cd = comp["diario_vs_nax"]
-            ax[2].scatter(mm.nax, mm.ndvi, s=6, alpha=.4, color="#0070C9"); lo, hi = mm[["nax", "ndvi"]].min().min(), mm[["nax", "ndvi"]].max().max()
-            ax[2].plot([lo, hi], [lo, hi], "r--", lw=1); ax[2].set_xlabel("NDVI NAX"); ax[2].set_ylabel("NDVI Sentinel-2 propio")
-            ax[2].set_title(f"Propio (diario) vs NAX · r={cd['r']} · RMSE={cd['rmse']}")
+            mm = pd.read_csv(os.path.join(OUT, "comparacion_nax_diario.csv"))
+            k = max(comp, key=lambda k: (comp[k].get("diario") or {}).get("n", 0)); mm = mm[(mm["var"] + "_vs_" + mm["prod"]) == k]; v = k.split("_vs_")[0]
+            ax[2].scatter(mm.valor, mm[v], s=5, alpha=.35, color="#0070C9"); ax[2].set_xlabel(k.split("_vs_")[1] + " (NAX)"); ax[2].set_ylabel(v.upper() + " propio")
+            ax[2].set_title(f"{k} · r={comp[k]['diario']['r']}")
         fig.tight_layout(); fig.savefig(os.path.join(OUT, "resumen.png"), dpi=110)
     except Exception as e:
         print("Sin gráfico:", e)
