@@ -1,0 +1,41 @@
+name: Sentinel-2 por pieza (prueba)
+
+on:
+  workflow_dispatch:
+    inputs:
+      division:
+        description: 'División (1 Higueral, 2 Guaymate, 3 La Higuera, 4 Chavón Abajo, 5 Cuyá, 6 Lechugas, 7 Baigua)'
+        default: '1'
+      dias:
+        description: 'Días hacia atrás'
+        default: '240'
+
+jobs:
+  s2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: sat/requirements.txt
+      - run: pip install -r sat/requirements.txt
+      - name: Histórico NAX del robot (para comparar)
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            nax/historico_actual.csv
+          key: nax-historico-${{ github.run_id }}
+          restore-keys: nax-historico-
+      - name: Índices Sentinel-2 por pieza, relleno de nubes y validación
+        env:
+          DIVISION: ${{ inputs.division }}
+          DIAS: ${{ inputs.dias }}
+        run: python sat/s2_piezas.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: s2-division-${{ inputs.division }}
+          path: sat/salida/

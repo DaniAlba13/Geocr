@@ -99,8 +99,10 @@ def _div(v):
     try:
         return DIVN.get(int(float(v)))
     except (TypeError, ValueError):
-        t = str(v or "").strip()
-        return t if t in DIVS else None
+        import unicodedata
+        n = lambda x: unicodedata.normalize("NFD", str(x)).encode("ascii", "ignore").decode().strip().lower()
+        t = n(v)
+        return next((k for k in DIVS if n(k) == t or t.endswith(n(k))), None)
 
 
 def serie_nax():
@@ -117,10 +119,18 @@ def serie_nax():
          "et": elegir("evapotrans"), "aw": elegir("available_water")}
     V = {k: c for k, c in V.items() if c}
     print("NAX, columnas de agua usadas:", V)
-    if not V or "timestamp" not in d.columns or "grouping_unit_02" not in d.columns:
+    if not V or "timestamp" not in d.columns or ("grouping_unit_02" not in d.columns and "name" not in d.columns):
         return {}
     d["_f"] = d["timestamp"].astype(str).str.slice(0, 10)
-    d["_d"] = d["grouping_unit_02"].map(_div)
+    # División: del ID de la pieza (ADM + DIV + DISTRITO + TABLÓN + PIEZA, 11 dígitos) y, si no, de grouping_unit_02.
+    def _div_id(v):
+        t = str(v or "").strip()
+        if t.endswith(".0"):
+            t = t[:-2]
+        return DIVN.get(int(t.zfill(11)[1])) if t.isdigit() and len(t) <= 11 else None
+    d["_d"] = d["name"].map(_div_id) if "name" in d.columns else None
+    if "grouping_unit_02" in d.columns:
+        d["_d"] = d["_d"].fillna(d["grouping_unit_02"].map(_div)) if d["_d"] is not None else d["grouping_unit_02"].map(_div)
     d["_w"] = (pd.to_numeric(d["effective_area"], errors="coerce") if "effective_area" in d.columns else pd.Series(1.0, index=d.index)).fillna(1.0).clip(lower=0.01)
     out = {}
     for (f, dv), g in d[d["_d"].notna()].groupby(["_f", "_d"]):
