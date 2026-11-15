@@ -6,3 +6,5 @@ numpy
 pandas
 scipy
 matplotlib
+planetary-computer
+scikit-learn
