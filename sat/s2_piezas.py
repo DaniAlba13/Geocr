@@ -204,7 +204,10 @@ def main():
     ruta = os.path.join(RAIZ, "nax", "historico_actual.csv")
     if os.path.exists(ruta):
         h = pd.read_csv(ruta, low_memory=False)
-        col = next((c for c in h.columns if c.lower() == "ndvi_optical"), None) or next((c for c in h.columns if "ndvi" in c.lower()), None)
+        cand = [c for c in h.columns if "ndvi" in c.lower() and not any(x in c.lower() for x in ("optimal", "median", "anomal", "evolution"))]
+        cnt = {c: int(pd.to_numeric(h[c], errors="coerce").notna().sum()) for c in cand}
+        print("NAX, columnas NDVI y datos no vacíos:", cnt, "· columnas:", list(h.columns)[:40])
+        col = max(cnt, key=cnt.get) if cnt and max(cnt.values()) > 0 else None
         if col and "name" in h.columns:
             h["id"] = h["name"].astype(str).str.replace(r"\.0$", "", regex=True).str.zfill(11)
             h["fecha"] = h["timestamp"].astype(str).str.slice(0, 10)
@@ -216,12 +219,14 @@ def main():
                 return {"n": int(len(a)), "r": round(float(np.corrcoef(a, b)[0, 1]), 3), "sesgo_propio_menos_nax": round(float(e.mean()), 4),
                         "rmse": round(float(np.sqrt((e ** 2).mean())), 4)}
             comp = {"columna_nax": col, "fechas_nax": int(h["fecha"].nunique())}
+            if h.empty:
+                comp["nota"] = "sin datos NAX en la caché"
             # a) observación propia vs observación NAX, ±3 días
-            o2 = obs[["id", "fecha", "ndvi"]].copy(); o2["t"] = pd.to_datetime(o2.fecha)
-            h2 = h.copy(); h2["t"] = pd.to_datetime(h2.fecha)
-            m = pd.merge_asof(h2.sort_values("t"), o2.sort_values("t")[["id", "t", "ndvi"]], on="t", by="id",
+            o2 = obs[["id", "fecha", "ndvi"]].copy(); o2["t"] = pd.to_datetime(o2.fecha).astype("datetime64[ns]")
+            h2 = h.copy(); h2["t"] = pd.to_datetime(h2.fecha).astype("datetime64[ns]")
+            m = pd.DataFrame() if h.empty else pd.merge_asof(h2.sort_values("t"), o2.sort_values("t")[["id", "t", "ndvi"]], on="t", by="id",
                               tolerance=pd.Timedelta(days=3), direction="nearest").dropna(subset=["ndvi"])
-            if len(m) > 10:
+            if not h.empty and len(m) > 10:
                 comp["observado_vs_nax_3dias"] = {**met(m.ndvi, m.nax), "piezas": int(m.id.nunique())}
                 m.to_csv(os.path.join(OUT, "comparacion_nax.csv"), index=False)
             # b) serie diaria propia (observada + reconstruida) en cada fecha de NAX
