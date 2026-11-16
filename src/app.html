@@ -1538,7 +1538,7 @@ const TEMAS={
   suelo:{n:'Tipo de suelo',t:'Mapa de tipos de suelo',f:r=>ATT.suelo[r[4]]||null,top:11},
   clase:{n:'Clase de cepa',t:'Mapa de clase de cepa',f:r=>{const c=ATT.clase[r[5]]||'';if(!c)return null;if(/^(PRIM|G\.C)/.test(c))return'Plantilla';const m=c.match(/^(\d+)-RET/);if(!m)return'Otra';const n=+m[1];return n>=10?'Retoño 10 o más':n>=6?'Retoño 6–9':'Retoño '+n},
     order:['Plantilla','Retoño 1','Retoño 2','Retoño 3','Retoño 4','Retoño 5','Retoño 6–9','Retoño 10 o más','Otra'],colors:['#1E5E14','#7CB342','#C0D84A','#FFD54F','#FFB300','#F57C00','#D32F2F','#7B1F1F','#B0B7C3']},
-  corte:{n:'Último corte',t:'Meses desde el último corte',f:r=>{const m=monthsSince(r[6]);if(!isFinite(m))return null;return m<3?'0–3 meses':m<6?'3–6 meses':m<9?'6–9 meses':m<12?'9–12 meses':m<15?'12–15 meses':'Más de 15 meses'},
+  corte:{n:'Último corte',t:'Meses desde el último corte (historia de zafras 2026 y NAX; capa si no hay otra)',f:r=>{const id=r&&r[0]?String(r[0]).padStart(11,'0'):'',c=cgFc({id,fc:/^\d{8}$/.test(r[6]||'')?`${r[6].slice(0,4)}-${r[6].slice(4,6)}-${r[6].slice(6,8)}`:''}),m=c?(Date.now()-Date.parse(c.f))/864e5/30.44:NaN;if(!isFinite(m))return null;return m<3?'0–3 meses':m<6?'3–6 meses':m<9?'6–9 meses':m<12?'9–12 meses':m<15?'12–15 meses':'Más de 15 meses'},
     order:['0–3 meses','3–6 meses','6–9 meses','9–12 meses','12–15 meses','Más de 15 meses'],colors:['#D6E6F5','#85B4DF','#2F7BC0','#1E5E14','#F59E0B','#D32F2F']},
   adm:{n:'Administración',t:'Mapa por administración',f:r=>r[7]?'ADM '+r[7]:null,order:['ADM 1','ADM 2','ADM 3']},
   division:{n:'División',t:'Mapa por división',f:(r,i)=>REC_DIV[i]||null,order:['Higueral','Guaymate','La Higuera','Chavón Abajo','Cuyá','Lechugas','Baigua']},
@@ -1658,9 +1658,9 @@ function buildFilters(){const box=$('#tFilt');box.innerHTML=FKEYS.map(k=>{const 
   const T=TEMAS[k],cats=T.order?T.order.filter(c=>ac.has(c)):[...ac].sort((a,b)=>b[1]-a[1]).map(c=>c[0]);
   return`<label>${T.n}</label><select data-f="${k}"><option value="">Todas</option>${cats.map(c=>`<option ${FILT[k]===c?'selected':''}>${c}</option>`).join('')}</select>`}).join('');
   $$('#tFilt select').forEach(s=>s.onchange=()=>{FILT[s.dataset.f]=s.value;buildTema(TS.key);drawTema()})}
-$('#tColor').onchange=()=>{TS.key=$('#tColor').value;buildTema(TS.key);drawTema()};
+$('#tColor').onchange=()=>{TS.key=$('#tColor').value;if(TS.key==='corte')cgHistLoad();buildTema(TS.key);drawTema()};
 $('#tClear').onclick=()=>{FKEYS.forEach(k=>FILT[k]='');buildFilters();buildTema(TS.key);drawTema()};
-function showSub(k){const lg={variedad:1,suelo:1,clase:1,corte:1,adm:1,mimapa:1,division:1};if(lg[k]){$('#tColor').value=k;TS.key=k;k='otros'}
+function showSub(k){if(k==='corte')cgHistLoad();const lg={variedad:1,suelo:1,clase:1,corte:1,adm:1,mimapa:1,division:1};if(lg[k]){$('#tColor').value=k;TS.key=k;k='otros'}
   $$('#subnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===k));$('#s-lluvias').classList.toggle('on',k==='lluvias');$('#s-lreg').classList.toggle('on',k==='registro');$('#s-tema').classList.toggle('on',k!=='lluvias'&&k!=='registro');
   if(k==='lluvias')drawRain();else if(k==='registro')lrShow();else{if(!$('#tFilt').children.length)buildFilters();TS.key=$('#tColor').value;buildTema(TS.key);drawTema()}}
 $$('#subnav button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.s==='lluvias'?'mapas':'mapas-'+b.dataset.s});
@@ -1974,7 +1974,7 @@ function cgFicha(S,one){const f=$('#cgFicha'),mk=CG_MK?CG.find(u=>u.k===CG_MK):n
   const cell=(t,b,e)=>`<div><small>${t}</small><b>${b||'–'}</b>${e?`<em>${e}</em>`:''}</div>`;
   if(mk){const c=cgC(mk)||{};f.className='cg-ficha pz';
     f.innerHTML=`<div class="t">Pieza ${mk.pz} · Tablón ${mk.tab} · ${mk.div}</div><div class="g">${cell('Variedad',cgVar(mk))}${cell('Área',isFinite(cgArea(mk))?fmt(cgArea(mk),2)+' acres':'','área efectiva NAX')}${cell('Nombre de suelo',cgSue(mk),c.cod?'Código '+c.cod:'')}${cell('Clase de caña',cgCla(mk))}${cell('Número de corte',c.corte!=null?String(c.corte):'',c.corte===0?'plantilla':'')}${(()=>{const ti=cgTcaI(mk),nn=cgNax(mk);return cell('TCA estimado ingenio',isFinite(ti)?fmt(ti,1):'',nn&&nn.tN!=null?'NAX: '+fmt(nn.tN,1):'')})()}</div>
-      <div class="x">ID ${mk.id||'–'}${c.finca?' · Finca '+c.finca:''}${mk.dis?' · Distrito '+mk.dis:''}${mk.adm?' · '+mk.adm:''}${mk.fc?' · Último corte/siembra '+mk.fc.split('-').reverse().join('/'):''} · <a href="#" id="cgVerTab">Ver resumen del tablón</a></div>`;
+      <div class="x">ID ${mk.id||'–'}${c.finca?' · Finca '+c.finca:''}${mk.dis?' · Distrito '+mk.dis:''}${mk.adm?' · '+mk.adm:''}${cgFcTxt(mk)?' · Inicio del ciclo actual '+cgFcTxt(mk):''} · <a href="#" id="cgVerTab">Ver resumen del tablón</a></div>`;
     $('#cgVerTab').onclick=e=>{e.preventDefault();CG_MK=null;cgDraw()};return}
   f.className='cg-ficha';const dist=(fn,w)=>{const m=new Map();S.forEach(u=>{const k=fn(u);if(k===''||k==null)return;m.set(k,(m.get(k)||0)+(w?w(u):1))});return[...m].sort((a,b)=>b[1]-a[1])};
   const lst=L=>L.length?L.slice(0,3).map(x=>x[0]).join(', ')+(L.length>3?` y ${L.length-3} más`:''):'';
@@ -1982,7 +1982,15 @@ function cgFicha(S,one){const f=$('#cgFicha'),mk=CG_MK?CG.find(u=>u.k===CG_MK):n
   f.innerHTML=`<div class="t">Tablón ${one.tab} · ${one.div} · ${S.length} pieza(s)</div><div class="g">${cell('Variedad',lst(V),V.length>1?`${V.length} variedades`:'')}${cell('Área',A.length?fmt(A.reduce((s,x)=>s+x,0),2)+' acres':'',A.length<S.length?`${S.length-A.length} pieza(s) sin área`:'área efectiva NAX')}${cell('Nombre de suelo',lst(dist(cgSue)))}${cell('Clase de caña',lst(dist(cgCla)))}${cell('Número de corte',Cs.length?(Cs[0]===Cs.at(-1)?String(Cs[0]):`${Cs[0]} a ${Cs.at(-1)}`):'',Cs.length>1&&Cs[0]!==Cs.at(-1)?'varía por pieza':'')}${(()=>{const w=S.filter(u=>isFinite(cgTcaI(u))),wa=u=>isFinite(cgArea(u))?cgArea(u):u.ac,ti=w.length?sumBy(w,u=>cgTcaI(u)*wa(u))/sumBy(w,wa):NaN,nn=S.map(cgNax).filter(n=>n&&n.tN!=null);return cell('TCA estimado ingenio',isFinite(ti)?fmt(ti,1):'',nn.length?'NAX: '+fmt(nn.reduce((s,n)=>s+n.tN,0)/nn.length,1):'promedio ponderado por área')})()}</div>
     <div class="x">${fi.length?'Finca '+fi[0][0]+' · ':''}Haz clic en una pieza del mapa o de la tabla para ver su ficha.</div>`}
 const cgNorm=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
-const cgEdad=u=>u.fc?(Date.now()-Date.parse(u.fc))/864e5/30.44:NaN;
+/* Inicio del ciclo actual de la pieza: la fecha MÁS RECIENTE entre (1) la última cosecha registrada en la historia de zafras
+   (field_data, incluida la zafra 2026), (2) el inicio de ciclo (start_date) del reporte NAX y (3) la fecha de la capa cartográfica.
+   La capa es una foto vieja (muchas veces la siembra), por eso nunca manda sobre una cosecha posterior. */
+function cgFc(u){let best=u.fc||'',src=u.fc?'capa':'';
+  const h=HIST&&u.id&&HIST.d[u.id];if(h)h.forEach(x=>{if(x&&x[2]){const t=String(x[2]),f=`${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}`;if(f>best){best=f;src='cosecha'}}});
+  const n=typeof cgNax==='function'?cgNax(u):null;if(n&&n.fi&&n.fi>best&&n.fi<=new Date().toISOString().slice(0,10)){best=n.fi;src='NAX'}
+  return best?{f:best,src}:null}
+const cgEdad=u=>{const c=cgFc(u);return c?(Date.now()-Date.parse(c.f))/864e5/30.44:NaN};
+const cgFcTxt=u=>{const c=cgFc(u);return c?c.f.split('-').reverse().join('/')+(c.src==='cosecha'?' (cosecha)':c.src==='NAX'?' (inicio de ciclo NAX)':' (capa)'):''};
 /* interpreta la búsqueda: ID de 9-11 dígitos, "división tablón", "tablón-pieza" o solo tablón */
 function cgParse(q){q=cgNorm(q);if(!q)return null;const sOnly=q.replace(/^tablon\s*/,'');
   if(/^\d{9,11}$/.test(q))return{id:q.padStart(11,'0')};
@@ -2010,9 +2018,9 @@ function cgDraw(){if(!$('#s-cartografia').classList.contains('on'))return;cgData
   cgMap(S);cgFicha(S,one);cgHistDraw(S);
   const nx=!!NX,rows=S.slice(0,600),fdd=s=>s?String(s).slice(0,10).split('-').reverse().join('/'):'',nxTxt=NX?` · Índices NAX del robot diario, actualizado el ${fdd(NX.fecha)}${NX.rango&&NX.rango[1]?' (imágenes hasta el '+fdd(NX.rango[1])+')':''}`:'';$('#cgN').textContent=(S.length>600?`Se muestran 600 de ${fmt(S.length)} piezas; el Excel trae todas.`:`${fmt(S.length)} pieza(s)`)+nxTxt;
   const fd=d=>d?d.split('-').reverse().join('/'):'';
-  $('#cgTbl').innerHTML=`<tr><th>División</th><th>Distrito</th><th>Tablón</th><th>Pieza</th><th>ID</th><th>Variedad</th><th class="num">Área (acres)</th><th>Nombre de suelo</th><th>Clase de caña</th><th class="num">N.º de corte</th><th>Último corte / siembra</th><th class="num">Edad (meses)</th><th class="num">Acres mapa</th><th class="num">TCA ingenio</th>${nx?'<th class="num">TCA NAX</th><th class="num">Humedad</th><th class="num">NDVI</th>':''}</tr>`+
+  $('#cgTbl').innerHTML=`<tr><th>División</th><th>Distrito</th><th>Tablón</th><th>Pieza</th><th>ID</th><th>Variedad</th><th class="num">Área (acres)</th><th>Nombre de suelo</th><th>Clase de caña</th><th class="num">N.º de corte</th><th>Inicio ciclo actual</th><th class="num">Edad (meses)</th><th class="num">Acres mapa</th><th class="num">TCA ingenio</th>${nx?'<th class="num">TCA NAX</th><th class="num">Humedad</th><th class="num">NDVI</th>':''}</tr>`+
     rows.map(u=>{const n=nx?cgNax(u):null,c=(k,d)=>n&&n[k]!=null?`<td class="num" style="color:${nxColor(k,nxCat(k,n[k]))};font-weight:700">${fmt(n[k],d)}</td>`:'<td class="num">–</td>';
-      return`<tr data-u="${u.k}"${CG_MK===u.k?' class="mk"':''}><td>${u.div||'–'}</td><td>${u.dis||'–'}</td><td><b>${u.tab}</b></td><td>${u.pz}</td><td>${u.id||'–'}</td><td>${cgVar(u)||'–'}</td><td class="num">${fmt(cgArea(u),2)}</td><td>${cgSue(u)||'–'}</td><td>${cgCla(u)||'–'}</td><td class="num">${(cgC(u)||{}).corte??'–'}</td><td>${fd(u.fc)||'–'}</td><td class="num">${fmt(cgEdad(u),1)}</td><td class="num">${fmt(u.ac,2)}</td><td class="num"><b>${fmt(cgTcaI(u),1)}</b></td>${nx?`<td class="num">${n&&n.tN!=null?fmt(n.tN,1):'–'}</td>`+c('hum',1)+c('ndvi',3):''}</tr>`}).join('');
+      return`<tr data-u="${u.k}"${CG_MK===u.k?' class="mk"':''}><td>${u.div||'–'}</td><td>${u.dis||'–'}</td><td><b>${u.tab}</b></td><td>${u.pz}</td><td>${u.id||'–'}</td><td>${cgVar(u)||'–'}</td><td class="num">${fmt(cgArea(u),2)}</td><td>${cgSue(u)||'–'}</td><td>${cgCla(u)||'–'}</td><td class="num">${(cgC(u)||{}).corte??'–'}</td><td>${cgFcTxt(u)||'–'}</td><td class="num">${fmt(cgEdad(u),1)}</td><td class="num">${fmt(u.ac,2)}</td><td class="num"><b>${fmt(cgTcaI(u),1)}</b></td>${nx?`<td class="num">${n&&n.tN!=null?fmt(n.tN,1):'–'}</td>`+c('hum',1)+c('ndvi',3):''}</tr>`}).join('');
   $$('#cgTbl tr[data-u]').forEach(tr=>tr.onclick=()=>{CG_MK=CG_MK===tr.dataset.u?null:tr.dataset.u;$$('#cgTbl tr.mk').forEach(x=>x.classList.remove('mk'));if(CG_MK)tr.classList.add('mk');cgMap(S);cgFicha(S,one);cgHistDraw(S);$('#cgFicha').scrollIntoView({behavior:'smooth',block:'nearest'})});
   $('#cgSt').textContent=''}
 let CG_S=null;
@@ -2037,7 +2045,7 @@ function cgMap(S,keep){CG_S=S;const cv=$('#cgMap'),im=imap(cv,{maxH:640}),sel=ne
 $('#cgMap').addEventListener('click',e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,t=$('#cgTip');if(!CG_V)return;const[lon,lat]=CG_V.geo(x,y),pi=pieceAt(lon,lat);
   if(pi<0){t.style.display='none';return}const u=CG.find(z=>z.pis.includes(pi));if(!u)return;const n=cgNax(u);
   if(CG_MK!==u.k&&CG_S&&CG_S.includes(u)){CG_MK=u.k;cgMap(CG_S,true);cgFicha(CG_S,CG_S.length&&new Set(CG_S.map(z=>z.div+'|'+z.tab)).size===1?CG_S[0]:null)}
-  const cc=cgC(u)||{};t.innerHTML=`<b>${u.div} · Tablón ${u.tab} · Pieza ${u.pz}</b><br>${u.adm||''}${u.dis?' · Distrito '+u.dis:''}<br>ID ${u.id||'–'} · ${isFinite(cgArea(u))?fmt(cgArea(u),2):fmt(u.ac,1)} acres<br>${cgVar(u)||'–'} · ${cgSue(u)||'–'}<br>${cgCla(u)||''}${cc.corte!=null?' · corte '+cc.corte:''}${u.fc?'<br>Último corte/siembra: '+u.fc.split('-').reverse().join('/')+` (${fmt(cgEdad(u),1)} meses)`:''}${isFinite(cgTcaI(u))?`<br>TCA estimado ingenio: ${fmt(cgTcaI(u),1)}`:''}${n?`<br>NAX: humedad ${fmt(n.hum,1)} · NDVI ${fmt(n.ndvi,3)} · TCA ${fmt(n.tN,1)}`:''}<br><a href="#" data-tab="${u.div}|${u.tab}">Ver todo el tablón →</a>`;
+  const cc=cgC(u)||{};t.innerHTML=`<b>${u.div} · Tablón ${u.tab} · Pieza ${u.pz}</b><br>${u.adm||''}${u.dis?' · Distrito '+u.dis:''}<br>ID ${u.id||'–'} · ${isFinite(cgArea(u))?fmt(cgArea(u),2):fmt(u.ac,1)} acres<br>${cgVar(u)||'–'} · ${cgSue(u)||'–'}<br>${cgCla(u)||''}${cc.corte!=null?' · corte '+cc.corte:''}${cgFc(u)?'<br>Inicio del ciclo actual: '+cgFcTxt(u)+` (${fmt(cgEdad(u),1)} meses)`:''}${isFinite(cgTcaI(u))?`<br>TCA estimado ingenio: ${fmt(cgTcaI(u),1)}`:''}${n?`<br>NAX: humedad ${fmt(n.hum,1)} · NDVI ${fmt(n.ndvi,3)} · TCA ${fmt(n.tN,1)}`:''}<br><a href="#" data-tab="${u.div}|${u.tab}">Ver todo el tablón →</a>`;
   t.style.left=Math.min(x+12,r.width-270)+'px';t.style.top=(y+12)+'px';t.style.display='block';
   t.querySelector('[data-tab]').onclick=ev=>{ev.preventDefault();const[d,tb]=ev.target.dataset.tab.split('|');Object.assign(CGF,{adm:'',dis:'',div:d,tab:tb,q:null});$('#cgQ').value='';CG_MK=u.k;t.style.display='none';cgDraw()}});
 ['cgAdm','cgDiv','cgDis','cgTab'].forEach(id=>$('#'+id).onchange=e=>{CGF[{cgAdm:'adm',cgDiv:'div',cgDis:'dis',cgTab:'tab'}[id]]=e.target.value;if(id!=='cgTab'&&id!=='cgDis'||true)CG_MK=null;$('#cgTip').style.display='none';cgDraw()});
@@ -2049,15 +2057,15 @@ const cgBuscar=()=>{const q=cgParse($('#cgQ').value);Object.assign(CGF,{adm:'',d
 $('#cgGo').onclick=cgBuscar;$('#cgQ').addEventListener('keydown',e=>{if(e.key==='Enter')cgBuscar()});$('#cgQ').addEventListener('change',cgBuscar);
 $('#cgClr').onclick=()=>{Object.assign(CGF,{adm:'',div:'',dis:'',tab:'',q:null});$('#cgQ').value='';CG_MK=null;$('#cgTip').style.display='none';cgDraw()};
 $('#cgXls').onclick=()=>{if(!window.XLSX){$('#cgSt').textContent='No se pudo cargar el generador de Excel.';return}const S=CG.filter(u=>cgMatch(u));
-  const head=['División','Administración','Distrito','Finca','Tablón','Pieza','ID','ID NAX','Variedad','Área efectiva NAX (acres)','Nombre de suelo','Código de suelo','Clase de caña','N.º de corte','Último corte / siembra','Edad (meses)','Acres mapa','TCA estimado ingenio'];if(NX)head.push('Humedad','NDVI','Biomasa','TCA estimado NAX');
-  const rows=S.map(u=>{const n=cgNax(u),c=cgC(u)||{},r=[u.div,u.adm,u.dis,c.finca||'',+u.tab,+u.pz,u.id,u.idnax,cgVar(u),isFinite(cgArea(u))?cgArea(u):'',cgSue(u),c.cod||'',cgCla(u),c.corte??'',u.fc,isFinite(cgEdad(u))?+cgEdad(u).toFixed(1):'',+u.ac.toFixed(2),isFinite(cgTcaI(u))?+cgTcaI(u).toFixed(2):''];if(NX)r.push(n?.hum??'',n?.ndvi??'',n?.bio??'',n?.tN??'');return r});
+  const head=['División','Administración','Distrito','Finca','Tablón','Pieza','ID','ID NAX','Variedad','Área efectiva NAX (acres)','Nombre de suelo','Código de suelo','Clase de caña','N.º de corte','Inicio ciclo actual','Edad (meses)','Acres mapa','TCA estimado ingenio'];if(NX)head.push('Humedad','NDVI','Biomasa','TCA estimado NAX');
+  const rows=S.map(u=>{const n=cgNax(u),c=cgC(u)||{},r=[u.div,u.adm,u.dis,c.finca||'',+u.tab,+u.pz,u.id,u.idnax,cgVar(u),isFinite(cgArea(u))?cgArea(u):'',cgSue(u),c.cod||'',cgCla(u),c.corte??'',(cgFc(u)||{}).f||'',isFinite(cgEdad(u))?+cgEdad(u).toFixed(1):'',+u.ac.toFixed(2),isFinite(cgTcaI(u))?+cgTcaI(u).toFixed(2):''];if(NX)r.push(n?.hum??'',n?.ndvi??'',n?.bio??'',n?.tN??'');return r});
   const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet([head,...rows]);ws['!cols']=head.map(h=>({wch:Math.max(10,h.length+2)}));XLSX.utils.book_append_sheet(wb,ws,'Cartografía');
   const nm=[CGF.div,CGF.tab&&'tablon_'+CGF.tab].filter(Boolean).join('_')||'central_romana';saveFile(`cartografia_${slug(nm)}_${hoyISO()}.xlsx`,new Blob([XLSX.write(wb,{bookType:'xlsx',type:'array'})],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),$('#cgSt'))};
 
 /* ---- Historia por zafra (historia.json: field_data 2020-21 a 2026-27) ---- */
 let HIST=null,HIST_ST='';
 async function cgHistLoad(){if(HIST||HIST_ST)return;HIST_ST='cargando';try{const r=await fetch('historia.json',{cache:'force-cache'});HIST=await r.json();
-    HIST.cr=HIST.z.map((_,k)=>{let w=0,s=0;for(const id in HIST.d){const x=HIST.d[id][k];if(x&&x[3]!=null){const a=x[5]||1;w+=a;s+=a*x[3]}}return w?s/w:NaN});HIST_ST='ok';cgDraw()}catch(e){HIST_ST='error';$('#cgHistN').textContent='No se pudo cargar la historia de zafras.'}}
+    HIST.cr=HIST.z.map((_,k)=>{let w=0,s=0;for(const id in HIST.d){const x=HIST.d[id][k];if(x&&x[3]!=null){const a=x[5]||1;w+=a;s+=a*x[3]}}return w?s/w:NaN});HIST_ST='ok';cgDraw();if(typeof TS!=='undefined'&&TS.key==='corte'){buildTema('corte');drawTema()}}catch(e){HIST_ST='error';$('#cgHistN').textContent='No se pudo cargar la historia de zafras.'}}
 const cgHx=(u,k)=>HIST&&u.id&&HIST.d[u.id]?HIST.d[u.id][k]:null;
 /* estado por zafra: sin variedad ni siembra y corte 0 = en renovación; corte > 0 sin cosechar = caña quedada (se cosecha en una zafra posterior y conserva el corte) */
 const cgEstado=(x,k)=>!x?'Sin registro':x[2]?'Cosechada '+String(x[2]).slice(6,8)+'/'+String(x[2]).slice(4,6)+'/'+String(x[2]).slice(0,4):x[6]&&x[1]===0?'En renovación':k===HIST.z.length-1?'En curso':'Caña quedada';
