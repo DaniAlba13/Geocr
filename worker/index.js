@@ -1,5 +1,6 @@
 // Worker de GeoCR: /api/* va a la API (base de datos D1); todo lo demás es la página en public/.
 import { onRequest } from './api.js';
+import { dispararRobot } from './robot.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -13,5 +14,9 @@ export default {
       }
     }
     return env.ASSETS.fetch(request);
+  },
+  // Cron de Cloudflare (ver "triggers" en wrangler.jsonc): dispara el robot NAX a la hora exacta.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(dispararRobot(env, event.cron));
   },
 };

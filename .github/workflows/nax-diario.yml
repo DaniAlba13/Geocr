@@ -1,19 +1,39 @@
 name: Alertas NAX diarias
 
 on:
+  # El disparo principal lo hace Cloudflare a las 6:00 a. m. RD (worker/robot.js). Este horario de GitHub
+  # queda solo de respaldo: llega con horas de atraso y no hace nada si ese día ya hubo una corrida exitosa.
   schedule:
-    # GitHub puede atrasar o saltarse corridas programadas en hora en punto; por eso hay.
-    # una corrida principal (~6:07 a. m. RD) y una de respaldo (~7:37 a. m. RD). Repetir no daña nada.
-    - cron: '7 10 * * *'
-    - cron: '37 11 * * *'
-  workflow_dispatch:         # botón "Run workflow" para correrlo a mano
+    - cron: '7 12 * * *'
+  workflow_dispatch:         # lo usa Cloudflare, y sirve de botón "Run workflow" para correrlo a mano
 
 concurrency:
   group: nax-diario
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
+  guardia:
+    runs-on: ubuntu-latest
+    outputs:
+      ya: ${{ steps.v.outputs.ya }}
+    steps:
+      - id: v
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ]; then echo "ya=false" >> $GITHUB_OUTPUT; exit 0; fi
+          HOY=$(TZ=America/Santo_Domingo date +%F)
+          N=$(gh api "repos/${{ github.repository }}/actions/workflows/nax-diario.yml/runs?status=success&created=>=${HOY}T04:00:00Z" --jq '.total_count')
+          echo "Corridas exitosas hoy: $N"
+          if [ "$N" -gt 0 ]; then echo "ya=true" >> $GITHUB_OUTPUT; else echo "ya=false" >> $GITHUB_OUTPUT; fi
+
   nax:
+    needs: guardia
+    if: needs.guardia.outputs.ya != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:

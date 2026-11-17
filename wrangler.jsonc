@@ -13,5 +13,7 @@
   ],
   // Conserva las variables puestas en el panel (EDITORES); los secrets (INGEST_TOKEN) se conservan siempre.
   "keep_vars": true,
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Robot NAX: 6:00 a. m. RD y revisión de respaldo a las 7:30 a. m. RD (hora UTC).
+  "triggers": { "crons": ["0 10 * * *", "30 11 * * *"] }
 }
