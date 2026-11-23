@@ -6,7 +6,9 @@
   "compatibility_date": "2026-11-10",
   "assets": {
     "directory": "public",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Todo pasa primero por el Worker, para exigir la entrada (correo autorizado) también en la página.
+    "run_worker_first": true
   },
   "d1_databases": [
     { "binding": "DB", "database_name": "geocr", "database_id": "9646f472-45f2-4067-9199-6eb180434db0" }
