@@ -36,6 +36,7 @@ import csv
 import json
 import math
 import glob
+import hashlib
 import struct
 import zipfile
 import datetime as dt
@@ -214,7 +215,23 @@ def buscar_entradas(base):
                                 partes[ext] = fh.read()
                             break
                 shps.append((a, partes))
-    return kmls, shps
+    # KML repetidos (mismo contenido o mismo vuelo): se toman una sola vez y se avisa.
+    unicos, vistos, rep = [], {}, []
+    for nom, data in kmls:
+        mr, mt = re.search(r"_R(\d{6,})", nom), re.search(r"_(\d{14})_", nom)
+        claves = [("h", hashlib.md5(data).hexdigest())] + ([("v", mr.group(1), mt.group(1))] if mr and mt else [])
+        ya = next((vistos[c] for c in claves if c in vistos), None)
+        if ya:
+            rep.append((nom, ya))
+            continue
+        for c in claves:
+            vistos[c] = nom
+        unicos.append((nom, data))
+    if rep:
+        print("AVISO: %d KML repetido(s); se toman una sola vez:" % len(rep))
+        for nom, ya in rep:
+            print("   %s%s" % (nom, "" if nom == ya else " (igual a %s)" % ya))
+    return unicos, shps
 
 
 def _num(s, default=0.0):

@@ -87,6 +87,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .p-alta{background:#FBE3E3;color:var(--red)}.p-media{background:#FDF0CF;color:#86600A}.p-baja{background:#E3F0FB;color:var(--navy2)}
 svg.chart{width:100%;display:block}
 .status{font-size:12px;margin-top:6px;color:var(--navy2)} .status.err{color:var(--red)}
+.caav{margin-top:10px;padding:10px 12px;border-left:4px solid #f2a900;background:#fff8e1;border-radius:0 6px 6px 0;font-size:12.5px;color:#5c4400;line-height:1.5}.caav b{color:#5c4400}.caav ul{margin:4px 0 0 18px;padding:0}
 .qc{color:var(--red);font-weight:700}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media(max-width:920px){.two{grid-template-columns:1fr}}
 textarea{width:100%;height:110px;font-family:monospace;font-size:11px;border:1px solid var(--line);border-radius:4px;padding:6px}
@@ -824,6 +825,7 @@ body.splashing{overflow:hidden}
         <label>Dosis objetivo (L/acre, opcional)</label><input type="number" id="caObj" step="0.01" placeholder="vacío = promedio real">
         <div class="row" style="margin-top:14px"><button class="btn" id="caRun">Procesar</button></div>
         <div class="status" id="caSt"></div>
+        <div class="caav" id="caAv" hidden></div>
         <div class="pbar" id="caBar" hidden><div class="pbar-t"><span id="caBarTx">Preparando…</span><b id="caBarPct">0 %</b></div><div class="pbar-o"><i id="caBarFill"></i></div><a href="#" id="caLogT">Ver detalle</a></div>
         <pre class="log" id="caLog" hidden></pre></div>
       <div class="card"><h2>Opción 2 · Subir los resultados del script</h2>
@@ -2309,18 +2311,32 @@ const caBar={set(p,tx,to,secs){const f=$('#caBarFill');$('#caBar').hidden=false;
   fin(tx,err){const f=$('#caBarFill');f.style.transition='transform .3s';f.style.transform='scaleX(1)';$('#caBar').classList.add(err?'err':'done');$('#caBarTx').textContent=tx;$('#caBarPct').textContent=err?'':'100 %'}};
 $('#caLogT').onclick=e=>{e.preventDefault();const l=$('#caLog');l.hidden=!l.hidden;e.target.textContent=l.hidden?'Ver detalle':'Ocultar detalle'};
 $('#caRun').onclick=async()=>{const files=[...$('#caFiles').files],say=t=>{$('#caSt').className='status';$('#caSt').textContent=t};const btn=$('#caRun');
-  try{if(!files.length)throw new Error('Sube primero los KML del drone.');btn.disabled=true;let hasShp=files.some(f=>/\.shp$/i.test(f.name)),bb=[1e9,1e9,-1e9,-1e9],nk=0;
+  $('#caAv').hidden=true;try{if(!files.length)throw new Error('Sube primero los KML del drone.');btn.disabled=true;let hasShp=files.some(f=>/\.shp$/i.test(f.name)),bb=[1e9,1e9,-1e9,-1e9],nk=0;
     const scan=t=>{nk++;for(const m of t.matchAll(/<coordinates>([^<]+)<\/coordinates>/g))m[1].trim().split(/\s+/).forEach(s=>{const[a,b]=s.split(',').map(Number);if(isFinite(a)&&isFinite(b)){bb=[Math.min(bb[0],a),Math.min(bb[1],b),Math.max(bb[2],a),Math.max(bb[3],b)]}})};
     /* Se abren los .zip/.kmz (también zip dentro de zip y subcarpetas) y se pasan sueltos los KML y las partes del shapefile */
-    const sueltos=[],malos=[];let nz=0;
+    const sueltos=[],malos=[],vistos=new Map(),repet=[],yaEval=[];let nz=0;
+    /* KML repetidos: mismo contenido o mismo vuelo (código R… del equipo + hora de inicio) */
+    const hashT=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return(h>>>0).toString(36)+':'+t.length};
+    const prevV=new Map();(STORE.ca||[]).forEach(r=>(r.vd||[]).forEach(v=>{if(v&&v[0])prevV.set(String(v[0]).slice(0,16)+'|'+Number(v[2]).toFixed(1),r)}));
     const abrir=async(nom,buf,pre,nivel)=>{const base=nom.split(/[\/\\]/).pop();if(!base||base.startsWith('._'))return;
-      if(/\.kml$/i.test(base)){scan(new TextDecoder().decode(buf));sueltos.push([pre+base,buf]);return}
+      if(/\.kml$/i.test(base)){const t=new TextDecoder().decode(buf),rid=(base.match(/_R(\d{6,})/)||t.match(/<name>\s*(R\d{6,})\s*<\/name>/)||[])[1]||'',ts=(base.match(/_(\d{14})_/)||[])[1]||'',
+          eq=((t.match(/<Data name="Aircraft Name">\s*<value>([^<]*)<\/value>/)||[])[1]||'').trim(),k1='h|'+hashT(t),k2=rid&&ts?'v|'+eq+'|'+rid+'|'+ts:'';
+        const ya=vistos.get(k1)||(k2&&vistos.get(k2));if(ya){repet.push([base,ya]);return}
+        vistos.set(k1,base);if(k2)vistos.set(k2,base);
+        if(ts){const lit=parseFloat((t.match(/<Data name="Spray amount">\s*<value>\s*([\d.]+)/)||[])[1]),ini=`${ts.slice(0,4)}-${ts.slice(4,6)}-${ts.slice(6,8)} ${ts.slice(8,10)}:${ts.slice(10,12)}`;
+          const r=isFinite(lit)&&prevV.get(ini+'|'+(lit/1000).toFixed(1));if(r)yaEval.push([base,r])}
+        scan(t);sueltos.push([pre+base,buf]);return}
       if(/\.(shp|dbf|shx|prj|cpg)$/i.test(base)){if(/\.shp$/i.test(base))hasShp=true;sueltos.push([pre+base,buf]);return}
       if(/\.(kmz|zip)$/i.test(base)&&nivel<5){if(!window.JSZip)throw new Error('No se pudo cargar el lector de .zip; recarga la página.');let z;try{z=await JSZip.loadAsync(buf)}catch(e){malos.push(base);return}
         const p2='z'+(++nz)+'_';for(const n of Object.keys(z.files)){const e=z.files[n];if(e.dir||/(^|\/)__MACOSX\//.test(n))continue;await abrir(n,await e.async('uint8array'),p2,nivel+1)}}};
     hasShp=false;for(const f of files)await abrir(f.name,new Uint8Array(await f.arrayBuffer()),'',0);
     if(!nk)throw new Error(malos.length?`No pude abrir ${malos.join(', ')}: el archivo está dañado o comprimido en un formato que el navegador no lee. Descomprímelo en tu PC y sube los KML sueltos o vuelve a comprimirlos en .zip.`:'No encontré archivos KML dentro de lo que subiste (sueltos, .kmz o .zip).');
     if(bb[0]>bb[2])throw new Error('Los KML no traen coordenadas de vuelo reconocibles. Verifica que sean los "Flight track" del drone.');
+    {const av=$('#caAv'),li=a=>a.slice(0,12).map(x=>`<li>${xesc(x)}</li>`).join('')+(a.length>12?`<li>… y ${a.length-12} más</li>`:'');let h='';
+      if(repet.length)h+=`<b>KML repetidos: ${repet.length}.</b> Estos vuelos venían más de una vez en lo que subiste; se tomaron una sola vez para no duplicar litros ni marcar traslapes falsos:<ul>${li(repet.map(([a,b])=>a===b?a:`${a} (igual a ${b})`))}</ul>`;
+      if(yaEval.length){const g=new Map();yaEval.forEach(([a,r])=>{const k=r.id;if(!g.has(k))g.set(k,{r,n:[]});g.get(k).n.push(a)});
+        h+=`${h?'<div style="height:8px"></div>':''}<b>Vuelos ya evaluados: ${yaEval.length}.</b> Estos KML ya están en evaluaciones guardadas. Si vuelves a guardar, ese tablón quedará evaluado dos veces:<ul>${li([...g.values()].map(({r,n})=>`${n.length} vuelo(s) en la evaluación del ${r.fecha||'—'} · tablón(es) ${(r.tabs||[]).map(t=>t.tablon).join(', ')||'—'}`))}</ul>`}
+      av.innerHTML=h;av.hidden=!h}
     $('#caLog').textContent='';caBar.set(0.01,'Preparando el procesador…',0.06,20);
     const py=await getPy(t=>caBar.set(0.02,t,0.06,20));py.runPython("import os,shutil\nshutil.rmtree('/w',ignore_errors=True)\nos.makedirs('/w')");
     for(const [n,b] of sueltos)py.FS.writeFile('/w/'+n.replace(/[\/\\]/g,'_'),b);
