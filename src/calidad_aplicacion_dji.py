@@ -474,8 +474,8 @@ PARCIAL_MIN_PCT = 15.0        # pieza (no testigo) con al menos este % sin aplic
 
 
 def piezas_parciales(T):
-    return [p for p in T.get("piezas", []) if not p.get("testigo") and p["area"] > 0
-            and p["no"] / p["area"] * 100 >= PARCIAL_MIN_PCT]
+    """Piezas aplicadas solo en parte: la parte sin pasadas se excluyó de la evaluación (excl)."""
+    return [p for p in T.get("piezas", []) if not p.get("testigo") and p["area"] > 0 and p.get("excl", 0) > 0]
 
 
 def diagnostico_tablon(T, vuelos):
@@ -495,11 +495,14 @@ def diagnostico_tablon(T, vuelos):
     parc = piezas_parciales(T)
     if parc:
         peor = max(p["no"] / p["area"] * 100 for p in parc)
-        out.append((ROJO if peor >= 30 else AMB, "Pieza(s) con aplicación inconclusa",
-                    "Se aplicó parte de la pieza y quedó otra parte sin pasadas. Como sí se empezó a aplicar, la pieza "
-                    "cuenta en el cálculo del tablón. Verificar si faltó terminarla o si se dejó una franja sin aplicar.",
-                    [("P-" + p["pieza"], p["area"] / 4046.8564224, 100 - p["no"] / p["area"] * 100, p["no"] / 4046.8564224)
-                     for p in parc], ["Pieza", "Acres", "% aplicado", "Acres sin aplicar"]))
+        out.append((AMB, "Pieza(s) aplicada(s) solo en parte",
+                    "Solo se aplicó una parte de la pieza. Se asume que el resto aún no tenía caña con la edad para "
+                    "aplicar, así que la cobertura y la uniformidad se calcularon solo sobre la parte trabajada, como una "
+                    "aplicación completa. Confirmar en campo: puede ser que la pieza no tenga la misma edad en toda su "
+                    "área o que haya quedado una parte sin aplicar por error.",
+                    [("P-" + p["pieza"], p["area"] / 4046.8564224, 100 - (p["no"] + p.get("excl", 0)) / p["area"] * 100,
+                      (p["no"] + p.get("excl", 0)) / 4046.8564224) for p in parc],
+                    ["Pieza", "Acres", "% aplicado", "Acres sin aplicar"]))
     if T.get("testigos"):
         out.append(("#6b7a89", "Pieza testigo excluida",
                     "La(s) pieza(s) %s no tienen pasadas (%.1f acres): se tomaron como testigo y no cuentan en la "
@@ -998,11 +1001,33 @@ def main():
                 else:
                     testigo[:] = False
                     testigos = []
+            # Pieza inconclusa: se aplicó solo una parte. Se asume que el resto aún no tenía caña con la edad
+            # para aplicar: la evaluación se hace sobre la zona que sí se trabajó (pasadas + huecos entre ellas)
+            # y la parte sin pasadas se excluye, con una nota en el diagnóstico.
+            sin_edad = np.zeros_like(en_lote)
+            if G["feats"] and (en_lote & (pasadas > 0)).sum() / max(int(en_lote.sum()), 1) * 100 >= UMBRAL_TABLON_PCT:
+                r_w = max(1, int(round(max(v["ancho_m"] for v in vuelos) / RESOLUCION_M)))
+                for i, (_, at) in enumerate(G["feats"], 1):
+                    m = (etiqueta == i) & en_lote
+                    n_m = int(m.sum())
+                    if not n_m:
+                        continue
+                    cbm = m & (pasadas > 0)
+                    if (m & ~cbm).sum() / n_m * 100 < PARCIAL_MIN_PCT:
+                        continue
+                    zona = dilatar(cierre(cbm, 2 * r_w), max(1, r_w // 2)) & m
+                    fuera = m & ~zona
+                    if fuera.sum() / n_m * 100 >= PARCIAL_MIN_PCT / 2:
+                        sin_edad |= fuera
+                if sin_edad.any() and (en_lote & ~sin_edad).any():
+                    en_lote = en_lote & ~sin_edad
+                else:
+                    sin_edad[:] = False
             cub = en_lote & (pasadas > 0)
             cobert = cub.sum() / en_lote.sum() * 100
             if cobert < UMBRAL_TABLON_PCT:
                 continue
-            calles = envolvente & ~en_lote & ~testigo
+            calles = envolvente & ~en_lote & ~testigo & ~sin_edad
             if SUAVIZADO_M > 0:
                 dosis = suavizar(dosis, SUAVIZADO_M / RESOLUCION_M).astype(np.float32)
             clases = np.zeros((malla.nf, malla.nc), np.uint8)
@@ -1012,6 +1037,7 @@ def main():
             clases[calles & (pasadas >= 1)] = 4
             clases[~envolvente & (pasadas >= 1)] = 5
             clases[testigo] = 6
+            clases[sin_edad] = 7
             if FRANJA_MINIMA_M > 0:
                 r_f = max(1, int(round(FRANJA_MINIMA_M / RESOLUCION_M / 2)))
                 for c in (2, 3):
@@ -1068,6 +1094,7 @@ def main():
             T["cobertura"] = (T["A_apl"] + T["A_sob"]) / T["A_lote"] * 100
             T["testigos"] = sorted(testigos)
             T["A_testigo"] = float(testigo.sum() * cel_m2)
+            T["A_sin_edad"] = float(sin_edad.sum() * cel_m2)
             if completo:
                 piezas = []
                 for i, (_, at) in enumerate(G["feats"], 1):
@@ -1083,11 +1110,11 @@ def main():
                     piezas.append(dict(
                         pieza=nom, variedad=at.get("VARIEDAD_N", ""), area=a,
                         apl=((clases == 1) & m).sum() * cel_m2, sob=((clases == 2) & m).sum() * cel_m2,
-                        no=((clases == 3) & m).sum() * cel_m2, litros=L_p,
+                        no=((clases == 3) & m).sum() * cel_m2, excl=float((sin_edad & m).sum() * cel_m2), litros=L_p,
                         dosis_cub=(L_p / (cb.sum() * cel_m2) * M2_POR_UNIDAD) if cb.any() else np.nan,
                         dosis_ef=L_p / a * M2_POR_UNIDAD,
                         cv=float(vv.std() / vv.mean() * 100) if vv.size else np.nan,
-                        unif=(en_rango & m).sum() / m.sum() * 100, testigo=nom in testigos,
+                        unif=(en_rango & m).sum() / max(int((m & en_lote).sum()), 1) * 100, testigo=nom in testigos,
                         xy=(malla.cx[int(np.median(cc))], malla.cy[int(np.median(ff))])))
                 piezas.sort(key=lambda p: p["pieza"])
                 T["piezas"] = piezas
@@ -1306,7 +1333,7 @@ def main():
                         round(T["m_sob"], 2), round(T["m_dosis"], 3), round(T["m_unif"], 2),
                         round(T["L_presc"], 2) if TASA_VARIADA else "",
                         " ".join(T.get("testigos", [])), round(a_unidad(T.get("A_testigo", 0)), 3),
-                        " ".join("%s:%.1f:%.2f" % (p["pieza"], 100 - pct(p["no"], p["area"]), a_unidad(p["no"]))
+                        " ".join("%s:%.1f:%.2f" % (p["pieza"], 100 - pct(p["no"] + p.get("excl", 0), p["area"]), a_unidad(p["no"] + p.get("excl", 0)))
                                  for p in piezas_parciales(T))])
 
     with open(os.path.join(salida, "resumen_piezas.csv"), "w", newline="", encoding="utf-8-sig") as fh:
@@ -1368,8 +1395,8 @@ def main():
         _mtext.Text.set_text = _set_text
     plt.rcParams["font.family"] = "sans-serif"
     plt.rcParams["font.sans-serif"] = ["Arial", "Liberation Sans", "Helvetica", "DejaVu Sans"]
-    COL = {1: "#2e9e44", 2: "#c62828", 3: "#f2c80f", 4: "#f08c00", 5: "#7b3fa0", 6: "#9aa5b1"}
-    NOM = {1: "Aplicado", 2: "Sobreaplicado", 3: "No aplicado", 4: "Aplicado en calles", 5: "Aplicado fuera del tablón", 6: "Pieza testigo (excluida)"}
+    COL = {1: "#2e9e44", 2: "#c62828", 3: "#f2c80f", 4: "#f08c00", 5: "#7b3fa0", 6: "#9aa5b1", 7: "#d5dde5"}
+    NOM = {1: "Aplicado", 2: "Sobreaplicado", 3: "No aplicado", 4: "Aplicado en calles", 5: "Aplicado fuera del tablón", 6: "Pieza testigo (excluida)", 7: "Parte sin aplicar de pieza parcial (excluida)"}
     VERDE, AMBAR = "#2e9e44", "#f08c00"
     A4 = (11.69, 8.27)
     pdf_path = os.path.join(salida, "Informe_Calidad_Aplicacion.pdf")
@@ -1571,7 +1598,11 @@ def main():
             ax.plot(an[:, 0], an[:, 1], color=CR_MARINO, lw=lw)
 
     def leyenda_clases(ax, ncol=3):
-        h = [Patch(color=COL[i], label=NOM[i]) for i in range(1, 7 if any(T.get("testigos") for T in tablones) else 6)]
+        h = [Patch(color=COL[i], label=NOM[i]) for i in range(1, 6)]
+        if any(T.get("testigos") for T in tablones):
+            h.append(Patch(color=COL[6], label=NOM[6]))
+        if any(T.get("A_sin_edad", 0) > 0 for T in tablones):
+            h.append(Patch(color=COL[7], label=NOM[7]))
         ax.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, -0.005), ncol=ncol, fontsize=6.8,
                   frameon=False, handlelength=1.1, columnspacing=0.9)
 
@@ -1901,8 +1932,8 @@ def main():
             titulo_bloque(fig, 0.04, 0.83, "Cobertura")
             titulo_bloque(fig, 0.515, 0.83, "Dosis aplicada vs prescripción" if TASA_VARIADA else "Dosis aplicada")
             ax1 = mapa_ax(fig, r1)
-            cm = ListedColormap(["#ffffff00"] + [COL[i] for i in range(1, 7)])
-            ax1.imshow(np.ma.masked_equal(T["disp_clases"], 0), cmap=cm, norm=BoundaryNorm(np.arange(-0.5, 7.5), cm.N),
+            cm = ListedColormap(["#ffffff00"] + [COL[i] for i in range(1, 8)])
+            ax1.imshow(np.ma.masked_equal(T["disp_clases"], 0), cmap=cm, norm=BoundaryNorm(np.arange(-0.5, 8.5), cm.N),
                        extent=T["disp_ext"], interpolation="nearest")
             contorno(ax1, T)
             ax2 = mapa_ax(fig, r2)
