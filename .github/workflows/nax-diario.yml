@@ -1,10 +1,11 @@
 name: Alertas NAX diarias
 
 on:
-  # El disparo principal lo hace Cloudflare a las 6:00 a. m. RD (worker/robot.js). Este horario de GitHub
-  # queda solo de respaldo: llega con horas de atraso y no hace nada si ese día ya hubo una corrida exitosa.
+  # El disparo principal lo hace Cloudflare a las 6:00 a. m. y 2:00 p. m. RD (worker/robot.js). Estos horarios
+  # de GitHub quedan solo de respaldo: llegan con atraso y no hacen nada si el turno ya tuvo una corrida exitosa.
   schedule:
     - cron: '7 12 * * *'
+    - cron: '7 20 * * *'
   workflow_dispatch:         # lo usa Cloudflare, y sirve de botón "Run workflow" para correrlo a mano
 
 concurrency:
@@ -26,9 +27,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ github.event_name }}" != "schedule" ]; then echo "ya=false" >> $GITHUB_OUTPUT; exit 0; fi
-          HOY=$(TZ=America/Santo_Domingo date +%F)
-          N=$(gh api "repos/${{ github.repository }}/actions/workflows/nax-diario.yml/runs?status=success&created=>=${HOY}T04:00:00Z" --jq '.total_count')
-          echo "Corridas exitosas hoy: $N"
+          # Turno actual: desde las 6:00 a. m. RD (10:00 UTC) o desde las 2:00 p. m. RD (18:00 UTC).
+          H=$(date -u +%H); D=$(date -u +%F)
+          if [ "$H" -ge 18 ]; then DESDE="${D}T18:00:00Z"; elif [ "$H" -ge 10 ]; then DESDE="${D}T10:00:00Z"; else DESDE="$(date -u -d yesterday +%F)T18:00:00Z"; fi
+          N=$(gh api "repos/${{ github.repository }}/actions/workflows/nax-diario.yml/runs?status=success&created=>=${DESDE}" --jq '.total_count')
+          echo "Corridas exitosas desde $DESDE: $N"
           if [ "$N" -gt 0 ]; then echo "ya=true" >> $GITHUB_OUTPUT; else echo "ya=false" >> $GITHUB_OUTPUT; fi
 
   nax:
