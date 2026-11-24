@@ -1,6 +1,7 @@
 // Entrada propia de AgroAP-CR (sin código por correo).
 //  · Si Cloudflare Access está delante, se usa su correo como siempre.
 //  · Si no, la persona escribe su correo en /entrar; solo pasa si está en la variable USUARIOS (correos separados por coma)
+//    o si es de un dominio de la variable DOMINIOS (ej. crcltd.com.do)
 //    y, si existe la variable CLAVE, si además escribe esa clave. Queda una cookie firmada (HMAC) por 90 días.
 //  · El encabezado de correo de Access que mande el navegador se descarta si no viene de Access (no se puede falsificar).
 const COOKIE = 'agroap_ses', DIAS = 90;
@@ -12,6 +13,10 @@ async function firma(env, txt) {
   return b64u(await crypto.subtle.sign('HMAC', k, enc.encode(txt)));
 }
 const lista = env => String(env.USUARIOS || '').toLowerCase().split(/[,;\s]+/).filter(Boolean);
+// DOMINIOS: dominios de correo permitidos (ej. crcltd.com.do). Cualquier correo de esos dominios puede entrar.
+const dominios = env => String(env.DOMINIOS || '').toLowerCase().split(/[,;\s]+/).map(d => d.replace(/^@/, '')).filter(Boolean);
+const permitido = (env, email) => !!email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) &&
+  (lista(env).includes(email) || dominios(env).includes(email.split('@')[1]));
 const cookieDe = (req, n) => ((req.headers.get('cookie') || '').split(/;\s*/).find(c => c.startsWith(n + '=')) || '').slice(n.length + 1);
 
 export async function correoSesion(request, env) {
@@ -20,7 +25,7 @@ export async function correoSesion(request, env) {
   const [email, exp, sig] = v.split('|');
   if (!email || !exp || !sig || !secreto(env) || Date.now() > +exp) return '';
   if (sig !== await firma(env, email + '|' + exp)) return '';
-  return lista(env).includes(email) ? email : '';      // si lo sacas de USUARIOS, pierde el acceso al instante
+  return permitido(env, email) ? email : '';      // si lo sacas de USUARIOS/DOMINIOS, pierde el acceso al instante
 }
 
 const pagina = (msg, conClave) => `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AgroAP-CR · Entrar</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiI+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMDQiIGZpbGw9IiMwRTJBNDciLz48ZyBpZD0ibWFyY2EiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE2IDgpIj4KICA8cmVjdCB4PSIxMDQiIHk9IjMwMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iIzAwNzBDOSIgb3BhY2l0eT0iLjIyIi8+CiAgPHJlY3QgeD0iMTA0IiB5PSIzNTgiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiMwMDcwQzkiIG9wYWNpdHk9Ii41Ii8+CiAgPHJlY3QgeD0iMTYyIiB5PSIzMDAiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiMwMDcwQzkiIG9wYWNpdHk9Ii41Ii8+CiAgPHJlY3QgeD0iMTYyIiB5PSIzNTgiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgcng9IjgiIGZpbGw9IiMwMDcwQzkiIG9wYWNpdHk9Ii44NSIvPgogIDxyZWN0IHg9IjE2MiIgeT0iMjQyIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSIjMDA3MEM5IiBvcGFjaXR5PSIuMjIiLz4KICA8cmVjdCB4PSIyMjAiIHk9IjM1OCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiByeD0iOCIgZmlsbD0iIzAwNzBDOSIgb3BhY2l0eT0iLjUiLz4KICA8ZyBmaWxsPSIjRkZGRkZGIj4KICAgIDxyZWN0IHg9IjIzOCIgeT0iMzIyIiB3aWR0aD0iMzYiIGhlaWdodD0iODYiIHJ4PSIxMSIvPgogICAgPHJlY3QgeD0iMjQwIiB5PSIyMzIiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4MiIgcng9IjExIiB0cmFuc2Zvcm09InJvdGF0ZSg0IDI1OCAyNzMpIi8+CiAgICA8cmVjdCB4PSIyNDYiIHk9IjE0NiIgd2lkdGg9IjM0IiBoZWlnaHQ9Ijc4IiByeD0iMTEiIHRyYW5zZm9ybT0icm90YXRlKDggMjYzIDE4NSkiLz4KICAgIDxwYXRoIGQ9Ik0yNzIgMjQ4IFEzMzYgMTk2IDQwNCAyMDYgUTM0MiAyMjYgMjc4IDI3OCBaIi8+CiAgICA8cGF0aCBkPSJNMjQ0IDMyNiBRMTg0IDI3OCAxMjYgMjgyIFExODIgMzAyIDIzOCAzNTQgWiIvPgogICAgPHBhdGggZD0iTTI2NiAxNzYgUTI3MiAxMjIgMzA0IDk0IFEyOTIgMTMyIDI4NiAxODIgWiIvPgogIDwvZz4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9IiNFRTNCMzMiIHN0cm9rZS13aWR0aD0iOSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIj4KICAgIDxwYXRoIGQ9Ik0zOTIgMTY4IEEgNTIgNTIgMCAwIDEgMzQwIDExNiIgb3BhY2l0eT0iLjYiLz4KICAgIDxwYXRoIGQ9Ik0zOTIgMTk2IEEgODAgODAgMCAwIDEgMzEyIDExNiIgb3BhY2l0eT0iLjMiLz4KICA8L2c+CiAgPGNpcmNsZSBjeD0iMzkyIiBjeT0iMTE2IiByPSIyNyIgZmlsbD0iI0VFM0IzMyIvPgogIDxjaXJjbGUgY3g9IjM5MiIgY3k9IjExNiIgcj0iMTAiIGZpbGw9IiMwRTJBNDciLz4KPC9nPjxnIGlkPSJjciI+PHBhdGggZD0iTTM3Ny45NjQ4NDM3NSA0MjEuMDE1NjI1QzM5OC41MzEyNSA0MjEuMDE1NjI1IDQxMC4wNTg1OTM3NSA0MDYuNzk2ODc1IDQxMS40Mjk2ODc1IDM5My4yODkwNjI1SDM5My4zMDA3ODEyNUMzOTIuMDMxMjUgNDAwLjY1MjM0Mzc1IDM4Ni40NDUzMTI1IDQwNS4yNzM0Mzc1IDM3OC4zMjAzMTI1IDQwNS4yNzM0Mzc1QzM2Ny40NTMxMjUgNDA1LjI3MzQzNzUgMzYwLjQ5NjA5Mzc1IDM5Ny40MDIzNDM3NSAzNjAuNDk2MDkzNzUgMzgyLjIxODc1QzM2MC40OTYwOTM3NSAzNjcuNTQyOTY4NzUgMzY3LjMwMDc4MTI1IDM1OS4wNjI1IDM3OC40MjE4NzUgMzU5LjA2MjVDMzg2LjU0Njg3NSAzNTkuMDYyNSAzOTIuMDgyMDMxMjUgMzYzLjY4MzU5Mzc1IDM5My4yNSAzNzEuMDQ2ODc1SDQxMS4zNzg5MDYyNUM0MDkuMjk2ODc1IDM1My40MjU3ODEyNSAzOTUuOTQxNDA2MjUgMzQzLjMyMDMxMjUgMzc3Ljk2NDg0Mzc1IDM0My4zMjAzMTI1QzM1Ny44MDQ2ODc1IDM0My4zMjAzMTI1IDM0Mi4xNjQwNjI1IDM1Ny4yMzQzNzUgMzQyLjE2NDA2MjUgMzgyLjIxODc1QzM0Mi4xNjQwNjI1IDQwNy4wNTA3ODEyNSAzNTcuNSA0MjEuMDE1NjI1IDM3Ny45NjQ4NDM3NSA0MjEuMDE1NjI1WiIgZmlsbD0iI0VFM0IzMyIvPjxwYXRoIGQ9Ik00MTcuMjMwNDY4NzUgNDIwLjBINDM1LjE1NjI1VjM5My45NDkyMTg3NUg0NDQuOTA2MjVMNDU4Ljc2OTUzMTI1IDQyMC4wSDQ3OC40MjE4NzVMNDYyLjYyODkwNjI1IDM5MS4xMDU0Njg3NUM0NzEuMDA3ODEyNSAzODcuMzQ3NjU2MjUgNDc1Ljc4MTI1IDM3OS45MzM1OTM3NSA0NzUuNzgxMjUgMzY5LjQ3MjY1NjI1QzQ3NS43ODEyNSAzNTQuMDM1MTU2MjUgNDY1LjI2OTUzMTI1IDM0NC4zMzU5Mzc1IDQ0OC4yMDcwMzEyNSAzNDQuMzM1OTM3NUg0MTcuMjMwNDY4NzVaTTQzNS4xNTYyNSAzNzkuNzgxMjVWMzU4Ljg1OTM3NUg0NDQuMzk4NDM3NUM0NTIuODI4MTI1IDM1OC44NTkzNzUgNDU3LjE5NTMxMjUgMzYyLjQxNDA2MjUgNDU3LjE5NTMxMjUgMzY5LjQ3MjY1NjI1QzQ1Ny4xOTUzMTI1IDM3Ni41MzEyNSA0NTIuODI4MTI1IDM3OS43ODEyNSA0NDQuNDQ5MjE4NzUgMzc5Ljc4MTI1WiIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjM0MS4wIiB5PSIzMjMuMyIgd2lkdGg9IjEzNC4yIiBoZWlnaHQ9IjExIiByeD0iMiIgZmlsbD0iIzAwNzBDOSIvPjwvZz48L3N2Zz4=">
@@ -43,7 +48,7 @@ export async function rutaEntrada(request, env, url) {
   if (request.method !== 'POST') return html(pagina('', conClave));
   const f = await request.formData(), email = String(f.get('email') || '').trim().toLowerCase(), clave = String(f.get('clave') || '');
   if (!secreto(env)) return html(pagina('La plataforma no tiene configurada la firma de sesión.', conClave), 500);
-  if (!lista(env).includes(email) || (conClave && clave !== String(env.CLAVE).trim())) {
+  if (!permitido(env, email) || (conClave && clave !== String(env.CLAVE).trim())) {
     await new Promise(r => setTimeout(r, 600));           // frena intentos repetidos
     return html(pagina('Ese correo no está autorizado' + (conClave ? ' o la clave no es correcta' : '') + '.', conClave), 403);
   }
