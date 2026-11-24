@@ -2,6 +2,7 @@
 import { onRequest } from './api.js';
 import { dispararRobot } from './robot.js';
 import { correoSesion, rutaEntrada, paginaEntrada } from './entrada.js';
+import { rutaJD } from './jd.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -14,6 +15,10 @@ export default {
     if (!email && !(path && path[0] === 'ingest') && env.ALLOW_ANON !== '1') {
       if (path) return new Response(JSON.stringify({ error: 'Entra con tu correo autorizado.', entrar: '/entrar' }), { status: 401, headers: { 'content-type': 'application/json' } });
       return paginaEntrada(env);
+    }
+    if (url.pathname === '/jd' || url.pathname.startsWith('/jd/')) {
+      const r = await rutaJD(request, env, url, email);
+      if (r) return r;
     }
     if (path) {
       const h = new Headers(request.headers);
