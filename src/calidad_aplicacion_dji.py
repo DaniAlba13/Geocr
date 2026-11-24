@@ -554,8 +554,8 @@ def diagnostico_tablon(T, vuelos):
                     "terminó en otra jornada, procese esos vuelos junto con estos para que el informe refleje la aplicación "
                     "completa." % (area * no / 100, no) + (" La uniformidad también baja porque el área sin aplicar cuenta como "
                     "fuera de dosis." if T["unif"] <= 80 else ""), None))
-    elif cob < 95:
-        out.append((AMB, "Cobertura por debajo de la meta", "Cobertura de %.1f %% (meta 95 %%): %.1f acres sin aplicar, "
+    elif cob < 90:
+        out.append((AMB, "Cobertura por debajo de la meta", "Cobertura de %.1f %% (meta 90 %%): %.1f acres sin aplicar, "
                     "normalmente en bordes, esquinas o entre pasadas." % (cob, area * no / 100), None))
     if sob > 5:
         out.append((AMB, "Sobreaplicación por traslape", "%.1f %% del tablón recibió dos pasadas o más. Revisar la "
@@ -1913,7 +1913,7 @@ def main():
         for T in tablones:
             r = len(filas_tab)
             cb = pct(T["A_apl"] + T["A_sob"], T["A_lote"])
-            colores[(r, 3)] = semaforo(cb, 95, 85)
+            colores[(r, 3)] = semaforo(cb, 90, 85)
             colores[(r, 10)] = semaforo(T["unif"], 80.05, 70)
             filas_tab.append([T["nombre"], T["n_piezas"], "%.2f" % a_unidad(T["A_lote"]), "%.1f" % cb,
                               "%.2f" % a_unidad(T["A_no"]), "%.1f" % pct(T["A_no"], T["A_lote"]),
@@ -1977,7 +1977,7 @@ def main():
 
             kw, kh = 0.142, 0.085
             fila = [
-                ("Cobertura", "%.1f %%" % cb, "%.2f %s" % (a_unidad(T["A_apl"] + T["A_sob"]), U_TXT), semaforo(cb, 95, 85)),
+                ("Cobertura", "%.1f %%" % cb, "%.2f %s" % (a_unidad(T["A_apl"] + T["A_sob"]), U_TXT), semaforo(cb, 90, 85)),
                 ("No aplicado", "%.1f %%" % pct(T["A_no"], T["A_lote"]), "%.2f %s" % (a_unidad(T["A_no"]), U_TXT), None),
                 ("Sobreaplicado", "%.1f %%" % pct(T["A_sob"], T["A_lote"]), "%.2f %s" % (a_unidad(T["A_sob"]), U_TXT), None),
                 ("Dosis cubierta", "%.2f L/%.0s§" % (T["dosis_cub"], U_TXT), "%.1f L/ha" % (T["dosis_cub"] / M2_POR_UNIDAD * 1e4), None),
