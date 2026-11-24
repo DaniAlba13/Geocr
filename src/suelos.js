@@ -19,7 +19,7 @@ const SU_PAR={
   limo:{n:'Limo',u:'%',d:0,br:[20,25,30,35],lab:['Muy bajo','Bajo','Medio','Alto','Muy alto'],pal:SU_TEX},
   gravas:{n:'Gravas',u:'%',d:0,br:[5,15,30,40],lab:['Muy bajas','Bajas','Medias','Altas','Muy altas'],pal:SU_TEX},
 };
-const SU={base:SU_BASE,pts:null,idx:null,key:'mo',modo:'interp',div:'',anio:0,R:1500,pot:2,lo:null,hi:null,br:null,view:null,res:null,hi_c:new Set()};
+const SU={zm:{z:1},base:SU_BASE,pts:null,idx:null,key:'mo',modo:'interp',div:'',anio:0,R:1500,pot:2,lo:null,hi:null,br:null,view:null,res:null,hi_c:new Set()};
 /* centroide (UTM) y acres de cada pieza de la capa */
 const SU_PZ=(()=>{const m=new Map();EMBED_PIECES.forEach(p=>{const k=p[0]+'|'+p[1]+'|'+p[2],U=p[3].map(q=>llToUtm(q[0],q[1]));let a=0,cx=0,cy=0;
   for(let i=0,j=U.length-1;i<U.length;j=i++){const f=U[j][0]*U[i][1]-U[i][0]*U[j][1];a+=f;cx+=(U[j][0]+U[i][0])*f;cy+=(U[j][1]+U[i][1])*f}
@@ -47,22 +47,23 @@ function suResumen(){const P=SU_PAR[SU.key],n=suBr().length+1,cl=Array.from({len
     if(suPass(r.v)){sv+=r.v*pz.ac;sa+=pz.ac}ac+=pz.ac;if(r.med){nm++;mn=Math.min(mn,r.v);mx=Math.max(mx,r.v)}});
   SU.res={cl,media:sa?sv/sa:NaN,mn,mx,nm,ac,acF:sa}}
 function suTitulo(){const P=SU_PAR[SU.key];let t=`${P.n}${P.u?' ('+P.u+')':''} · ${SU.modo==='interp'?'interpolado por IDW':'valor medido por pieza'}`;if(SU.div)t+=' · Div. '+DIVN[SU.div];if(SU.anio)t+=` · análisis desde ${SU.anio}`;return t}
-function suDraw(){if(!$('#s-suelos')||!$('#s-suelos').classList.contains('on'))return;suBuild();suResumen();suLayout($('#suMap'),null);suPanel()}
+function suDraw(){if(!$('#s-suelos')||!$('#s-suelos').classList.contains('on'))return;suBuild();suResumen();suLayout($('#slMap'),null);suPanel();zoomable($('#slMap'),SU.zm,()=>suLayout($('#slMap'),null),()=>SU.view,()=>SU.div?EMBED_PIECES.filter(p=>p[0]===+SU.div):EMBED_PIECES)}
 function suPanel(){const P=SU_PAR[SU.key],R=SU.res,u=P.u?' '+P.u:'';
-  $('#suK1').textContent=fmt(SU.div?SU.pts.filter(q=>q.div===+SU.div).length:SU.pts.length);$('#suK2l').textContent=SU.lo!=null||SU.hi!=null?'Media ponderada (filtro)':'Media ponderada';$('#suK2').textContent=isFinite(R.media)?fmt(R.media,P.d)+u:'–';$('#suK3').textContent=R.nm?`${fmt(R.mn,P.d)} – ${fmt(R.mx,P.d)}`:'–';$('#suK4').textContent=fmt(R.ac);
+  $('#slK1').textContent=fmt(SU.div?SU.pts.filter(q=>q.div===+SU.div).length:SU.pts.length);$('#slK2l').textContent=SU.lo!=null||SU.hi!=null?'Media ponderada (filtro)':'Media ponderada';$('#slK2').textContent=isFinite(R.media)?fmt(R.media,P.d)+u:'–';$('#slK3').textContent=R.nm?`${fmt(R.mn,P.d)} – ${fmt(R.mx,P.d)}`:'–';$('#slK4').textContent=fmt(R.ac);
   const tot=R.cl.reduce((s,c)=>s+c.ac,0)||1;
-  $('#suTbl').innerHTML=`<tr><th>Rango</th><th class="n">Piezas</th><th class="n">Con análisis</th><th class="n">Acres</th><th class="n">% acres</th><th></th></tr>`+R.cl.map((c,i)=>`<tr data-i="${i}" style="cursor:pointer;${SU.hi_c.size&&!SU.hi_c.has(i)?'opacity:.45':''}"><td><i style="display:inline-block;width:12px;height:12px;background:${P.pal[i]};margin-right:8px;vertical-align:-1px"></i>${suLab(i)}</td><td class="n">${fmt(c.n)}</td><td class="n">${fmt(c.med)}</td><td class="n">${fmt(c.ac)}</td><td class="n">${fmt(c.ac/tot*100,1)}</td><td><span class="sevbar" style="width:${Math.max(2,c.ac/tot*140)}px;background:${P.pal[i]}"></span></td></tr>`).join('');
-  $$('#suTbl tr[data-i]').forEach(tr=>tr.onclick=()=>{const i=+tr.dataset.i;SU.hi_c.has(i)?SU.hi_c.delete(i):SU.hi_c.add(i);suDraw()});
-  $('#suNota').innerHTML=`${fmt(SU.pts.length)} piezas con análisis de ${P.n==='pH'||P.n==='CIC'?P.n:P.n.toLowerCase()} ubicadas en su centroide${SU.sinCapa?` (${fmt(SU.sinCapa)} del archivo no están en la capa CR)`:''}. `+
+  $('#slTbl').innerHTML=`<tr><th>Rango</th><th class="n">Piezas</th><th class="n">Con análisis</th><th class="n">Acres</th><th class="n">% acres</th><th></th></tr>`+R.cl.map((c,i)=>`<tr data-i="${i}" style="cursor:pointer;${SU.hi_c.size&&!SU.hi_c.has(i)?'opacity:.45':''}"><td><i style="display:inline-block;width:12px;height:12px;background:${P.pal[i]};margin-right:8px;vertical-align:-1px"></i>${suLab(i)}</td><td class="n">${fmt(c.n)}</td><td class="n">${fmt(c.med)}</td><td class="n">${fmt(c.ac)}</td><td class="n">${fmt(c.ac/tot*100,1)}</td><td><span class="sevbar" style="width:${Math.max(2,c.ac/tot*140)}px;background:${P.pal[i]}"></span></td></tr>`).join('');
+  $$('#slTbl tr[data-i]').forEach(tr=>tr.onclick=()=>{const i=+tr.dataset.i;SU.hi_c.has(i)?SU.hi_c.delete(i):SU.hi_c.add(i);suDraw()});
+  $('#slNota').innerHTML=`${fmt(SU.pts.length)} piezas con análisis de ${P.n==='pH'||P.n==='CIC'?P.n:P.n.toLowerCase()} ubicadas en su centroide${SU.sinCapa?` (${fmt(SU.sinCapa)} del archivo no están en la capa CR)`:''}. `+
     (SU.modo==='interp'?`Cada punto del mapa se estima con los análisis a menos de ${fmt(SU.R)} m (IDW, potencia ${SU.pot}); las piezas sin análisis cercano quedan en gris. `:'Solo se colorean las piezas con análisis. ')+
-    (SU.lo!=null||SU.hi!=null?`Filtro: ${SU.lo!=null?'≥ '+fmt(SU.lo,P.d):''}${SU.lo!=null&&SU.hi!=null?' y ':''}${SU.hi!=null?'≤ '+fmt(SU.hi,P.d):''}${u} (lo demás en gris). `:'')+`Fuente: ${xesc(SU.base.fuente||'base de suelos')}.`}
+    (SU.lo!=null||SU.hi!=null?`Filtro: ${SU.lo!=null?'≥ '+fmt(SU.lo,P.d):''}${SU.lo!=null&&SU.hi!=null?' y ':''}${SU.hi!=null?'≤ '+fmt(SU.hi,P.d):''}${u} (lo demás en gris). `:'')}
 function suLayout(cv,T){
   const W=T?T.W:Math.max(cv.parentElement.clientWidth,700),H=Math.round(W*0.70),dpr=T?1:(window.devicePixelRatio||1);
   cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
   const s=W/1290,F={x:28*s,y:72*s,w:950*s,h:770*s},PN={x:1010*s,y:78*s,w:265*s,h:768*s},P=SU_PAR[SU.key],clip=EMBED_LAYERS.mask,UT=(lon,lat)=>llToUtm(lon,lat);
   const sel=SU.div?EMBED_PIECES.filter(p=>p[0]===+SU.div):[];
   let bb=bboxPts((sel.length?sel.flatMap(p=>p[3]):polyPts(clip)).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.05;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
-  const sc=Math.min(F.w/(bb[2]-bb[0]),F.h/(bb[3]-bb[1])),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;
+  let sc=Math.min(F.w/(bb[2]-bb[0]),F.h/(bb[3]-bb[1])),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;
+  {const v=aplicaZoom(SU.zm,F,{sc,cx,cy,bb});sc=v.sc;cx=v.cx;cy=v.cy;bb=v.bb}
   const toPx=(E,N)=>[F.x+F.w/2+(E-cx)*sc,F.y+F.h/2-(N-cy)*sc],toE=(x,y)=>[cx+(x-F.x-F.w/2)/sc,cy-(y-F.y-F.h/2)/sc],px=(lon,lat)=>toPx(...UT(lon,lat));
   const ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)};
   const path=Pl=>{ctx.beginPath();for(const p of Pl)for(const r of p)ring(r)};
@@ -82,12 +83,14 @@ function suLayout(cv,T){
   }else{const groups=new Map();pzs.forEach(p=>{const m=SU.med.get(p[0]+'|'+p[1]+'|'+p[2]),c=m?suColor(m.v):null;if(!c)return;if(!groups.has(c))groups.set(c,[]);groups.get(c).push(p[3])});
     groups.forEach((rs,c)=>{ctx.beginPath();rs.forEach(ring);ctx.fillStyle=c;ctx.fill()})}
   ctx.beginPath();pzs.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=.35*s;ctx.stroke();
-  if($('#suPts').checked){ctx.fillStyle='#111';SU.pts.forEach(q=>{if(SU.div&&q.div!==+SU.div)return;const[x,y]=toPx(q.x,q.y);ctx.beginPath();ctx.arc(x,y,Math.max(1,1.3*s),0,7);ctx.fill()})}
+  if($('#slPts').checked){ctx.fillStyle='#111';SU.pts.forEach(q=>{if(SU.div&&q.div!==+SU.div)return;const[x,y]=toPx(q.x,q.y);ctx.beginPath();ctx.arc(x,y,Math.max(1,1.3*s),0,7);ctx.fill()})}
   EMBED_LAYERS.divs.forEach(d=>{path(d.polys);ctx.strokeStyle='#2B2B2B';ctx.lineWidth=1.5*s;ctx.stroke()});
   path(clip);ctx.strokeStyle='#111';ctx.lineWidth=2*s;ctx.stroke();
+  if(SU.zm.z>1){const V=pzs.filter(p=>{const[x,y]=px(p[3][0][0],p[3][0][1]);return x>F.x&&x<F.x+F.w&&y>F.y&&y<F.y+F.h});if(V.length<=400){ctx.font=`600 ${Math.max(7,9*s)}px Arial`;ctx.textAlign='center';
+    V.forEach(p=>{const Pp=p[3].map(q=>px(q[0],q[1])),x=Pp.reduce((a,b)=>a+b[0],0)/Pp.length,y=Pp.reduce((a,b)=>a+b[1],0)/Pp.length,t=p[1]+'-'+p[2];ctx.lineWidth=2.5*s;ctx.strokeStyle='rgba(255,255,255,.85)';ctx.strokeText(t,x,y);ctx.fillStyle='#111';ctx.fillText(t,x,y)})}}
   ctx.font=`bold ${16*s}px Arial`;ctx.textAlign='center';EMBED_LAYERS.divs.forEach(d=>{const[x,y]=px(d.lab[0],d.lab[1]);ctx.lineWidth=4*s;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.strokeText('Div. '+d.name,x,y);ctx.fillStyle='#0E2A47';ctx.fillText('Div. '+d.name,x,y)});
   {if(ROSA.complete&&ROSA.naturalWidth){const w=78*s,hh=w*ROSA.naturalHeight/ROSA.naturalWidth;ctx.drawImage(ROSA,855*s-w/2,170*s-hh/2,w,hh)}}
-  {const nice=[500,1000,2000,2500,5000,10000].find(m=>m*sc>=60*s)||5000,len=nice*sc,x0=F.x+F.w-70*s-2*len,y0=F.y+F.h-55*s;ctx.fillStyle='#000';ctx.fillRect(x0,y0,len,8*s);ctx.fillStyle='#fff';ctx.fillRect(x0+len,y0,len,8*s);ctx.strokeStyle='#000';ctx.strokeRect(x0,y0,2*len,8*s);
+  {const nice=[50,100,200,250,500,1000,2000,2500,5000,10000].find(m=>m*sc>=60*s)||5000,len=nice*sc,x0=F.x+F.w-70*s-2*len,y0=F.y+F.h-55*s;ctx.fillStyle='#000';ctx.fillRect(x0,y0,len,8*s);ctx.fillStyle='#fff';ctx.fillRect(x0+len,y0,len,8*s);ctx.strokeStyle='#000';ctx.strokeRect(x0,y0,2*len,8*s);
     ctx.fillStyle='#000';ctx.font=`${12*s}px Arial`;ctx.textAlign='center';ctx.fillText('0',x0,y0-6*s);ctx.fillText(fmt(nice),x0+len,y0-6*s);ctx.fillText(fmt(2*nice)+' m',x0+2*len+10*s,y0-6*s)}
   ctx.restore();
   ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.strokeRect(F.x,F.y,F.w,F.h);ctx.fillStyle='#333';ctx.font=`${9*s}px Arial`;
@@ -97,42 +100,42 @@ function suLayout(cv,T){
   ctx.fillStyle='#000';ctx.textAlign='center';ctx.font=`${16*s}px Arial`;const tl=wrap(ctx,suTitulo(),PN.w-24*s);tl.forEach((l,i)=>ctx.fillText(l,tx,yy+hs[0]/2-(tl.length-1)*10*s+i*20*s+6*s));yy+=hs[0];
   if(logoImg){const r=Math.min((PN.w-40*s)/logoImg.width,(hs[1]-30*s)/logoImg.height);ctx.drawImage(logoImg,tx-logoImg.width*r/2,yy+hs[1]/2-logoImg.height*r/2,logoImg.width*r,logoImg.height*r)}yy+=hs[1];
   ctx.font=`${15*s}px Arial`;wrap(ctx,'Departamento de Investigaciones Agrícolas',PN.w-30*s).forEach((l,i,a)=>ctx.fillText(l,tx,yy+hs[2]/2-(a.length-1)*10*s+i*20*s+6*s));yy+=hs[2];
-  ctx.textAlign='left';ctx.font=`${12*s}px Arial`;wrap(ctx,'Realizado por: '+$('#suAutor').value,PN.w-24*s).forEach((l,i,a)=>ctx.fillText(l,PN.x+14*s,yy+hs[3]/2-(a.length-1)*8*s+i*16*s+4*s));yy+=hs[3];
+  ctx.textAlign='left';ctx.font=`${12*s}px Arial`;wrap(ctx,'Realizado por: '+$('#slAutor').value,PN.w-24*s).forEach((l,i,a)=>ctx.fillText(l,PN.x+14*s,yy+hs[3]/2-(a.length-1)*8*s+i*16*s+4*s));yy+=hs[3];
   ctx.textAlign='center';ctx.font=`bold ${18*s}px Arial`;ctx.fillText('Leyenda',tx,yy+28*s);
   let ly=yy+44*s;const lx=PN.x+16*s;ctx.textAlign='left';const n=suBr().length+1;ctx.font=`${11.5*s}px Arial`;
   for(let i=0;i<n;i++){ctx.fillStyle=P.pal[i];ctx.fillRect(lx,ly,22*s,14*s);ctx.fillStyle='#000';const L=wrap(ctx,suLab(i),PN.w-60*s);L.forEach((l,j)=>ctx.fillText(l,lx+30*s,ly+11*s+j*14*s));ly+=Math.max(22*s,L.length*14*s+8*s)}
   ctx.fillStyle='#E6E9ED';ctx.fillRect(lx,ly,22*s,14*s);ctx.fillStyle='#000';ctx.fillText(SU.modo==='interp'?'Sin análisis cercano':'Sin análisis',lx+30*s,ly+11*s);ly+=26*s;
   ctx.font=`${9.5*s}px Arial`;ctx.fillStyle='#444';wrap(ctx,SU.modo==='interp'?`Interpolación IDW (potencia ${SU.pot}, radio ${fmt(SU.R)} m) desde el centroide de ${fmt(SU.pts.length)} piezas con análisis.`:`${fmt(SU.pts.length)} piezas con análisis.`,PN.w-30*s).forEach((l,i)=>ctx.fillText(l,lx,ly+i*12*s));
-  if(!T)SU.view={toPx,toE,px,F};
+  if(!T)SU.view={toPx,toE,px,F,sc};
 }
 function suInit(){if(suInit.ok)return;suInit.ok=true;
-  $('#suPar').innerHTML=Object.entries(SU_PAR).filter(([k])=>SU.base.filas.some(f=>f[4+SU.base.campos.indexOf(k)]!=null)).map(([k,P])=>`<option value="${k}">${P.n}${P.u?' ('+P.u+')':''}</option>`).join('');$('#suPar').value=SU.key;
-  $('#suDiv').innerHTML='<option value="">Todas</option>'+Object.entries(DIVN).map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
-  const anios=[...new Set(SU.base.filas.map(f=>f[3]).filter(Boolean))].sort();$('#suAnio').innerHTML='<option value="0">Todos los años</option>'+anios.map(a=>`<option value="${a}">Desde ${a}</option>`).join('');
-  const brTxt=()=>{$('#suBr').value=suBr().join(', ')};brTxt();
-  $('#suPar').onchange=()=>{SU.key=$('#suPar').value;SU.br=null;SU.lo=SU.hi=null;$('#suLo').value=$('#suHi').value='';SU.hi_c.clear();brTxt();suDraw()};
-  $('#suDiv').onchange=()=>{SU.div=$('#suDiv').value;suDraw()};$('#suAnio').onchange=()=>{SU.anio=+$('#suAnio').value;suDraw()};
-  $('#suR').onchange=()=>{SU.R=+$('#suR').value;suDraw()};$('#suPts').onchange=()=>suDraw();
-  $$('#suModo button').forEach(b=>b.onclick=()=>{SU.modo=b.dataset.m;$$('#suModo button').forEach(x=>x.classList.toggle('on',x===b));suDraw()});
+  $('#slPar').innerHTML=Object.entries(SU_PAR).filter(([k])=>SU.base.filas.some(f=>f[4+SU.base.campos.indexOf(k)]!=null)).map(([k,P])=>`<option value="${k}">${P.n}${P.u?' ('+P.u+')':''}</option>`).join('');$('#slPar').value=SU.key;
+  $('#slDiv').innerHTML='<option value="">Todas</option>'+Object.entries(DIVN).map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
+  const anios=[...new Set(SU.base.filas.map(f=>f[3]).filter(Boolean))].sort();$('#slAnio').innerHTML='<option value="0">Todos los años</option>'+anios.map(a=>`<option value="${a}">Desde ${a}</option>`).join('');
+  const brTxt=()=>{$('#slBr').value=suBr().join(', ')};brTxt();
+  $('#slPar').onchange=()=>{SU.key=$('#slPar').value;SU.br=null;SU.lo=SU.hi=null;$('#slLo').value=$('#slHi').value='';SU.hi_c.clear();brTxt();suDraw()};
+  $('#slDiv').onchange=()=>{SU.div=$('#slDiv').value;SU.zm.z=1;SU.zm.cx=SU.zm.cy=null;suDraw()};$('#slAnio').onchange=()=>{SU.anio=+$('#slAnio').value;suDraw()};
+  $('#slR').onchange=()=>{SU.R=+$('#slR').value;suDraw()};$('#slPts').onchange=()=>suDraw();
+  $$('#slModo button').forEach(b=>b.onclick=()=>{SU.modo=b.dataset.m;$$('#slModo button').forEach(x=>x.classList.toggle('on',x===b));suDraw()});
   const num=v=>{v=String(v).trim().replace(',','.');return v===''?null:(isFinite(+v)?+v:null)};
-  $('#suLo').oninput=$('#suHi').oninput=()=>{SU.lo=num($('#suLo').value);SU.hi=num($('#suHi').value);suDraw()};
-  $('#suBr').onchange=()=>{const b=$('#suBr').value.split(/[;,\s]+/).map(x=>+x.replace(',','.')).filter(isFinite).sort((a,b)=>a-b);SU.br=b.length===4?b:null;if(!SU.br)brTxt();SU.hi_c.clear();suDraw()};
-  $('#suBrR').onclick=()=>{SU.br=null;brTxt();suDraw()};$('#suAutor').oninput=()=>suDraw();
-  $('#suPdf').onclick=async()=>{if(!window.jspdf){$('#suSt').textContent='No se pudo cargar el generador de PDF.';return}$('#suSt').textContent='Generando…';await new Promise(r=>setTimeout(r,30));const c=document.createElement('canvas');suLayout(c,{W:2580});await saveFile(`${slug(suTitulo())}.pdf`,pdfFrom([c]),$('#suSt'))};
-  $('#suPng').onclick=()=>{const c=document.createElement('canvas');suLayout(c,{W:2580});c.toBlob(b=>saveFile(`${slug(suTitulo())}.png`,b,$('#suSt')),'image/png')};
-  $('#suFile').onchange=async e=>{const st=$('#suFSt');st.className='status';try{st.textContent='Leyendo…';const base=await suLeerExcel(e.target.files[0]);SU.base=base;
+  $('#slLo').oninput=$('#slHi').oninput=()=>{SU.lo=num($('#slLo').value);SU.hi=num($('#slHi').value);suDraw()};
+  $('#slBr').onchange=()=>{const b=$('#slBr').value.split(/[;,\s]+/).map(x=>+x.replace(',','.')).filter(isFinite).sort((a,b)=>a-b);SU.br=b.length===4?b:null;if(!SU.br)brTxt();SU.hi_c.clear();suDraw()};
+  $('#slBrR').onclick=()=>{SU.br=null;brTxt();suDraw()};$('#slAutor').oninput=()=>suDraw();
+  $('#slPdf').onclick=async()=>{if(!window.jspdf){$('#slSt').textContent='No se pudo cargar el generador de PDF.';return}$('#slSt').textContent='Generando…';await new Promise(r=>setTimeout(r,30));const c=document.createElement('canvas');suLayout(c,{W:2580});await saveFile(`${slug(suTitulo())}.pdf`,pdfFrom([c]),$('#slSt'))};
+  $('#slPng').onclick=()=>{const c=document.createElement('canvas');suLayout(c,{W:2580});c.toBlob(b=>saveFile(`${slug(suTitulo())}.png`,b,$('#slSt')),'image/png')};
+  $('#slFile').onchange=async e=>{const st=$('#slFSt');st.className='status';try{st.textContent='Leyendo…';const base=await suLeerExcel(e.target.files[0]);SU.base=base;
       if(DB){st.textContent='Guardando para todos…';const txt=JSON.stringify(base),parts=[];for(let i=0;i<txt.length;i+=900000)parts.push(txt.slice(i,i+900000));
         for(let i=0;i<parts.length;i++)await DB.collection('suelo_base').doc('p'+i).set({i,s:parts[i]});await DB.collection('suelo_base').doc('meta').set({partes:parts.length,fuente:base.fuente,filas:base.filas.length,fecha:hoyISO()})}
       suInit.ok=false;suInit();st.textContent=`Base cargada: ${fmt(base.filas.length)} piezas con análisis${DB?' (guardada para todos)':''}.`;suDraw()}catch(err){st.className='status err';st.textContent=err.message}};
-  $('#suMap').addEventListener('click',e=>{if(!SU.view)return;const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,{px,toE}=SU.view;let hit=null;
+  $('#slMap').addEventListener('click',e=>{if(!SU.view)return;const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,{px,toE}=SU.view;let hit=null;
     for(const p of (SU.div?EMBED_PIECES.filter(q=>q[0]===+SU.div):EMBED_PIECES)){const Pp=p[3].map(q=>px(q[0],q[1]));let a=1e9,b=1e9,c=-1e9,d=-1e9;Pp.forEach(([u,v])=>{a=Math.min(a,u);c=Math.max(c,u);b=Math.min(b,v);d=Math.max(d,v)});if(x<a||x>c||y<b||y>d)continue;if(pip(x,y,[[Pp]])){hit=p;break}}
-    const t=$('#suTip');if(!hit){t.style.display='none';return}const k=hit[0]+'|'+hit[1]+'|'+hit[2],m=SU.med.get(k),fr=SU.base.filas.find(f=>f[0]+'|'+f[1]+'|'+f[2]===k),P=SU_PAR[SU.key],[E,N]=toE(x,y),ve=suIdw(E,N);
+    const t=$('#slTip');if(!hit){t.style.display='none';return}const k=hit[0]+'|'+hit[1]+'|'+hit[2],m=SU.med.get(k),fr=SU.base.filas.find(f=>f[0]+'|'+f[1]+'|'+f[2]===k),P=SU_PAR[SU.key],[E,N]=toE(x,y),ve=suIdw(E,N);
     const det=fr?SU.base.campos.map((c,i)=>fr[4+i]!=null&&SU_PAR[c]?`${SU_PAR[c].n}: <b>${fmt(fr[4+i],SU_PAR[c].d)}</b>${SU_PAR[c].u?' '+SU_PAR[c].u:''}`:null).filter(Boolean).join('<br>'):'';
     t.innerHTML=`<b>${DIVN[hit[0]]||'—'} · Tablón ${hit[1]} · Pieza ${hit[2]}</b><br>${m?`${P.n} medido: <b>${fmt(m.v,P.d)}</b>${P.u?' '+P.u:''}${fr&&fr[3]?` (análisis ${fr[3]})`:''}`:'Sin análisis en esta pieza'}${SU.modo==='interp'?`<br>Estimado en este punto: <b>${ve==null?'sin análisis cercano':fmt(ve,P.d)+(P.u?' '+P.u:'')}</b>`:''}${det?`<hr style="border:0;border-top:1px solid #ddd;margin:5px 0">${det}`:''}`;
     t.style.left=Math.min(x+12,r.width-260)+'px';t.style.top=(y+12)+'px';t.style.display='block'});
   suCargarDB()}
 async function suCargarDB(){if(!DB)return;try{const m=await DB.collection('suelo_base').doc('meta').get();if(!m.exists)return;const M=m.data();let s='';for(let i=0;i<M.partes;i++){const d=await DB.collection('suelo_base').doc('p'+i).get();if(!d.exists)return;s+=d.data().s}
-  SU.base=JSON.parse(s);suInit.ok=false;suInit();$('#suFSt').textContent=`Base en uso: ${M.fuente||'—'} · ${fmt(M.filas)} piezas (cargada el ${M.fecha||'—'}).`;suDraw()}catch(e){}}
+  SU.base=JSON.parse(s);suInit.ok=false;suInit();$('#slFSt').textContent=`Base en uso: ${fmt(M.filas)} piezas con análisis (actualizada el ${M.fecha||'—'}).`;suDraw()}catch(e){}}
 /* lee una base nueva con la misma estructura (hoja "AREA REVISADA FINAL V2" o la primera con columnas TABLON/PIEZA/PH) */
 async function suLeerExcel(file){const sh=await readTable(file);const hoja=sh.find(s=>/v2/i.test(s.name)&&/revisada/i.test(s.name))||sh.find(s=>s.rows.length&&s.rows[0].some(h=>/^PH$/i.test(String(h||'').trim()))&&s.rows[0].some(h=>/^TABLON$/i.test(String(h||'').trim())));
   if(!hoja)throw new Error('No encontré la hoja "AREA REVISADA FINAL V2" ni otra con las columnas DIVISION_CODE, TABLON, PIEZA y PH.');
