@@ -496,7 +496,7 @@ body.splashing{overflow:hidden}
 <section id="s-mapas">
   <h1>Gestión de mapas</h1>
   <p class="sub">Genera mapas de lluvia para cualquier período y combina la información de cada pieza para crear tus propios mapas, listos en PDF.</p>
-  <div class="subnav" id="subnav"><button data-s="lluvias" class="on">Lluvias</button><button data-s="otros">Otros mapas</button><button data-s="registro" id="lrNav" style="display:none">Registrar lluvia</button></div>
+  <div class="subnav" id="subnav"><button data-s="lluvias" class="on">Lluvias</button><button data-s="otros">Otros mapas</button><button data-s="suelos">Análisis de suelo</button><button data-s="registro" id="lrNav" style="display:none">Registrar lluvia</button></div>
   <div id="s-lluvias" class="subv on">
   <h2 style="font-size:20px">Mapas de lluvia</h2>
   <p class="sub" id="rainSub">Pluviómetros de Central Romana</p>
@@ -628,6 +628,34 @@ body.splashing{overflow:hidden}
           <div class="dl"><button class="btn" id="tPdf">Descargar mapa (PDF)</button><button class="btn sec" id="tPng">PNG</button><span class="status" id="tSt"></span></div></div>
         <div class="card" style="margin-top:16px"><h2>Resumen por categoría</h2><div class="scroll"><table id="temaTable"></table></div>
           <div id="mmMiss" class="note" style="margin-top:8px"></div></div>
+      </div>
+    </div>
+  </div>
+  <div id="s-suelos" class="subv">
+    <div class="layout">
+      <div class="card">
+        <h2>Análisis de suelo</h2>
+        <p class="note">Cada análisis se ubica en el centroide de su pieza y el mapa se interpola entre piezas (distancia inversa ponderada, IDW).</p>
+        <label>Parámetro</label><select id="suPar"></select>
+        <label>Tipo de mapa</label><div class="seg" id="suModo"><button data-m="interp" class="on">Interpolado</button><button data-m="pieza">Por pieza</button></div>
+        <label>División</label><select id="suDiv"></select>
+        <label>Año del análisis</label><select id="suAnio"></select>
+        <label>Distancia máxima de interpolación</label><select id="suR"><option value="750">750 m</option><option value="1000">1 000 m</option><option value="1500" selected>1 500 m</option><option value="2500">2 500 m</option><option value="4000">4 000 m</option></select>
+        <label>Mostrar solo valores entre</label><div style="display:flex;gap:8px"><input type="text" id="suLo" placeholder="mínimo" inputmode="decimal"><input type="text" id="suHi" placeholder="máximo" inputmode="decimal"></div>
+        <label>Límites de los rangos (4 valores)</label><div style="display:flex;gap:8px"><input type="text" id="suBr"><button class="btn sec" id="suBrR" title="Volver a los rangos por defecto">Restablecer</button></div>
+        <label style="display:flex;gap:8px;align-items:center;text-transform:none;font-size:13px;color:var(--ink)"><input type="checkbox" id="suPts"> Mostrar los puntos de muestreo (centroides)</label>
+        <label>Realizado por</label><input type="text" id="suAutor" value="Ing. Daniel Felipe Alba Ramírez">
+        <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+        <label>Actualizar la base de suelos (Excel)</label><input type="file" id="suFile" accept=".xlsx,.xls">
+        <div class="status" id="suFSt"></div>
+        <p class="note">Hoja "AREA REVISADA FINAL V2" o una con DIVISION_CODE, TABLON, PIEZA, PH, MO%, P ppm, K ppm… Los ceros se toman como sin dato.</p>
+      </div>
+      <div>
+        <div class="kpis"><div class="kpi"><small>Piezas con análisis</small><div id="suK1">–</div></div><div class="kpi"><small id="suK2l">Media ponderada</small><div id="suK2">–</div></div><div class="kpi"><small>Rango medido</small><div id="suK3">–</div></div><div class="kpi"><small>Acres en el mapa</small><div id="suK4">–</div></div></div>
+        <div class="card"><div class="mapwrap"><canvas class="map" id="suMap"></canvas><div class="tip" id="suTip"></div></div>
+          <div class="dl"><button class="btn" id="suPdf">Descargar mapa (PDF)</button><button class="btn sec" id="suPng">PNG</button><span class="status" id="suSt"></span></div>
+          <p class="note" id="suNota" style="margin-top:8px"></p></div>
+        <div class="card" style="margin-top:16px"><h2>Piezas y acres por rango</h2><p class="note">Haz clic en un rango para resaltarlo en el mapa.</p><div class="scroll"><table id="suTbl"></table></div></div>
       </div>
     </div>
   </div>
@@ -1027,7 +1055,7 @@ async function readGeo(file){
 const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','muestreo','surcos','cosecha','riego'];
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));
-  if(v==='mapas')showSub(['lluvias','registro','otros','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
+  if(v==='mapas')showSub(['lluvias','registro','otros','suelos','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 
 __INTRO__
 __IMAP__
@@ -1665,8 +1693,8 @@ function buildFilters(){const box=$('#tFilt');box.innerHTML=FKEYS.map(k=>{const 
 $('#tColor').onchange=()=>{TS.key=$('#tColor').value;if(TS.key==='corte')cgHistLoad();buildTema(TS.key);drawTema()};
 $('#tClear').onclick=()=>{FKEYS.forEach(k=>FILT[k]='');buildFilters();buildTema(TS.key);drawTema()};
 function showSub(k){if(k==='corte')cgHistLoad();const lg={variedad:1,suelo:1,clase:1,corte:1,adm:1,mimapa:1,division:1};if(lg[k]){$('#tColor').value=k;TS.key=k;k='otros'}
-  $$('#subnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===k));$('#s-lluvias').classList.toggle('on',k==='lluvias');$('#s-lreg').classList.toggle('on',k==='registro');$('#s-tema').classList.toggle('on',k!=='lluvias'&&k!=='registro');
-  if(k==='lluvias')drawRain();else if(k==='registro')lrShow();else{if(!$('#tFilt').children.length)buildFilters();TS.key=$('#tColor').value;buildTema(TS.key);drawTema()}}
+  $$('#subnav button').forEach(b=>b.classList.toggle('on',b.dataset.s===k));$('#s-lluvias').classList.toggle('on',k==='lluvias');$('#s-lreg').classList.toggle('on',k==='registro');$('#s-tema').classList.toggle('on',k!=='lluvias'&&k!=='registro'&&k!=='suelos');$('#s-suelos').classList.toggle('on',k==='suelos');
+  if(k==='lluvias')drawRain();else if(k==='registro')lrShow();else if(k==='suelos'){suInit();suDraw()}else{if(!$('#tFilt').children.length)buildFilters();TS.key=$('#tColor').value;buildTema(TS.key);drawTema()}}
 $$('#subnav button').forEach(b=>b.onclick=()=>{location.hash=b.dataset.s==='lluvias'?'mapas':'mapas-'+b.dataset.s});
 
 /* ================= REGISTRO (base de datos compartida) Y TABLEROS ================= */
@@ -2445,6 +2473,7 @@ $('#suSave').onclick=async()=>{const st=$('#suSt');try{if(!SUP)return;const f=$(
 
 __COSECHA__
 __RIEGO__
+__SUELOSJS__
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
 const LR={cargas:new Map(),dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{cargas:false,dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};

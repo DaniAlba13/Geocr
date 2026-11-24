@@ -2,7 +2,7 @@
 // Rutas:  GET /api/ping · GET /api/me · /api/db/<coleccion>[/<id>] · POST /api/ingest (robot NAX, con token)
 const J = (o, s = 200) => new Response(typeof o === 'string' ? o : JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
 // Colecciones que solo pueden modificar los correos de EDITORES (variable de Cloudflare, separados por coma).
-const SOLO_EDITORES = new Set(['lluvia_dia', 'lluvia_mes', 'lluvia_cargas', 'pluviometros', 'campo_meta', 'campo_snap']);
+const SOLO_EDITORES = new Set(['lluvia_dia', 'lluvia_mes', 'lluvia_cargas', 'pluviometros', 'campo_meta', 'campo_snap', 'suelo_base']);
 const esEditor = (env, email) => { const l = String(env.EDITORES || '').toLowerCase().split(/[,;\s]+/).filter(Boolean); return !l.length || l.includes(String(email).toLowerCase()); };
 const COLL = /^[a-z0-9_]{1,40}$/, ID = /^[A-Za-z0-9_.\-]{1,120}$/;
 let listo = false;
@@ -51,7 +51,7 @@ export async function onRequest({ request, env, params }) {
   if (seg[0] !== 'db') return J({ error: 'ruta desconocida' }, 404);
   const c = seg[1], id = seg[2];
   if (!COLL.test(c || '') || (id !== undefined && !ID.test(id))) return J({ error: 'colección o id inválido' }, 400);
-  if (m !== 'GET' && SOLO_EDITORES.has(c) && !esEditor(env, email)) return J({ error: 'Solo el equipo autorizado puede modificar las lluvias.' }, 403);
+  if (m !== 'GET' && SOLO_EDITORES.has(c) && !esEditor(env, email)) return J({ error: 'Solo el equipo autorizado (EDITORES) puede modificar estos datos.' }, 403);
   if (id === undefined) {
     if (m !== 'GET') return J({ error: 'método no permitido' }, 405);
     const u = new URL(request.url), lim = Math.min(Math.max(parseInt(u.searchParams.get('limit') || '1000', 10) || 1000, 1), 2000);
