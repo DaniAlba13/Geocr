@@ -1732,7 +1732,7 @@ const HOME_APPS=[
 function countUp(){$$('#homeChips b').forEach(b=>{if(!b.dataset.n)b.dataset.n=b.textContent;const raw=b.dataset.n,n=parseFloat(raw.replace(/[^\d.]/g,''));if(!isFinite(n))return;const pre=raw.match(/^[^\d]*/)[0],t0=performance.now(),D=1100,tok=(b._tok||0)+1;b._tok=tok;const step=t=>{if(b._tok!==tok)return;const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);b.textContent=k<1?pre+Math.round(n*e).toLocaleString('en-US'):raw;if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)})}
 function homeInfo(){
   const divs=new Set([...R.gauges.values()].map(g=>g.div).filter(Boolean)).size;
-  $('#homeChips').innerHTML=`<span><b>7</b>divisiones</span><span><b>${HOME_APPS.length-1}</b>herramientas en la plataforma</span>`;
+  $('#homeChips').innerHTML=`<span><b>${HOME_APPS.length-1}</b>herramientas en la plataforma</span>`;
   const ms=months().slice().reverse();for(const m of ms){const A=accumulate(m+'-01',m+'-'+lastDay(+m.slice(0,4),+m.slice(5,7)));const v=[...A.vals.values()].filter(isFinite);
     if(v.length>R.gauges.size/2){{const tx=`Última lluvia: ${ymLabel(m)} · <b>${fmt(v.reduce((a,b)=>a+b,0)/v.length,2)} plg</b> de media`;$$('.tkRain').forEach(e=>e.innerHTML=tx)}$('#homeRain').textContent=`Última lluvia registrada: ${ymLabel(m)}, ${fmt(v.reduce((a,b)=>a+b,0)/v.length,2)} plg de media`;break}}
 }
