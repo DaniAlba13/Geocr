@@ -33,11 +33,11 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]));
   $('#flAct').innerHTML=act.length?act.map(([k,v])=>`<button class="fl-chip on" data-k="${k}" data-v="${xesc(v)}">${xesc(v)} ✕</button>`).join('')+`<button class="fl-clr" id="flClr">Limpiar filtros</button>`:'<span class="fl-hint">Haz clic en cualquier gráfico para filtrar todo el tablero.</span>';
   $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>flTog(b.dataset.k,b.dataset.v));if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
-  const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size;
+  const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size,md=A.R.filter(r=>r.horas>0).length;
   const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(r[k]||0),0))}return flSpark(L)};
   const K=[['Máquinas reportando',`${fmt(rep)}<small> / ${fmt(M.length)}</small>`,`${fmt(M.filter(m=>flEst(m)==='Sin reportar').length)} sin reportar más de 24 h`,''],
     ['Horas de motor',fmt(A.h,0),`${dias===1?'hoy':'últimos '+dias+' días'} ${flDelta(A.h,P.h)}`,spark('horas')],
-    ['Horas por máquina activa',act7?fmt(A.h/act7/dias,1):'–',`por día · ${fmt(act7)} máquinas trabajaron`,''],
+    ['Promedio diario por máquina',md?fmt(A.h/md,1)+' h':'–',`horas de motor en los días que trabajó · ${fmt(act7)} máquinas trabajaron`,''],
     ['Ralentí',A.h?fmt(A.i/A.h*100,0)+' %':'–','motor encendido sin trabajar',spark('ralenti')],
     ['Combustible',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'según telemetría',spark('comb')]];
   $('#flKpis').innerHTML=K.map(([t,v,s,g],i)=>`<div class="fl-k${i===3&&A.h&&A.i/A.h>.25?' warn':''}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
