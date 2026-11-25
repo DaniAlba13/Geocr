@@ -56,11 +56,11 @@ export async function tokenJD(env) {
   await guardarTok(env.DB, n);
   return n.access_token;
 }
-export async function getJD(env, ruta) {
+export async function getJD(env, ruta, accept) {
   const tok = await tokenJD(env);
   if (!tok) throw new Error('John Deere no está conectado.');
   const u = /^https?:/.test(ruta) ? ruta : api(env) + ruta;
-  const r = await fetch(u, { headers: { authorization: 'Bearer ' + tok, accept: ACCEPT } });
+  const r = await fetch(u, { headers: { authorization: 'Bearer ' + tok, accept: accept || ACCEPT } });
   const txt = await r.text();
   let j = null; try { j = JSON.parse(txt); } catch (e) {}
   return { status: r.status, json: j, txt };
@@ -93,6 +93,23 @@ async function estado(env, url) {
     h += `<tr><td>${esc(g.name)}</td><td>${esc(g.id)}</td><td>${con ? `<a class="b" href="${esc(con.uri + (/[?&]redirect_uri=/.test(con.uri) ? '' : (con.uri.includes('?') ? '&' : '?') + 'redirect_uri=' + encodeURIComponent(retorno(url))))}">Aprobar acceso</a>` : '<span class="ok">Aprobado</span>'}</td></tr>`;
   }
   h += '</table></div>';
+  // Diagnóstico: qué servicios de John Deere responden con esta conexión (para elegir de dónde leer la flota).
+  const og = orgs.find(g => !link(g, 'connections'));
+  if (og) {
+    const id = encodeURIComponent(og.id), J = 'application/json', X = 'application/xml';
+    const pr = [
+      ['Máquinas (Operations Center, pruebas)', `https://sandboxapi.deere.com/platform/organizations/${id}/machines`, ACCEPT],
+      ['Máquinas (Operations Center, producción)', `https://partnerapi.deere.com/platform/organizations/${id}/machines`, ACCEPT],
+      ['Equipos (API nueva)', `https://equipmentapi.deere.com/isg/equipment?organizationIds=${id}`, J],
+      ['Equipos (API nueva, pruebas)', `https://sandboxequipmentapi.deere.com/isg/equipment?organizationIds=${id}`, J],
+      ['ISO 15143-3 flota (pruebas)', 'https://sandboxapi.deere.com/aemp/Fleet/1', X],
+      ['ISO 15143-3 flota (pruebas, aemp)', 'https://sandboxaemp.deere.com/Fleet/1', X],
+      ['ISO 15143-3 flota (producción)', 'https://partneraemp.deere.com/Fleet/1', X],
+    ];
+    const rs = await Promise.all(pr.map(async ([n, u, a]) => { try { const r = await getJD(env, u, a); return [n, u, r.status, r.txt] } catch (e) { return [n, u, 'error', String(e && e.message || e)] } }));
+    h += `<div class="c"><h2>Diagnóstico de servicios</h2><table><tr><th>Servicio</th><th>Respuesta</th><th>Inicio de la respuesta</th></tr>` +
+      rs.map(([n, u, st, t]) => `<tr><td>${esc(n)}<br><small>${esc(u.replace(/^https:\/\//, ''))}</small></td><td class="${st === 200 ? 'ok' : 'mal'}">${esc(st)}</td><td><pre style="max-height:90px;margin:0">${esc(String(t).slice(0, 400))}</pre></td></tr>`).join('') + '</table></div>';
+  }
   for (const g of orgs.filter(g => !link(g, 'connections'))) {
     const m = await getJD(env, `/organizations/${encodeURIComponent(g.id)}/machines`);
     const vals = (m.json && m.json.values) || [];
