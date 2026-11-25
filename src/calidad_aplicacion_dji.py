@@ -58,7 +58,14 @@ MODO_DETECCION = False        # True: solo lista los tablones con aplicacion (ta
 DOSIS_OBJETIVO = None         # dosis teorica en L por UNIDAD_AREA (ej. 6.2 L/ac). None = usa la dosis
                               # promedio real como referencia para la uniformidad.
 UNIDAD_AREA = "ac"            # "ac" (acres) o "ha"
-ANCHO_FAJA_M = None           # None = usa "Route Spacing" de cada KML; o fijar un valor en metros
+ANCHO_FAJA_M = None           # None = usa el ancho de faja estándar del equipo (o "Route Spacing" si el equipo no está en la tabla)
+# Parámetros estandarizados por equipo (Central Romana, madurante y bioestimulante):
+#   modelo: (altura m, velocidad m/s, ancho de faja m, DVM µm)
+ESTANDAR = {"T40": (5, 7, 7, 300), "T50": (5, 7, 7, 300), "T55": (5, 7, 7, 300), "T70": (6, 10, 9, 300), "T100": (6, 10, 9, 300)}
+TOL_ALTURA_M = 0.5            # tolerancia de altura (± m)
+TOL_VELOCIDAD_PCT = 10        # tolerancia de velocidad (± % del estándar)
+TOL_FAJA_PCT = 5              # tolerancia del espaciamiento entre pasadas (± % del ancho de faja estándar)
+EMPRESA = ""                  # empresa proveedora del servicio (aparece en el informe)
 RESOLUCION_M = 0.5            # tamano de celda de la malla de analisis (m)
 TOLERANCIA_ANGULO = 3.0       # grados: una linea es "pasada" si es paralela al rumbo de trabajo +- esto
 TOLERANCIA_DOSIS = 10.0       # %: rango +- para considerar la dosis "en objetivo"
@@ -495,6 +502,33 @@ def piezas_parciales(T):
     return [p for p in T.get("piezas", []) if not p.get("testigo") and p["area"] > 0 and p.get("excl", 0) > 0]
 
 
+def modelo_equipo(nombre):
+    m = re.search(r"T\s*-?\s*(\d{2,3})", str(nombre or "").upper())
+    return "T" + m.group(1) if m else ""
+
+
+def evaluar_estandar(v):
+    """Compara la altura, la velocidad y el espaciamiento programados en el KML con el estándar del equipo."""
+    v["modelo"] = modelo_equipo(v.get("equipo"))
+    st = ESTANDAR.get(v["modelo"])
+    v["std"] = st
+    v["cumple"] = {}
+    if not st:
+        return
+    alt, vel, esp = v.get("altura"), v.get("velocidad"), v.get("ancho")
+    ok = lambda x: x == x and x is not None
+    v["cumple"] = {
+        "altura": (abs(alt - st[0]) <= TOL_ALTURA_M) if ok(alt) else None,
+        "velocidad": (abs(vel - st[1]) <= st[1] * TOL_VELOCIDAD_PCT / 100) if ok(vel) else None,
+        "faja": (abs(esp - st[2]) <= st[2] * TOL_FAJA_PCT / 100) if ok(esp) else None,
+    }
+
+
+def vuelo_cumple(v):
+    c = [x for x in v.get("cumple", {}).values() if x is not None]
+    return (all(c) if c else None)
+
+
 def diagnostico_tablon(T, vuelos):
     """Hallazgos que explican un tablón en Atención/Alerta: [(color, título, texto, filas_vuelos)]."""
     ROJO, AMB = "#c62828", "#f2a900"
@@ -507,6 +541,23 @@ def diagnostico_tablon(T, vuelos):
         if a > 0.05 and v["litros"] > 0:
             vd.append((v["fecha"].strftime("%d/%m %H:%M"), a, v["litros"], v["litros"] / a, v["fecha"]))
     area = T["A_lote"] / 4046.8564224
+    vt = [v for v in vuelos if SOLO_TABLON is not None or T["nombre"] in v.get("tablones", [])]
+    fuera = [v for v in vt if vuelo_cumple(v) is False]
+    if fuera:
+        fx = lambda x: "-" if x != x or x is None else ("%g" % round(x, 2))
+        filas = []
+        for v in fuera:
+            st, c = v["std"], v["cumple"]
+            filas.append(((v["fecha"].strftime("%d/%m %H:%M") if v["fecha"] else v["id"]) + " " + v["modelo"],
+                          ("%s (%g)%s" % (fx(v["altura"]), st[0], "" if c.get("altura") is not False else " FUERA")),
+                          ("%s (%g)%s" % (fx(v["velocidad"]), st[1], "" if c.get("velocidad") is not False else " FUERA")),
+                          ("%s (%g)%s" % (fx(v["ancho"]), st[2], "" if c.get("faja") is not False else " FUERA"))))
+        out.append(("#c62828", "Parámetros de vuelo fuera del estándar",
+                    "%d de %d vuelos se programaron con altura, velocidad o espaciamiento distintos al estándar del equipo "
+                    "(entre paréntesis el valor estándar; FUERA = fuera de tolerancia: altura ±%g m, velocidad ±%g %%, faja ±%g %%). "
+                    "La cobertura se calcula con el ancho de faja estándar, así que un espaciamiento mayor deja franjas sin aplicar."
+                    % (len(fuera), len(vt), TOL_ALTURA_M, TOL_VELOCIDAD_PCT, TOL_FAJA_PCT),
+                    filas, ["Vuelo", "Altura m", "Velocidad m/s", "Espaciamiento m"]))
     cob, no, sob = T["cobertura"], T["A_no"] / T["A_lote"] * 100, T["A_sob"] / T["A_lote"] * 100
     con_filas = False
     parc = piezas_parciales(T)
@@ -696,7 +747,8 @@ def main():
     for v in vuelos:
         x, y = ll_to_utm(v["lonlat"][:, 0], v["lonlat"][:, 1], zona, sur)
         v["xy"] = np.column_stack([x, y])
-        v["ancho_m"] = ANCHO_FAJA_M if ANCHO_FAJA_M else (v["ancho"] if v["ancho"] == v["ancho"] and v["ancho"] > 0 else 7.0)
+        evaluar_estandar(v)
+        v["ancho_m"] = ANCHO_FAJA_M if ANCHO_FAJA_M else (v["std"][2] if v["std"] else (v["ancho"] if v["ancho"] == v["ancho"] and v["ancho"] > 0 else 7.0))
 
     def proyectar(feats, prj_txt):
         ip = info_prj(prj_txt)
@@ -1318,7 +1370,8 @@ def main():
                     "velocidad_m_s", "ancho_faja_m", "area_equipo_%s" % U, "area_calculada_%s" % U,
                     "litros", "dosis_equipo_L_%s" % U, "dosis_calc_L_%s" % U, "dosis_calc_L_ha",
                     "litros_dentro_tablones", "long_pasadas_m", "long_traslados_m", "litros_esperados_prescripcion",
-                    "factor_calibracion"])
+                    "factor_calibracion", "modelo", "espaciamiento_kml_m", "altura_std_m", "velocidad_std_m_s", "faja_std_m",
+                    "dvm_std_um", "cumple_altura", "cumple_velocidad", "cumple_faja", "cumple_estandar", "empresa"])
         for v in vuelos:
             w.writerow([v["n"], v["id"], v["archivo"], v["fecha"].strftime("%Y-%m-%d %H:%M:%S") if v["fecha"] else "",
                         round(v["tiempo_s"] / 60, 2), v["equipo"], v["piloto"], " ".join(v["tablones"]),
@@ -1330,7 +1383,11 @@ def main():
                         round(v["L_dentro"], 2), round(v["long_pasadas_m"], 1),
                         round(v["long_total_m"] - v["long_pasadas_m"], 1),
                         round(v["litros_esperados"], 2) if TASA_VARIADA else "",
-                        round(v["factor"], 3) if TASA_VARIADA else ""])
+                        round(v["factor"], 3) if TASA_VARIADA else "",
+                        v.get("modelo", ""), v["ancho"] if v["ancho"] == v["ancho"] else "",
+                        *(list(v["std"]) if v.get("std") else ["", "", "", ""]),
+                        *[("" if v.get("cumple", {}).get(k) is None else int(v["cumple"][k])) for k in ("altura", "velocidad", "faja")],
+                        "" if vuelo_cumple(v) is None else int(vuelo_cumple(v)), EMPRESA])
 
     with open(os.path.join(salida, "resumen_tablones.csv"), "w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh)
@@ -1711,6 +1768,8 @@ def main():
             fig.text(0.047, 0.34, "Tablón %s%s  ·  aplicación del %s" % (str(SOLO_TABLON[1]),
                      ("  ·  División " + _divn) if _divn else "", fecha_apl),
                      fontsize=17, weight="bold", color=CR_MARINO, va="center")
+        if EMPRESA:
+            fig.text(0.047, 0.30, "Servicio de aplicación: %s" % EMPRESA, fontsize=13, color="#33475b", va="center")
         bandas(fig, 0.225)
         pdf.savefig(fig, facecolor=fig.get_facecolor()); plt.close(fig)
 
@@ -1798,7 +1857,9 @@ def main():
                     y -= 0.028
                 if filas_h:
                     y -= 0.008
-                    if enc_h:
+                    if enc_h and isinstance(filas_h[0][1], str):
+                        tabla(fig, [0.055, y - alto_tab, 0.7, alto_tab], enc_h, [list(f) for f in filas_h[:12]], fs=8)
+                    elif enc_h:
                         tabla(fig, [0.055, y - alto_tab, 0.5, alto_tab], enc_h,
                               [[f[0], "%.2f" % f[1], "%.1f %%" % f[2], "%.2f" % f[3]] for f in filas_h[:12]], fs=8)
                     else:
@@ -2170,8 +2231,10 @@ def main():
         kpi(fig, 0.625 + kw + 0.008, 0.12, kw, 0.10, "Altura / velocidad",
             "%.1f m · %.1f m/s" % (np.nanmean([v["altura"] for v in vuelos]), np.nanmean([v["velocidad"] for v in vuelos])),
             "programadas", fs=11)
-        kpi(fig, 0.625 + 2 * (kw + 0.008), 0.12, kw, 0.10, "Ancho de faja",
-            "%.2f m" % np.mean([v["ancho_m"] for v in vuelos]), "Route Spacing")
+        _ok = [vuelo_cumple(v) for v in vuelos if vuelo_cumple(v) is not None]
+        kpi(fig, 0.625 + 2 * (kw + 0.008), 0.12, kw, 0.10, "Parámetros estándar",
+            ("%d de %d vuelos" % (sum(_ok), len(_ok))) if _ok else "-",
+            ("faja estándar %.0f m" % np.mean([v["ancho_m"] for v in vuelos])) if _ok else "equipo sin estándar", fs=11)
         cerrar_pagina(pdf, fig)
 
         # =========================== DOSIS Y PASADAS (global) ===========================
