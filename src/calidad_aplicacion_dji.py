@@ -66,6 +66,9 @@ TOL_ALTURA_M = 0.5            # tolerancia de altura (± m)
 TOL_VELOCIDAD_PCT = 10        # tolerancia de velocidad (± % del estándar)
 TOL_FAJA_PCT = 5              # tolerancia del espaciamiento entre pasadas (± % del ancho de faja estándar)
 EMPRESA = ""                  # empresa proveedora del servicio (aparece en el informe)
+DOSIS_ESTANDAR_L_HA = 15      # dosis objetivo establecida (L/ha); se convierte a L/acre. Aplica a vuelos desde ESTANDAR_DESDE
+TOL_DOSIS_PCT = 10            # tolerancia de la dosis respecto al objetivo (± %)
+ESTANDAR_DESDE = "2026-11-25"  # los vuelos anteriores a esta fecha no se evalúan contra el estándar (se usa su Route Spacing, como antes)
 RESOLUCION_M = 0.5            # tamano de celda de la malla de analisis (m)
 TOLERANCIA_ANGULO = 3.0       # grados: una linea es "pasada" si es paralela al rumbo de trabajo +- esto
 TOLERANCIA_DOSIS = 10.0       # %: rango +- para considerar la dosis "en objetivo"
@@ -511,8 +514,11 @@ def evaluar_estandar(v):
     """Compara la altura, la velocidad y el espaciamiento programados en el KML con el estándar del equipo."""
     v["modelo"] = modelo_equipo(v.get("equipo"))
     st = ESTANDAR.get(v["modelo"])
-    v["std"] = st
     v["cumple"] = {}
+    if v.get("fecha") and ESTANDAR_DESDE and v["fecha"].strftime("%Y-%m-%d") < ESTANDAR_DESDE:
+        st = None
+        v["previo"] = True
+    v["std"] = st
     if not st:
         return
     alt, vel, esp = v.get("altura"), v.get("velocidad"), v.get("ancho")
@@ -539,7 +545,7 @@ def diagnostico_tablon(T, vuelos):
             continue
         a = v["area_dji_ha"] * 2.4710538
         if a > 0.05 and v["litros"] > 0:
-            vd.append((v["fecha"].strftime("%d/%m %H:%M"), a, v["litros"], v["litros"] / a, v["fecha"]))
+            vd.append((v["fecha"].strftime("%d/%m %H:%M") if v["fecha"] else str(v["id"]), a, v["litros"], v["litros"] / a, v["fecha"] or dt.datetime.min))
     area = T["A_lote"] / 4046.8564224
     vt = [v for v in vuelos if SOLO_TABLON is not None or T["nombre"] in v.get("tablones", [])]
     fuera = [v for v in vt if vuelo_cumple(v) is False]
@@ -600,6 +606,16 @@ def diagnostico_tablon(T, vuelos):
                             "vuelos; cada vuelo puede estar bien, pero el tablón no queda parejo."
                             % ("bajó" if ch < 0 else "subió", a_, b_, ch * 100), r))
         con_filas = len(out) > n0
+    if DOSIS_OBJETIVO and T.get("dosis_cub") == T.get("dosis_cub") and T.get("dosis_cub"):
+        dv = (T["dosis_cub"] - DOSIS_OBJETIVO) / DOSIS_OBJETIVO * 100
+        if abs(dv) > TOL_DOSIS_PCT:
+            out.insert(0 if abs(dv) > 2 * TOL_DOSIS_PCT else len(out), (ROJO if abs(dv) > 2 * TOL_DOSIS_PCT else AMB,
+                        "Dosis %s del objetivo" % ("por encima" if dv > 0 else "por debajo"),
+                        "Dosis media de %.2f L/acre en el área cubierta frente al objetivo de %.2f L/acre (%g L/ha): %+.1f %% "
+                        "(tolerancia ±%g %%). %s" % (T["dosis_cub"] / M2_POR_UNIDAD * 4046.8564224, DOSIS_OBJETIVO / M2_POR_UNIDAD * 4046.8564224,
+                        round(DOSIS_OBJETIVO / M2_POR_UNIDAD * 1e4, 1), dv, TOL_DOSIS_PCT,
+                        "Revisar la tasa programada, el caudal de las boquillas o la calibración." if dv < 0 else
+                        "Se usó más producto del necesario; revisar la tasa programada y los traslapes."), None))
     if cob < 85:
         out.append((ROJO, "Aplicación incompleta", "Quedaron %.1f acres sin aplicar (%.1f %% del tablón). Si el tablón se "
                     "terminó en otra jornada, procese esos vuelos junto con estos para que el informe refleje la aplicación "
@@ -686,6 +702,11 @@ def main():
         polis_kml += ps
     vuelos = [v for v in vuelos if v["litros"] > 0]
     vuelos.sort(key=lambda v: (v["fecha"] or dt.datetime.min, v["archivo"]))
+    global DOSIS_OBJETIVO
+    _f = [v["fecha"] for v in vuelos if v["fecha"]]
+    if DOSIS_OBJETIVO is None and DOSIS_ESTANDAR_L_HA and _f and (not ESTANDAR_DESDE or min(_f).strftime("%Y-%m-%d") >= ESTANDAR_DESDE):
+        DOSIS_OBJETIVO = round(DOSIS_ESTANDAR_L_HA * M2_POR_UNIDAD / 1e4, 2)
+        print("Dosis objetivo: %g L/ha = %.2f L/%s" % (DOSIS_ESTANDAR_L_HA, DOSIS_OBJETIVO, UNIDAD_AREA))
     if not vuelos:
         print("ERROR: los KML no tienen vuelos con litros asperjados.")
         return
@@ -1396,7 +1417,7 @@ def main():
                     "dosis_area_cubierta_L_%s" % U, "cv_dosis_pct", "uniformidad_pct", "vuelos",
                     "margen_cobertura_pct", "margen_no_aplicado_pct", "margen_sobreaplicado_pct",
                     "margen_dosis_L_%s" % U, "margen_uniformidad_pct", "litros_prescritos",
-                    "piezas_testigo", "area_testigo_%s" % U, "piezas_parciales"])
+                    "piezas_testigo", "area_testigo_%s" % U, "piezas_parciales", "dosis_objetivo_L_%s" % U])
         for T in tablones:
             w.writerow([T["nombre"], T["division"], T["n_piezas"], round(a_unidad(T["A_lote"]), 3),
                         round(pct(T["A_apl"] + T["A_sob"], T["A_lote"]), 2), round(a_unidad(T["A_no"]), 3),
@@ -1408,7 +1429,8 @@ def main():
                         round(T["L_presc"], 2) if TASA_VARIADA else "",
                         " ".join(T.get("testigos", [])), round(a_unidad(T.get("A_testigo", 0)), 3),
                         " ".join("%s:%.1f:%.2f" % (p["pieza"], 100 - pct(p["no"] + p.get("excl", 0), p["area"]), a_unidad(p["no"] + p.get("excl", 0)))
-                                 for p in piezas_parciales(T))])
+                                 for p in piezas_parciales(T)),
+                        round(DOSIS_OBJETIVO, 3) if DOSIS_OBJETIVO else ""])
 
     with open(os.path.join(salida, "resumen_piezas.csv"), "w", newline="", encoding="utf-8-sig") as fh:
         w = csv.writer(fh)
@@ -2234,7 +2256,8 @@ def main():
         _ok = [vuelo_cumple(v) for v in vuelos if vuelo_cumple(v) is not None]
         kpi(fig, 0.625 + 2 * (kw + 0.008), 0.12, kw, 0.10, "Parámetros estándar",
             ("%d de %d vuelos" % (sum(_ok), len(_ok))) if _ok else "-",
-            ("faja estándar %.0f m" % np.mean([v["ancho_m"] for v in vuelos])) if _ok else "equipo sin estándar", fs=11)
+            ("faja estándar %.0f m" % np.mean([v["ancho_m"] for v in vuelos])) if _ok else
+            ("vigente desde %s" % "/".join(ESTANDAR_DESDE.split("-")[::-1]) if any(v.get("previo") for v in vuelos) else "equipo sin estándar"), fs=11)
         cerrar_pagina(pdf, fig)
 
         # =========================== DOSIS Y PASADAS (global) ===========================
