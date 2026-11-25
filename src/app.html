@@ -447,7 +447,7 @@ body.splashing{overflow:hidden}
       <div class="dd"><button type="button">GIS</button><div class="ddm"><a href="#cartografia">Cartografía</a><a href="#mapas">Gestión de mapas</a><a href="#muestreo">Puntos de muestreo</a></div></div>
       <div class="dd"><button type="button">Teledetección</button><div class="ddm"><a href="#surcos">Surcos y despoblación</a><a href="#malezas">Detección de malezas <span class="pr">Próximamente</span></a></div></div>
       <div class="dd"><button type="button">Monitoreo</button><div class="ddm"><a href="#alertas">Monitoreo satelital NAX</a><a href="#tasa-variada">Mapas de prescripción</a><a href="#calidad">Calidad de aplicación</a></div></div>
-      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha <span class="pr">Próximamente</span></a><a href="#cosecha">Piezas terminadas</a></div></div>
+      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha <span class="pr">Próximamente</span></a><a href="#cosecha">Piezas terminadas</a><a href="#flota">Flota John Deere</a></div></div>
       <a href="#riego">Riego <span class="beta">BETA</span></a>
     </nav>
   </div>
@@ -932,6 +932,24 @@ body.splashing{overflow:hidden}
     <p class="note" style="margin-top:12px">Estado: la plataforma ya está conectada a John Deere. Falta que la organización de Central Romana apruebe el acceso de AgroAP-CR y habilitar la API de operaciones de campo (cosecha). <a href="/jd">Ver la conexión con John Deere</a></p>
   </div>
 </section>
+<section id="s-flota">
+  <h1>Flota John Deere</h1>
+  <p class="sub">Telemetría de tractores y cosechadoras desde Operations Center, sincronizada cada hora.</p>
+  <p class="area">Área de Agricultura de Precisión</p>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 14px"><button class="btn sec" id="flSync">Sincronizar ahora</button><div class="status" id="flSt" style="margin:0"></div></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
+    <div class="seg" id="flPer" style="flex:0 0 auto"><button data-d="1">Hoy</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>
+    <select id="flTipo" style="width:auto"></select><input type="text" id="flQ" placeholder="Buscar máquina, modelo o serie" style="max-width:260px">
+  </div>
+  <div class="kpis"><div class="kpi"><small>Máquinas</small><div id="flK1">–</div><small id="flK1s"></small></div><div class="kpi"><small>Horas de motor</small><div id="flK2">–</div><small id="flK2s"></small></div><div class="kpi"><small>Ralentí</small><div id="flK3">–</div><small>motor encendido sin trabajar</small></div><div class="kpi"><small>Combustible</small><div id="flK4">–</div><small id="flK4s"></small></div></div>
+  <div class="layout" style="grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)">
+    <div class="card"><h2>Última posición</h2><div class="mapwrap"><canvas class="map" id="flMap"></canvas><div class="tip" id="flTip"></div></div>
+      <p class="note" style="margin-top:6px"><span style="color:#2E9E44">●</span> Motor encendido &nbsp; <span style="color:#0070C9">●</span> Apagado &nbsp; <span style="color:#D32F2F">●</span> Sin reportar más de 24 h &nbsp; ■ cosechadora · ● tractor u otro</p></div>
+    <div><div class="card"><h2>Horas de motor por día</h2><svg class="chart" id="flCh1"></svg></div>
+      <div class="card" style="margin-top:16px"><h2>Horas por máquina</h2><p class="note">Color según ralentí: azul &lt; 20 %, amarillo 20–30 %, rojo &gt; 30 %.</p><svg class="chart" id="flCh2"></svg></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2>Máquinas</h2><div class="scroll"><table id="flTbl"></table></div></div>
+</section>
 <section id="s-malezas">
   <div class="prox card">
     <h1>Detección de malezas <span class="pr">Próximamente</span></h1>
@@ -1093,9 +1111,10 @@ async function readGeo(file){
 }
 
 /* ---------------- navegación ---------------- */
-const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','muestreo','surcos','cosecha','riego','avance','malezas'];
+const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','muestreo','surcos','cosecha','riego','avance','malezas','flota'];
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));$$('#nav .dd').forEach(d=>{d.classList.toggle('on',!!d.querySelector('a.on'));d.classList.remove('open')});
+  if(v==='flota')flShow();
   if(v==='mapas')showSub(['lluvias','registro','otros','suelos','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 
 __INTRO__
@@ -2547,6 +2566,7 @@ $('#suSave').onclick=async()=>{const st=$('#suSt');try{if(!SUP)return;const f=$(
 __COSECHA__
 __RIEGO__
 __SUELOSJS__
+__FLOTAJS__
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
 const LR={cargas:new Map(),dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{cargas:false,dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};
