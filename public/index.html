@@ -3531,7 +3531,10 @@ const flTipo=m=>{if(m._t)return m._t;const t=String(m.tipo||''),hp=(t.match(/(\d
   if(/combine|harvest|cosech/i.test(t+' '+(m.modelo||''))||/^CH\d/i.test(m.modelo||''))o='Cosechadora';else if(/sprayer|pulveri|fumig/i.test(t))o='Fumigadora';
   else if(/tractor/i.test(t))o=(/four|4wd|track/i.test(t)?'Tractor 4WD':'Tractor')+r;else if(/loader|cargador/i.test(t))o='Cargador';else if(/excavat/i.test(t))o='Excavadora';else if(/grader|motonivel/i.test(t))o='Motoniveladora';
   else o=t||(/^\d+[A-Z]/.test(m.modelo||'')?'Tractor':'Otro');return m._t=o};
-const flDiv=m=>{if(m._d!==undefined)return m._d;if(m.lat==null||m.lon==null)return m._d='Sin ubicación';const d=EMBED_LAYERS.divs.find(d=>pip(m.lon,m.lat,d.polys));return m._d=d?d.name:'Fuera de las divisiones'};
+/* división según la última posición; si la máquina está fuera (en tránsito, en un camino), se asigna la división más cercana */
+const flDiv=m=>{if(m._d!==undefined)return m._d;if(m.lat==null||m.lon==null)return m._d='Sin ubicación';const d=EMBED_LAYERS.divs.find(d=>pip(m.lon,m.lat,d.polys));if(d)return m._d=d.name;
+  const[E,N]=llToUtm(m.lon,m.lat);let best=null,bd=Infinity;EMBED_LAYERS.divs.forEach(dv=>{for(const p of dv.polys)for(const r of p){let a=llToUtm(r[0][0],r[0][1]);for(let i=1;i<r.length;i++){const b=llToUtm(r[i][0],r[i][1]),dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,((E-a[0])*dx+(N-a[1])*dy)/L)):0,x=a[0]+t*dx-E,y=a[1]+t*dy-N,q=x*x+y*y;if(q<bd){bd=q;best=dv.name}a=b}}});
+  m._fuera=Math.sqrt(bd);return m._d=best||'Sin ubicación'};
 const flH=h=>h==null||!isFinite(h)?'–':fmt(h,1);
 const flFecha=f=>f?f.toLocaleString('es-DO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
 async function flCargar(){if(FL.cargando)return;FL.cargando=true;
@@ -3627,7 +3630,7 @@ function flTabla(M,pm){const o=FL.orden,val={nombre:m=>m.nombre||'',tipo:flTipo,
   const L=M.slice().sort((a,b)=>{const x=val[o.k](a),y=val[o.k](b);return(x>y?1:x<y?-1:0)*o.d}),mxh=Math.max(...M.map(m=>(pm.get(m.id)||{}).h||0),1);
   const th=(k,t,n)=>`<th class="${n?'n':''}" data-k="${k}">${t}${o.k===k?(o.d>0?' ▲':' ▼'):''}</th>`;
   $('#flTbl').innerHTML=`<thead><tr>${th('nombre','Máquina')}${th('tipo','Tipo')}${th('div','División')}${th('est','Estado')}${th('hacum','Horas acum.',1)}${th('h','Horas periodo',1)}${th('ral','Ralentí',1)}${th('tq','Tanque',1)}${th('senal','Última señal')}</tr></thead><tbody>`+
-    L.map(m=>{const x=pm.get(m.id)||{h:0,i:0},e=flEst(m),ri=x.h&&x.i?x.i/x.h:null;return`<tr data-id="${xesc(m.id)}" class="${FL.sel===m.id?'sel':''}"><td><b>${xesc(m.nombre||m.id)}</b><small>${xesc(m.modelo||'')} · ${xesc(m.pin||m.serie||'')}</small></td><td>${xesc(flTipo(m))}</td><td>${xesc(flDiv(m))}</td>
+    L.map(m=>{const x=pm.get(m.id)||{h:0,i:0},e=flEst(m),ri=x.h&&x.i?x.i/x.h:null;return`<tr data-id="${xesc(m.id)}" class="${FL.sel===m.id?'sel':''}"><td><b>${xesc(m.nombre||m.id)}</b><small>${xesc(m.modelo||'')} · ${xesc(m.pin||m.serie||'')}</small></td><td>${xesc(flTipo(m))}</td><td>${xesc(flDiv(m))}${m._fuera?`<small>en tránsito · a ${fmt(m._fuera/1000,1)} km</small>`:''}</td>
       <td><span class="fl-pill" style="--c:${FL_EC[e]}">${e}</span></td><td class="n">${flH(m.horas)}</td><td class="n"><span class="fl-db"><i style="width:${x.h/mxh*100}%"></i><b>${x.h?fmt(x.h,1):'–'}</b></span></td>
       <td class="n" style="${ri>.3?'color:#C62828;font-weight:700':''}">${ri==null?'–':fmt(ri*100,0)+' %'}</td><td class="n">${m.comb_pct==null?'–':`<span class="fl-tq"><i style="width:${m.comb_pct}%;background:${m.comb_pct<20?FLC.sinr:m.comb_pct<40?FLC.ral:FLC.on}"></i></span>${fmt(m.comb_pct,0)} %`}</td><td>${flFecha(flSenal(m))}</td></tr>`}).join('')+'</tbody>';
   $$('#flTbl th').forEach(t=>t.onclick=()=>{const k=t.dataset.k;FL.orden=o.k===k?{k,d:-o.d}:{k,d:k==='nombre'||k==='tipo'||k==='div'?1:-1};flDraw()});
