@@ -16,6 +16,7 @@ async function tablas(db) {
     db.prepare('CREATE TABLE IF NOT EXISTS flota_maq (id TEXT PRIMARY KEY, data TEXT NOT NULL, upd TEXT)'),
     db.prepare('CREATE TABLE IF NOT EXISTS flota_dia (id TEXT NOT NULL, fecha TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY (id, fecha))'),
     db.prepare('CREATE TABLE IF NOT EXISTS flota_meta (k TEXT PRIMARY KEY, v TEXT)'),
+    db.prepare('CREATE TABLE IF NOT EXISTS flota_pos (id TEXT NOT NULL, ts TEXT NOT NULL, lat REAL, lon REAL, horas REAL, PRIMARY KEY (id, ts))'),
   ]);
 }
 
@@ -82,6 +83,8 @@ export async function syncFlota(env) {
       const d = { id, ...m, nombre: (e && e.name) || m.equipo || m.modelo || id, tipo: e ? nom(e.equipmentType || e.type) : '', modelo: (e && nom(e.equipmentModel)) || m.modelo,
         marca: (e && nom(e.equipmentMake)) || m.marca, anio: e && (e.modelYear || e.year) || null, eq_id: e && e.id || null, upd: t0 };
       st.push(db.prepare('INSERT INTO flota_maq (id,data,upd) VALUES (?1,?2,?3) ON CONFLICT(id) DO UPDATE SET data=excluded.data, upd=excluded.upd').bind(id, JSON.stringify(d), t0));
+      // posición de cada lectura (para el avance de cosecha: qué piezas tienen cosechadora trabajando)
+      if (m.lat != null && m.lon != null) st.push(db.prepare('INSERT OR IGNORE INTO flota_pos (id,ts,lat,lon,horas) VALUES (?1,?2,?3,?4,?5)').bind(id, m.f_pos || t0, m.lat, m.lon, m.horas));
       if (m.horas != null || m.comb != null) {
         const p = prev.get(id) || { h_ini: m.horas, r_ini: m.ralenti, c_ini: m.comb, n: 0 };
         const r = { ...p, h_fin: m.horas, r_fin: m.ralenti, c_fin: m.comb, c24: m.comb24, lat: m.lat, lon: m.lon, n: (p.n || 0) + 1, upd: t0 };
@@ -98,6 +101,7 @@ export async function syncFlota(env) {
     const meta = { upd: t0, org: org.name, n_iso: iso.out.length, n_eq: E.length, error_eq: Array.isArray(eq) ? '' : eq.error, ok: true };
     st.push(db.prepare("INSERT INTO flota_meta (k,v) VALUES ('estado',?1) ON CONFLICT(k) DO UPDATE SET v=excluded.v").bind(JSON.stringify(meta)));
     st.push(db.prepare("INSERT INTO flota_meta (k,v) VALUES ('muestra',?1) ON CONFLICT(k) DO UPDATE SET v=excluded.v").bind(JSON.stringify({ iso: iso.muestra, eq: E[0] || null })));
+    st.push(db.prepare('DELETE FROM flota_pos WHERE ts < ?1').bind(new Date(Date.now() - 200 * 864e5).toISOString()));
     for (let i = 0; i < st.length; i += 80) await db.batch(st.slice(i, i + 80));
     return meta;
   } catch (e) {
@@ -125,6 +129,11 @@ function porDia(D) {
 }
 export async function rutaFlota(request, env, path) {
   if (path[1] === 'sync' && request.method === 'POST') return J(await syncFlota(env));
+  if (path[1] === 'pos') {   // posiciones de los últimos días (avance de cosecha)
+    await tablas(env.DB); const u = new URL(request.url), d = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '3', 10) || 3, 1), 200);
+    const r = await env.DB.prepare('SELECT id,ts,lat,lon,horas FROM flota_pos WHERE ts >= ?1 ORDER BY id, ts').bind(new Date(Date.now() - d * 864e5).toISOString()).all();
+    return J(r.results || []);
+  }
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
   const x = await datos(env, dias); return J({ estado: x.estado, maq: x.maq, dia: porDia(x.dia) });

@@ -449,6 +449,7 @@ body.splashing{overflow:hidden}
 .fl-lg i{width:10px;height:10px;border-radius:3px}.fl-lg b{color:#0E2A47}.fl-lg small{color:#8794A3;text-align:right}
 .fl-hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr 44px;gap:10px;align-items:center;width:100%;border:0;background:none;font:inherit;font-size:12.5px;padding:5px 4px;border-radius:6px;cursor:pointer;text-align:left;color:#1F2933}.fl-hb:hover{background:#F1F5F9}.fl-hb.dim{opacity:.35}.fl-hb.on span{font-weight:800;color:#0B4E8C}
 .fl-hb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-hb i{height:12px;background:#EEF2F6;border-radius:6px;overflow:hidden}.fl-hb em{display:block;height:100%;background:linear-gradient(90deg,#0B5394,#0070C9);border-radius:6px;transition:width .5s}.fl-hb b{text-align:right;color:#0E2A47}
+.fl-hb2{grid-template-columns:minmax(110px,36%) 1fr 92px}.fl-hb2 span small,.fl-hb2 b small{display:block;font-size:10.5px;color:#8794A3;font-weight:600}.fl-hb2 i{position:relative;height:14px}.fl-hb2 em{position:absolute;left:0;top:0}.fl-hb2 em.r{background:#F2A900;opacity:.9}
 .fl-tr{display:grid;grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) 78px;gap:10px;align-items:center;padding:7px 6px;border-radius:8px;cursor:pointer}.fl-tr:hover,.fl-tr.sel{background:#F1F5F9}
 .fl-tn{width:22px;height:22px;border-radius:50%;background:#EEF2F6;color:#0E2A47;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}.fl-tl{min-width:0}.fl-tl b,.fl-tl small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-tl b{font-size:13px;color:#0E2A47}.fl-tl small{font-size:11px;color:#8794A3}
 .fl-tb{height:10px;background:#EEF2F6;border-radius:5px;overflow:hidden}.fl-tb i{display:block;height:100%;border-radius:5px;transition:width .5s}.fl-tv{text-align:right;font-weight:800;color:#0E2A47;font-size:13px}.fl-tv small{display:block;font-weight:600;color:#8794A3;font-size:10.5px}
@@ -464,6 +465,14 @@ body.splashing{overflow:hidden}
 .fl-dk{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.fl-dk div{background:#F4F7FA;border-radius:10px;padding:10px 12px}.fl-dk small{display:block;font-size:11px;color:#6B7785;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-dk b{font-size:20px;color:#0E2A47}
 @media(max-width:1100px){.fl-kpis{grid-template-columns:repeat(3,1fr)}.fl-g1,.fl-g2{grid-template-columns:1fr}.fl-dk{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:640px){.fl-kpis{grid-template-columns:repeat(2,1fr)}#s-flota{margin:-16px -12px 0;padding:14px 10px}.fl-ctl input{width:100%}.fl-dk{grid-template-columns:repeat(2,1fr)}}
+
+#s-avance{background:#EEF2F6;margin:-8px -22px 0;padding:16px 22px 24px}.av-kpis{grid-template-columns:repeat(4,1fr)}
+.av-tl{display:flex;align-items:center;gap:12px;margin-top:10px}.av-tl input{flex:1;accent-color:#43A047}.av-tl .fl-sync{background:#0E2A47;color:#fff}.av-f{min-width:84px;text-align:right;font-weight:800;color:#0E2A47}
+.av-lg i{width:12px;height:12px}
+.av-dv{display:grid;grid-template-columns:minmax(0,1fr) 120px 58px;gap:10px;align-items:center;width:100%;border:0;background:none;font:inherit;text-align:left;padding:8px 6px;border-radius:8px;cursor:pointer}.av-dv:hover,.av-dv.on{background:#F1F5F9}
+.av-dv b{display:block;font-size:13px;color:#0E2A47}.av-dv small{display:block;font-size:11px;color:#8794A3}.av-dv i{position:relative;height:12px;background:#E4E9EF;border-radius:6px;overflow:hidden}.av-dv em{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,#1B5E20,#7CB342);border-radius:6px}.av-dv em.c{background:#FF9F1C;border-radius:0}
+.av-dv strong{text-align:right;color:#0E2A47;font-size:13px}
+@media(max-width:1100px){.av-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body class="splashing">
@@ -488,7 +497,7 @@ body.splashing{overflow:hidden}
       <div class="dd"><button type="button">GIS</button><div class="ddm"><a href="#cartografia">Cartografía</a><a href="#mapas">Gestión de mapas</a><a href="#muestreo">Puntos de muestreo</a></div></div>
       <div class="dd"><button type="button">Teledetección</button><div class="ddm"><a href="#surcos">Surcos y despoblación</a><a href="#malezas">Detección de malezas <span class="pr">Próximamente</span></a></div></div>
       <div class="dd"><button type="button">Monitoreo</button><div class="ddm"><a href="#alertas">Monitoreo satelital NAX</a><a href="#tasa-variada">Mapas de prescripción</a><a href="#calidad">Calidad de aplicación</a></div></div>
-      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha <span class="pr">Próximamente</span></a><a href="#cosecha">Piezas terminadas</a><a href="#flota">Flota John Deere</a></div></div>
+      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha</a><a href="#cosecha">Piezas terminadas</a><a href="#flota">Flota John Deere</a></div></div>
       <a href="#riego">Riego <span class="beta">BETA</span></a>
     </nav>
   </div>
@@ -961,16 +970,23 @@ body.splashing{overflow:hidden}
   </div>
 </section>
 <section id="s-avance">
-  <div class="prox card">
-    <h1>Avance de cosecha <span class="pr">Próximamente</span></h1>
-    <p class="note" style="font-size:14px">Avance diario de la cosecha a partir de los datos que registran las cosechadoras John Deere en Operations Center, sin descargas manuales.</p>
-    <ul>
-      <li>Acres y tablones cosechados por día, por división y acumulado de la zafra.</li>
-      <li>Mapa de lo cosechado y de lo que falta, con la posición de las cosechadoras.</li>
-      <li>Horas de motor, ralentí y combustible por cosechadora; litros por tonelada al cruzar con Piezas terminadas.</li>
-      <li>Alertas y códigos de diagnóstico activos de la flota.</li>
-    </ul>
-    <p class="note" style="margin-top:12px">Estado: la plataforma ya está conectada a John Deere. Falta que la organización de Central Romana apruebe el acceso de AgroAP-CR y habilitar la API de operaciones de campo (cosecha). <a href="/jd">Ver la conexión con John Deere</a></p>
+  <div class="fl-wrap">
+    <div class="fl-head">
+      <div><div class="fl-eyebrow">Cosecha · Zafra en curso</div><h1>Avance de cosecha</h1><div class="fl-st" id="avSt"></div></div>
+      <div class="fl-ctl"><button class="fl-sync" id="avHoy">Hoy</button></div>
+    </div>
+    <div class="fl-kpis av-kpis" id="avKpis"></div>
+    <div class="fl-g1">
+      <div class="fl-c av-mapc"><div class="fl-ch"><h2>Mapa de avance</h2><span class="fl-cs">clic en una pieza para ver su detalle · rueda del mouse para acercar</span></div>
+        <div class="mapwrap" style="border:0;background:#0F2338;border-radius:10px;overflow:hidden"><canvas class="map" id="avMap"></canvas><div class="tip" id="avTip"></div></div>
+        <div class="av-tl"><button class="fl-sync" id="avPlay">▶ Reproducir zafra</button><input type="range" id="avT" min="0" max="0" value="0" step="1"><span class="av-f" id="avFecha">Hoy</span></div>
+        <div class="fl-lgh av-lg"><span><i style="background:#C6F432;box-shadow:0 0 8px #C6F432"></i>Terminada en los últimos 3 días</span><span><i style="background:#43A047"></i>Terminada hace 4–14 días</span><span><i style="background:#1B5E20"></i>Terminada hace más de 14 días</span><span><i style="background:#FF9F1C;box-shadow:0 0 8px #FF9F1C"></i>En cosecha</span><span><i style="background:#294A6B"></i>Por cosechar</span><span><i style="background:#fff;border:2px solid #FF9F1C;border-radius:2px"></i>Cosechadora</span></div></div>
+      <div class="fl-col2">
+        <div class="fl-c"><div class="fl-ch"><h2>Avance por división</h2><span class="fl-cs">clic para enfocar</span></div><div id="avDivs"></div></div>
+        <div class="fl-c"><div class="fl-ch"><h2>Acres cosechados por semana</h2></div><div id="avSem"></div></div>
+      </div>
+    </div>
+    <div class="fl-c"><div class="fl-ch"><h2>Piezas en cosecha ahora</h2><span class="fl-cs">cosechadoras trabajando dentro de la pieza en las últimas 48 h</span></div><div class="fl-als" id="avCos"></div></div>
   </div>
 </section>
 <section id="s-flota">
@@ -986,21 +1002,19 @@ body.splashing{overflow:hidden}
     <div class="fl-act" id="flAct"></div>
     <div class="fl-kpis" id="flKpis"></div>
     <div class="fl-g1">
-      <div class="fl-c fl-map"><div class="fl-ch"><h2>Ubicación de la flota</h2><span class="fl-cs">clic en una máquina para ver su detalle</span></div>
-        <div class="mapwrap" style="border:0;background:transparent"><canvas class="map" id="flMap"></canvas><div class="tip" id="flTip"></div></div>
-        <div class="fl-lgh"><span><i style="background:#1F9D55"></i>Encendida</span><span><i style="background:#3B82C4"></i>Reportando / apagada</span><span><i style="background:#E5484D"></i>Sin reportar &gt; 24 h</span><span><i style="background:#A3AEBB"></i>Sin telemetría</span><span><i style="background:#5B6B7C;border-radius:2px"></i>Cosechadora</span></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí · todas las máquinas filtradas</span></div><div id="flDia"></div></div>
       <div class="fl-col2">
         <div class="fl-c"><div class="fl-ch"><h2>Estado de la flota</h2></div><div class="fl-donut" id="flEst"></div></div>
-        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2></div><div id="flDiv"></div></div>
+        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2><span class="fl-cs">según su última posición</span></div><div id="flDiv"></div></div>
       </div>
     </div>
     <div class="fl-det" id="flDet" hidden></div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí</span></div><div id="flDia"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros · y litros por hora de motor</span></div><div id="flComb"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas con más horas</h2><span class="fl-cs">periodo seleccionado</span></div><div id="flTop"></div></div>
     </div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Tipos de máquina</h2></div><div id="flTipoCh"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Horas y ralentí por tipo de máquina</h2><span class="fl-cs">clic para filtrar</span></div><div id="flTipoCh"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Alertas <span class="fl-badge" id="flAlN">0</span></h2></div><div class="fl-als" id="flAl"></div></div>
     </div>
     <div class="fl-c"><div class="fl-ch"><h2>Máquinas <span class="fl-badge" id="flTn">0</span></h2><span class="fl-cs">clic en un encabezado para ordenar</span></div><div class="fl-tw"><table class="fl-t" id="flTbl"></table></div></div>
@@ -1171,6 +1185,7 @@ const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));$$('#nav .dd').forEach(d=>{d.classList.toggle('on',!!d.querySelector('a.on'));d.classList.remove('open')});
   if(v==='flota')flShow();
+  if(v==='avance')avShow();
   if(v==='mapas')showSub(['lluvias','registro','otros','suelos','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 
 /* Intro de agricultura de precisión (canvas): campo en perspectiva, tractor con guiado RTK,
@@ -3505,11 +3520,17 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
   flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
   const cnt=(k,fn)=>{const g=new Map();D.maq.filter(m=>flPasa(m,k)).forEach(m=>{const v=fn(m);g.set(v,(g.get(v)||0)+1)});return[...g.entries()].sort((a,b)=>b[1]-a[1])};
-  flHB($('#flDiv'),cnt('div',flDiv),FL.f.div,v=>flTog('div',v),v=>fmt(v));flHB($('#flTipoCh'),cnt('tipo',flTipo).slice(0,8),FL.f.tipo,v=>flTog('tipo',v),v=>fmt(v));
+  flHB($('#flDiv'),cnt('div',flDiv),FL.f.div,v=>flTog('div',v),v=>fmt(v));
   const nd=Math.max(14,FL.per),dd=[];for(let i=nd-1;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10),R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f);
     const h=R.reduce((t,r)=>t+(r.horas||0),0),ii=R.reduce((t,r)=>t+(r.ralenti||0),0);dd.push({f,t:Math.max(h-ii,0),i:ii,n:R.filter(r=>r.horas>0).length})}
   flCols($('#flDia'),dd);
+  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+(r.comb||0),0),h:d.t+d.i}});flComb($('#flComb'),dc);
   const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=r.comb||0;pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
+  {const g=new Map(),cn=new Map();D.maq.filter(m=>flPasa(m,'tipo')).forEach(m=>{const t=flTipo(m);cn.set(t,(cn.get(t)||0)+1)});
+    FL.d.dia.forEach(r=>{const m=byId.get(r.id);if(!m||!flPasa(m,'tipo'))return;const[a,b]=flRango(0);if(r.fecha<a||r.fecha>b)return;const t=flTipo(m),o=g.get(t)||{h:0,i:0};o.h+=r.horas||0;o.i+=r.ralenti||0;g.set(t,o)});
+    const L=[...cn.keys()].map(t=>[t,(g.get(t)||{h:0}).h,(g.get(t)||{i:0}).i,cn.get(t)]).sort((a,b)=>b[1]-a[1]||b[3]-a[3]).slice(0,10),mx=Math.max(...L.map(x=>x[1]),1);
+    $('#flTipoCh').innerHTML=L.map(([t,h,i,n])=>`<button class="fl-hb fl-hb2${FL.f.tipo.size&&!FL.f.tipo.has(t)?' dim':''}${FL.f.tipo.has(t)?' on':''}" data-v="${xesc(t)}"><span>${xesc(t)}<small>${fmt(n)} máquinas</small></span><i><em style="width:${h/mx*100}%"></em><em class="r" style="width:${i/mx*100}%"></em></i><b>${h?fmt(h,0)+' h':'–'}<small>${h&&i?'ralentí '+fmt(i/h*100,0)+' %':''}</small></b></button>`).join('')||'<div class="fl-empty">Sin datos</div>';
+    $$('#flTipoCh .fl-hb').forEach(e=>e.onclick=()=>flTog('tipo',e.dataset.v))}
   const top=[...pm.entries()].filter(x=>x[1].h>0).sort((a,b)=>b[1].h-a[1].h).slice(0,10);
   $('#flTop').innerHTML=top.length?top.map(([id,o],i)=>{const m=byId.get(id),mx=top[0][1].h,ri=o.h?o.i/o.h:0;return`<div class="fl-tr${FL.sel===id?' sel':''}" data-id="${xesc(id)}"><span class="fl-tn">${i+1}</span><span class="fl-tl"><b>${xesc(m?m.nombre:id)}</b><small>${xesc(m?flTipo(m):'')}</small></span><span class="fl-tb"><i style="width:${o.h/mx*100}%;background:${ri>.3?FLC.sinr:ri>.2?FLC.ral:FLC.off}"></i></span><span class="fl-tv">${fmt(o.h,1)} h<small>${o.i?'ralentí '+fmt(ri*100,0)+' %':''}</small></span></div>`}).join(''):'<div class="fl-empty">Las horas trabajadas aparecen desde la segunda sincronización: cada hora se compara la lectura nueva con la anterior.</div>';
   $$('#flTop .fl-tr').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
@@ -3518,7 +3539,7 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   al.sort((a,b)=>b[0]-a[0]);$('#flAlN').textContent=al.length;
   $('#flAl').innerHTML=al.length?al.slice(0,40).map(([,c,t,m,d])=>`<div class="fl-al" data-id="${xesc(m.id)}"><i style="background:${c}"></i><span><b>${t}</b> · ${xesc(m.nombre||m.id)}<small>${xesc(flTipo(m))} · ${d}</small></span></div>`).join(''):'<div class="fl-empty">Sin alertas con los filtros actuales.</div>';
   $$('#flAl .fl-al').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
-  flMapa($('#flMap'),null);zoomable($('#flMap'),FL.zm,()=>flMapa($('#flMap'),null),()=>FL.view,()=>[]);flTabla(M,pm);flDet()}
+  flTabla(M,pm);flDet()}
 /* ---------- visuales SVG ---------- */
 function flSpark(v){const W=120,H=30,mx=Math.max(...v,1e-9);if(!v.some(x=>x>0))return'';const p=v.map((x,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-2-x/mx*(H-6)).toFixed(1)}`).join(' ');
   return`<svg class="fl-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="0,${H} ${p} ${W},${H}" fill="rgba(0,112,201,.12)" stroke="none"/><polyline points="${p}" fill="none" stroke="#0070C9" stroke-width="1.6"/></svg>`}
@@ -3537,7 +3558,13 @@ function flCols(el,dd){const W=Math.max(el.clientWidth,320),H=230,L=40,B=28,T=14
     if(dd.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
   if(!dd.some(d=>d.t+d.i>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">Las horas por día aparecen desde la segunda sincronización</text>`;
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#0070C9"></i>Trabajando</span><span><i style="background:${FLC.ral}"></i>Ralentí</span></div>`}
-/* ---------- mapa ---------- */
+function flComb(el,dc){const W=Math.max(el.clientWidth,320),H=210,L=46,R=40,B=28,T=14,mx=Math.max(...dc.map(d=>d.c),1),lh=dc.map(d=>d.h?d.c/d.h:null),mxl=Math.max(...lh.filter(x=>x!=null),1),bw=(W-L-R)/Math.max(dc.length,1),y=v=>H-B-(H-B-T)*v/mx,yl=v=>H-B-(H-B-T)*v/(mxl*1.15);let h='';
+  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
+  dc.forEach((d,i)=>{const x=L+i*bw+3,w=Math.max(bw-6,2);h+=`<rect x="${x}" y="${y(d.c)}" width="${w}" height="${(H-B-T)*d.c/mx}" rx="2" fill="#1F9D55"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.c,0)} L${lh[i]!=null?' · '+fmt(lh[i],1)+' L/h':''}</title></rect>`;if(dc.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
+  const pl=lh.map((v,i)=>v==null?null:`${L+i*bw+bw/2},${yl(v)}`).filter(Boolean);if(pl.length>1)h+=`<polyline points="${pl.join(' ')}" fill="none" stroke="#0E2A47" stroke-width="2"/>`+pl.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.6" fill="#0E2A47"/>`).join('');
+  if(!dc.some(d=>d.c>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">El consumo diario aparece cuando la telemetría reporta combustible usado</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#1F9D55"></i>Litros por día</span><span><i style="background:#0E2A47"></i>Litros por hora de motor</span></div>`}
+/* ---------- mapa (ya no se muestra en el tablero; se conserva por si se usa en Avance de cosecha) ---------- */
 function flMapa(cv,T){const W=T?T.W:Math.max(cv.parentElement.clientWidth,500),H=Math.round(W*.66),dpr=T?1:(window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#F4F7FA';ctx.fillRect(0,0,W,H);const F={x:0,y:0,w:W,h:H},clip=EMBED_LAYERS.mask,UT=(lo,la)=>llToUtm(lo,la);
   let bb=bboxPts(polyPts(clip).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.04;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
@@ -3563,7 +3590,7 @@ function flTabla(M,pm){const o=FL.orden,val={nombre:m=>m.nombre||'',tipo:flTipo,
   $$('#flTbl th').forEach(t=>t.onclick=()=>{const k=t.dataset.k;FL.orden=o.k===k?{k,d:-o.d}:{k,d:k==='nombre'||k==='tipo'||k==='div'?1:-1};flDraw()});
   $$('#flTbl tbody tr').forEach(r=>r.onclick=()=>flSel(r.dataset.id));$('#flTn').textContent=fmt(L.length)}
 /* ---------- máquina seleccionada ---------- */
-function flSel(id){FL.sel=FL.sel===id?null:id;const m=FL.d.maq.find(x=>x.id===id);if(FL.sel&&m&&m.lat!=null){const[E,N]=llToUtm(m.lon,m.lat);FL.zm.z=Math.max(FL.zm.z||1,3.5);FL.zm.cx=E;FL.zm.cy=N}flDraw();
+function flSel(id){FL.sel=FL.sel===id?null:id;flDraw();
   if(FL.sel)$('#flDet').scrollIntoView({behavior:'smooth',block:'nearest'})}
 function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);if(!m){el.hidden=true;return}el.hidden=false;const e=flEst(m),R=FL.d.dia.filter(r=>r.id===m.id).sort((a,b)=>a.fecha<b.fecha?-1:1).slice(-30);
   const dd=R.map(r=>({f:r.fecha,t:Math.max((r.horas||0)-(r.ralenti||0),0),i:r.ralenti||0,n:1}));
@@ -3575,14 +3602,91 @@ function flInit(){if(flInit.ok)return;flInit.ok=true;
   $$('#flPer button').forEach(b=>b.onclick=()=>{FL.per=+b.dataset.d;$$('#flPer button').forEach(x=>x.classList.toggle('on',x===b));flDraw()});
   $('#flSync').onclick=async()=>{const b=$('#flSync');b.disabled=true;b.classList.add('spin');$('#flSt').textContent='Sincronizando con John Deere…';
     try{const r=await fetch('/api/flota/sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'falló la sincronización');await flCargar()}catch(e){$('#flSt').innerHTML=`<span class="fl-err">${xesc(e.message)}</span>`}finally{b.disabled=false;b.classList.remove('spin')}};
-  const cerca=e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=12;FL.pts.forEach(p=>{if(!flPasa(p.m))return;const d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=p}});return{best,x,y,r}};
-  $('#flMap').addEventListener('click',e=>{const{best}=cerca(e);if(best)flSel(best.m.id)});
-  $('#flMap').addEventListener('mousemove',e=>{const{best,x,y,r}=cerca(e),t=$('#flTip');if(!best){t.style.display='none';return}const m=best.m;
-    t.innerHTML=`<b>${xesc(m.nombre||m.id)}</b><br>${xesc(flTipo(m))} · ${xesc(m.modelo||'')}<br>${flEst(m)} · ${flH(m.horas)} h<br><small>${flFecha(flSenal(m))}</small>`;t.style.left=Math.min(x+14,r.width-200)+'px';t.style.top=(y+14)+'px';t.style.display='block'});
-  $('#flMap').addEventListener('mouseleave',()=>{$('#flTip').style.display='none'});
   let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if($('#s-flota').classList.contains('on'))flDraw()},150)});
   setInterval(()=>{if($('#s-flota').classList.contains('on')&&!document.hidden)flCargar()},10*60e3)}
 function flShow(){flInit();if(FL.d)flDraw();flCargar()}
+
+/* ================= AVANCE DE COSECHA =================
+   Une dos fuentes:  · Piezas terminadas (última quincena cargada en Cosecha): piezas con fecha de fin de corte.
+                     · Cosechadoras John Deere (posición cada hora): piezas donde hay cosechadora trabajando ahora = "en cosecha".
+   El mapa "se alumbra" a medida que se terminan piezas; con la línea de tiempo se puede reproducir el avance de la zafra. */
+const AV={rows:null,q:null,pos:null,maq:null,fecha:null,min:null,max:null,div:'',zm:{z:1},view:null,play:null,enCos:new Map(),cargando:false};
+const AV_C={old:'#1B5E20',mid:'#43A047',new:'#C6F432',cos:'#FF9F1C',none:'#E4E9EF'};
+const avK=(d,t,p)=>`${+d}|${String(+t)}|${+p}`;
+const avDays=(a,b)=>(Date.UTC(+b.slice(0,4),+b.slice(5,7)-1,+b.slice(8,10))-Date.UTC(+a.slice(0,4),+a.slice(5,7)-1,+a.slice(8,10)))/864e5;
+const avAdd=(f,n)=>new Date(Date.UTC(+f.slice(0,4),+f.slice(5,7)-1,+f.slice(8,10))+n*864e5).toISOString().slice(0,10);
+async function avCargar(){if(AV.cargando)return;AV.cargando=true;$('#avSt').textContent='Cargando…';
+  try{for(let t=0;t<200&&!CO.listo;t++)await new Promise(r=>setTimeout(r,50));
+    const q=coOrden()[0];if(q){AV.q=q;const rows=await coCargar(q);AV.rows=new Map();rows.forEach(r=>{if(!r.ffin&&!r.fin)return;AV.rows.set(avK(r.div,r.tab,r.pz),{...coCalc(r),k:avK(r.div,r.tab,r.pz)})})}
+    try{const[a,b]=await Promise.all([fetch('/api/flota?dias=3',{cache:'no-store'}),fetch('/api/flota/pos?dias=3',{cache:'no-store'})]);if(a.ok&&b.ok){AV.maq=(await a.json()).maq;AV.pos=await b.json()}}catch(e){}
+    avEnCosecha();const F=[...(AV.rows||new Map()).values()].map(r=>r.ffin).filter(Boolean).sort();AV.min=F[0]||hoyISO().slice(0,10);AV.max=hoyISO().slice(0,10);if(!AV.fecha)AV.fecha=AV.max;
+    $('#avT').max=Math.max(0,avDays(AV.min,AV.max));$('#avT').value=avDays(AV.min,AV.fecha);avDraw()}
+  catch(e){$('#avSt').innerHTML=`<span class="fl-err">${xesc(e.message||e)}</span>`}finally{AV.cargando=false}}
+/* piezas con cosechadora trabajando (horas de motor subieron entre lecturas) en las últimas 48 h */
+function avEnCosecha(){AV.enCos=new Map();if(!AV.maq||!AV.pos)return;const cos=new Set(AV.maq.filter(m=>/cosech/i.test(flTipo(m))).map(m=>m.id)),nm=new Map(AV.maq.map(m=>[m.id,m.nombre||m.id]));
+  const lim=new Date(Date.now()-48*36e5).toISOString(),prev=new Map(),idx=new Map(),cell=.01;
+  EMBED_PIECES.forEach(p=>{let a=1e9,b=1e9,c=-1e9,d=-1e9;p[3].forEach(q=>{a=Math.min(a,q[0]);c=Math.max(c,q[0]);b=Math.min(b,q[1]);d=Math.max(d,q[1])});p._bb=[a,b,c,d];
+    for(let x=Math.floor(a/cell);x<=Math.floor(c/cell);x++)for(let y=Math.floor(b/cell);y<=Math.floor(d/cell);y++){const k=x+','+y;if(!idx.has(k))idx.set(k,[]);idx.get(k).push(p)}});
+  AV.pos.forEach(o=>{if(!cos.has(o.id))return;const p0=prev.get(o.id);prev.set(o.id,o);if(o.ts<lim||!p0||o.horas==null||p0.horas==null||!(o.horas>p0.horas))return;
+    const L=idx.get(Math.floor(o.lon/cell)+','+Math.floor(o.lat/cell))||[];const pz=L.find(p=>o.lon>=p._bb[0]&&o.lon<=p._bb[2]&&o.lat>=p._bb[1]&&o.lat<=p._bb[3]&&pip(o.lon,o.lat,[[p[3]]]));if(!pz)return;
+    const k=avK(pz[0],pz[1],pz[2]),e=AV.enCos.get(k)||{maq:new Set(),ult:''};e.maq.add(nm.get(o.id));if(o.ts>e.ult)e.ult=o.ts;AV.enCos.set(k,e)})}
+function avEstado(k){const r=AV.rows&&AV.rows.get(k);if(r&&r.ffin&&r.ffin<=AV.fecha)return'term';if(AV.fecha===AV.max&&AV.enCos.has(k))return'cos';if(r&&r.fin&&r.fin<=AV.fecha&&(!r.ffin||r.ffin>AV.fecha))return'cos';return''}
+function avColor(k){const e=avEstado(k);if(e==='cos')return AV_C.cos;if(e!=='term')return null;const r=AV.rows.get(k),d=avDays(r.ffin,AV.fecha);return d<=3?AV_C.new:d<=14?AV_C.mid:AV_C.old}
+function avDraw(){if(!$('#s-avance').classList.contains('on'))return;const hayQ=!!AV.q;
+  $('#avSt').innerHTML=(hayQ?`Piezas terminadas: quincena ${AV.q.n} · zafra ${xesc(AV.q.zafra||'')} (hasta ${coDF(AV.q.fecha)})`:'Todavía no hay quincenas cargadas en Piezas terminadas')+` · ${AV.maq?`cosechadoras en vivo: ${fmt(AV.maq.filter(m=>/cosech/i.test(flTipo(m))).length)}`:'sin datos de la flota'}`;
+  $('#avFecha').textContent=AV.fecha===AV.max?'Hoy':coDF(AV.fecha);
+  /* totales */
+  const tot=new Map(),hech=new Map(),cos=new Map();let ac=0,acT=0,ton=0,nT=0,acC=0,nC=0;const sem=new Map();
+  SU_PZ.forEach((o,k)=>{const d=+k.split('|')[0];if(!d||!DIVN[d]||(AV.div&&d!==+AV.div))return;tot.set(d,(tot.get(d)||0)+o.ac);acT+=o.ac;const e=avEstado(k),r=AV.rows&&AV.rows.get(k);
+    if(e==='term'){const a=r&&r.acR>0?r.acR:o.ac;hech.set(d,(hech.get(d)||0)+a);ac+=a;nT++;ton+=r&&r.ton>0?r.ton:0;const w=avAdd(r.ffin,-((new Date(r.ffin+'T12:00:00Z').getUTCDay()+6)%7));sem.set(w,(sem.get(w)||0)+a)}
+    else if(e==='cos'){cos.set(d,(cos.get(d)||0)+o.ac);acC+=o.ac;nC++}});
+  const trab=AV.maq?new Set([...AV.enCos.values()].flatMap(e=>[...e.maq])).size:0;
+  const K=[['Acres cosechados',fmt(ac,0),`${fmt(nT)} piezas terminadas`],['Avance',acT?fmt(ac/acT*100,1)+' %':'–',`del área total (${fmt(acT,0)} acres)`],['Toneladas',ton?fmt(ton,0):'–',ac&&ton?`${fmt(ton/ac,1)} TCA`:'caña molida'],
+    ['En cosecha ahora',fmt(nC),`${fmt(acC,0)} acres · ${fmt(trab)} cosechadoras trabajando`]];
+  $('#avKpis').innerHTML=K.map(([t,v,s],i)=>`<div class="fl-k${i===3?' warn':''}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div></div>`).join('');
+  $('#avDivs').innerHTML=[...tot.entries()].sort((a,b)=>a[0]-b[0]).map(([d,t])=>{const h=hech.get(d)||0,c=cos.get(d)||0;return`<button class="av-dv${AV.div==d?' on':''}" data-d="${d}"><span><b>${xesc(DIVN[d]||'Div. '+d)}</b><small>${fmt(h,0)} de ${fmt(t,0)} acres${c?` · ${fmt(c,0)} en cosecha`:''}</small></span><i><em style="width:${h/t*100}%"></em><em class="c" style="left:${h/t*100}%;width:${c/t*100}%"></em></i><strong>${fmt(h/t*100,1)} %</strong></button>`}).join('');
+  $$('#avDivs .av-dv').forEach(b=>b.onclick=()=>{AV.div=AV.div==b.dataset.d?'':b.dataset.d;AV.zm.z=1;AV.zm.cx=AV.zm.cy=null;avDraw()});
+  const S=[...sem.entries()].sort((a,b)=>a[0]<b[0]?-1:1).slice(-16);avSem($('#avSem'),S);
+  const L=[...AV.enCos.entries()].filter(([k])=>!AV.div||+k.split('|')[0]===+AV.div).sort((a,b)=>a[1].ult<b[1].ult?1:-1);
+  $('#avCos').innerHTML=L.length?L.slice(0,30).map(([k,e])=>{const[d,t,p]=k.split('|');return`<div class="fl-al" data-k="${k}"><i style="background:${AV_C.cos}"></i><span><b>${xesc(DIVN[d]||d)} · Tablón ${t} · Pieza ${p}</b><small>${xesc([...e.maq].join(', '))} · ${flFecha(new Date(e.ult))}</small></span></div>`}).join(''):`<div class="fl-empty">${AV.maq?'Ninguna cosechadora trabajando dentro de una pieza en las últimas 48 h.':'Conecta la flota John Deere para ver qué piezas se están cosechando ahora.'}</div>`;
+  $$('#avCos .fl-al').forEach(e=>e.onclick=()=>avIr(e.dataset.k));
+  avMapa($('#avMap'),null);zoomable($('#avMap'),AV.zm,()=>avMapa($('#avMap'),null),()=>AV.view,()=>AV.div?EMBED_PIECES.filter(p=>p[0]===+AV.div):EMBED_PIECES)}
+function avSem(el,S){const W=Math.max(el.clientWidth,280),H=190,L=44,B=26,T=12,mx=Math.max(...S.map(x=>x[1]),1),bw=(W-L-4)/Math.max(S.length,1),y=v=>H-B-(H-B-T)*v/mx;let h='';
+  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
+  S.forEach(([w,v],i)=>{const x=L+i*bw+3,bwi=Math.max(bw-6,2);h+=`<rect x="${x}" y="${y(v)}" width="${bwi}" height="${(H-B-T)*v/mx}" rx="2" fill="${i===S.length-1?'#7CB342':'#2E7D32'}"><title>Semana del ${coDF(w)}: ${fmt(v,0)} acres</title></rect><text x="${x+bwi/2}" y="${H-B+13}" font-size="9.5" text-anchor="middle" fill="#6B7785">${w.slice(8,10)}/${w.slice(5,7)}</text>`});
+  if(!S.length)h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">Sin piezas terminadas en el periodo</text>`;el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg>`}
+function avMapa(cv,T){const W=T?T.W:Math.max(cv.parentElement.clientWidth,600),H=Math.round(W*.68),dpr=T?1:(window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#0F2338';ctx.fillRect(0,0,W,H);const F={x:0,y:0,w:W,h:H},clip=EMBED_LAYERS.mask,UT=(lo,la)=>llToUtm(lo,la);
+  const sel=AV.div?EMBED_PIECES.filter(p=>p[0]===+AV.div):[];let bb=bboxPts((sel.length?sel.flatMap(p=>p[3]):polyPts(clip)).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.04;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
+  let sc=Math.min(F.w/(bb[2]-bb[0]),F.h/(bb[3]-bb[1])),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;{const v=aplicaZoom(AV.zm,F,{sc,cx,cy,bb});sc=v.sc;cx=v.cx;cy=v.cy}
+  const toPx=(E,N)=>[F.x+F.w/2+(E-cx)*sc,F.y+F.h/2-(N-cy)*sc],toE=(x,y)=>[cx+(x-F.x-F.w/2)/sc,cy-(y-F.y-F.h/2)/sc],px=(lo,la)=>toPx(...UT(lo,la));
+  const ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)},path=Pl=>{ctx.beginPath();for(const p of Pl)for(const r of p)ring(r)};
+  path(clip);ctx.fillStyle='#16324F';ctx.fill('evenodd');
+  const g=new Map();EMBED_PIECES.forEach(p=>{const c=avColor(avK(p[0],p[1],p[2]))||'#294A6B';if(!g.has(c))g.set(c,[]);g.get(c).push(p[3])});
+  g.forEach((rs,c)=>{ctx.beginPath();rs.forEach(ring);if(c===AV_C.new||c===AV_C.cos){ctx.shadowColor=c;ctx.shadowBlur=T?18:10}ctx.fillStyle=c;ctx.fill();ctx.shadowBlur=0});
+  ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(15,35,56,.55)';ctx.lineWidth=AV.zm.z>2?.8:.35;ctx.stroke();
+  EMBED_LAYERS.divs.forEach(d=>{path(d.polys);ctx.strokeStyle=AV.div&&d.name===DIVN[AV.div]?'#FFFFFF':'rgba(255,255,255,.55)';ctx.lineWidth=AV.div&&d.name===DIVN[AV.div]?2.4:1.3;ctx.stroke()});
+  ctx.font='800 12px Inter,Arial';ctx.textAlign='center';EMBED_LAYERS.divs.forEach(d=>{const[x,y]=px(d.lab[0],d.lab[1]);ctx.lineWidth=3;ctx.strokeStyle='rgba(15,35,56,.85)';ctx.strokeText(d.name.toUpperCase(),x,y);ctx.fillStyle='#E8F0F8';ctx.fillText(d.name.toUpperCase(),x,y)});
+  if(AV.maq&&AV.fecha===AV.max)AV.maq.filter(m=>/cosech/i.test(flTipo(m))&&m.lat!=null).forEach(m=>{const[x,y]=px(m.lon,m.lat),ok=flEst(m)!=='Sin reportar';ctx.beginPath();ctx.rect(x-5,y-5,10,10);ctx.fillStyle=ok?'#FFFFFF':'#8FA3B8';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=ok?AV_C.cos:'#5B6B7C';ctx.stroke();
+    if(AV.zm.z>2.2){ctx.font='700 11px Inter,Arial';ctx.textAlign='left';ctx.fillStyle='#fff';ctx.fillText(m.nombre||'',x+8,y+4)}});
+  if(!T){AV.view={toPx,toE,px,F,sc}}}
+function avIr(k){const[d,t,p]=k.split('|'),L=EMBED_PIECES.filter(q=>q[0]===+d&&String(q[1])===t&&+q[2]===+p);if(!L.length||!AV.view)return;const U=L.flatMap(q=>q[3].map(z=>llToUtm(z[0],z[1]))),b=bboxPts(U),w=Math.max(b[2]-b[0],b[3]-b[1],400)*3,base=AV.view.sc/(AV.zm.z||1);
+  AV.zm.z=Math.min(150,Math.max(1,Math.min(AV.view.F.w,AV.view.F.h)/(w*base)));AV.zm.cx=(b[0]+b[2])/2;AV.zm.cy=(b[1]+b[3])/2;avMapa($('#avMap'),null);$('#avMap').scrollIntoView({behavior:'smooth',block:'center'})}
+function avInit(){if(avInit.ok)return;avInit.ok=true;
+  const set=v=>{AV.fecha=avAdd(AV.min,+v);if(AV.fecha>AV.max)AV.fecha=AV.max;avDraw()};
+  $('#avT').oninput=e=>set(e.target.value);
+  $('#avPlay').onclick=()=>{if(AV.play){clearInterval(AV.play);AV.play=null;$('#avPlay').textContent='▶ Reproducir zafra';return}
+    let v=+$('#avT').value>=+$('#avT').max?0:+$('#avT').value;$('#avPlay').textContent='❚❚ Pausar';const paso=Math.max(1,Math.round(+$('#avT').max/90));
+    AV.play=setInterval(()=>{v=Math.min(v+paso,+$('#avT').max);$('#avT').value=v;set(v);if(v>=+$('#avT').max){clearInterval(AV.play);AV.play=null;$('#avPlay').textContent='▶ Reproducir zafra'}},120)};
+  $('#avHoy').onclick=()=>{$('#avT').value=$('#avT').max;set($('#avT').max)};
+  $('#avMap').addEventListener('click',e=>{if(!AV.view)return;const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,{px}=AV.view;let hit=null;
+    for(const p of EMBED_PIECES){if(AV.div&&p[0]!==+AV.div)continue;const P=p[3].map(q=>px(q[0],q[1]));let a=1e9,b=1e9,c=-1e9,d=-1e9;P.forEach(([u,v])=>{a=Math.min(a,u);c=Math.max(c,u);b=Math.min(b,v);d=Math.max(d,v)});if(x<a||x>c||y<b||y>d)continue;if(pip(x,y,[[P]])){hit=p;break}}
+    const t=$('#avTip');if(!hit){t.style.display='none';return}const k=avK(hit[0],hit[1],hit[2]),r2=AV.rows&&AV.rows.get(k),e2=avEstado(k),c=AV.enCos.get(k),o=SU_PZ.get(k);
+    t.innerHTML=`<b>${xesc(DIVN[hit[0]]||'')} · Tablón ${hit[1]} · Pieza ${hit[2]}</b><br>${e2==='term'?`<span style="color:#2E7D32;font-weight:700">● Terminada el ${coDF(r2.ffin)}</span>`:e2==='cos'?`<span style="color:#C77700;font-weight:700">● En cosecha</span>`:'Sin cosechar'}<br>${fmt(r2&&r2.acR>0?r2.acR:(o?o.ac:0),1)} acres${r2&&r2.ton>0?` · ${fmt(r2.ton,0)} t · ${fmt(r2.tca,1)} TCA`:''}${r2&&r2.var?`<br>Variedad ${xesc(r2.var)}`:''}${c?`<br><small>${xesc([...c.maq].join(', '))} · ${flFecha(new Date(c.ult))}</small>`:''}`;
+    t.style.left=Math.min(x+12,r.width-250)+'px';t.style.top=(y+12)+'px';t.style.display='block'});
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if($('#s-avance').classList.contains('on'))avDraw()},150)});
+  setInterval(()=>{if($('#s-avance').classList.contains('on')&&!document.hidden&&!AV.play)avCargar()},15*60e3)}
+function avShow(){avInit();if(AV.rows||AV.maq)avDraw();avCargar()}
 
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */

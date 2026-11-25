@@ -41,11 +41,17 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
   flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
   const cnt=(k,fn)=>{const g=new Map();D.maq.filter(m=>flPasa(m,k)).forEach(m=>{const v=fn(m);g.set(v,(g.get(v)||0)+1)});return[...g.entries()].sort((a,b)=>b[1]-a[1])};
-  flHB($('#flDiv'),cnt('div',flDiv),FL.f.div,v=>flTog('div',v),v=>fmt(v));flHB($('#flTipoCh'),cnt('tipo',flTipo).slice(0,8),FL.f.tipo,v=>flTog('tipo',v),v=>fmt(v));
+  flHB($('#flDiv'),cnt('div',flDiv),FL.f.div,v=>flTog('div',v),v=>fmt(v));
   const nd=Math.max(14,FL.per),dd=[];for(let i=nd-1;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10),R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f);
     const h=R.reduce((t,r)=>t+(r.horas||0),0),ii=R.reduce((t,r)=>t+(r.ralenti||0),0);dd.push({f,t:Math.max(h-ii,0),i:ii,n:R.filter(r=>r.horas>0).length})}
   flCols($('#flDia'),dd);
+  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+(r.comb||0),0),h:d.t+d.i}});flComb($('#flComb'),dc);
   const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=r.comb||0;pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
+  {const g=new Map(),cn=new Map();D.maq.filter(m=>flPasa(m,'tipo')).forEach(m=>{const t=flTipo(m);cn.set(t,(cn.get(t)||0)+1)});
+    FL.d.dia.forEach(r=>{const m=byId.get(r.id);if(!m||!flPasa(m,'tipo'))return;const[a,b]=flRango(0);if(r.fecha<a||r.fecha>b)return;const t=flTipo(m),o=g.get(t)||{h:0,i:0};o.h+=r.horas||0;o.i+=r.ralenti||0;g.set(t,o)});
+    const L=[...cn.keys()].map(t=>[t,(g.get(t)||{h:0}).h,(g.get(t)||{i:0}).i,cn.get(t)]).sort((a,b)=>b[1]-a[1]||b[3]-a[3]).slice(0,10),mx=Math.max(...L.map(x=>x[1]),1);
+    $('#flTipoCh').innerHTML=L.map(([t,h,i,n])=>`<button class="fl-hb fl-hb2${FL.f.tipo.size&&!FL.f.tipo.has(t)?' dim':''}${FL.f.tipo.has(t)?' on':''}" data-v="${xesc(t)}"><span>${xesc(t)}<small>${fmt(n)} máquinas</small></span><i><em style="width:${h/mx*100}%"></em><em class="r" style="width:${i/mx*100}%"></em></i><b>${h?fmt(h,0)+' h':'–'}<small>${h&&i?'ralentí '+fmt(i/h*100,0)+' %':''}</small></b></button>`).join('')||'<div class="fl-empty">Sin datos</div>';
+    $$('#flTipoCh .fl-hb').forEach(e=>e.onclick=()=>flTog('tipo',e.dataset.v))}
   const top=[...pm.entries()].filter(x=>x[1].h>0).sort((a,b)=>b[1].h-a[1].h).slice(0,10);
   $('#flTop').innerHTML=top.length?top.map(([id,o],i)=>{const m=byId.get(id),mx=top[0][1].h,ri=o.h?o.i/o.h:0;return`<div class="fl-tr${FL.sel===id?' sel':''}" data-id="${xesc(id)}"><span class="fl-tn">${i+1}</span><span class="fl-tl"><b>${xesc(m?m.nombre:id)}</b><small>${xesc(m?flTipo(m):'')}</small></span><span class="fl-tb"><i style="width:${o.h/mx*100}%;background:${ri>.3?FLC.sinr:ri>.2?FLC.ral:FLC.off}"></i></span><span class="fl-tv">${fmt(o.h,1)} h<small>${o.i?'ralentí '+fmt(ri*100,0)+' %':''}</small></span></div>`}).join(''):'<div class="fl-empty">Las horas trabajadas aparecen desde la segunda sincronización: cada hora se compara la lectura nueva con la anterior.</div>';
   $$('#flTop .fl-tr').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
@@ -54,7 +60,7 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   al.sort((a,b)=>b[0]-a[0]);$('#flAlN').textContent=al.length;
   $('#flAl').innerHTML=al.length?al.slice(0,40).map(([,c,t,m,d])=>`<div class="fl-al" data-id="${xesc(m.id)}"><i style="background:${c}"></i><span><b>${t}</b> · ${xesc(m.nombre||m.id)}<small>${xesc(flTipo(m))} · ${d}</small></span></div>`).join(''):'<div class="fl-empty">Sin alertas con los filtros actuales.</div>';
   $$('#flAl .fl-al').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
-  flMapa($('#flMap'),null);zoomable($('#flMap'),FL.zm,()=>flMapa($('#flMap'),null),()=>FL.view,()=>[]);flTabla(M,pm);flDet()}
+  flTabla(M,pm);flDet()}
 /* ---------- visuales SVG ---------- */
 function flSpark(v){const W=120,H=30,mx=Math.max(...v,1e-9);if(!v.some(x=>x>0))return'';const p=v.map((x,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-2-x/mx*(H-6)).toFixed(1)}`).join(' ');
   return`<svg class="fl-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="0,${H} ${p} ${W},${H}" fill="rgba(0,112,201,.12)" stroke="none"/><polyline points="${p}" fill="none" stroke="#0070C9" stroke-width="1.6"/></svg>`}
@@ -73,7 +79,13 @@ function flCols(el,dd){const W=Math.max(el.clientWidth,320),H=230,L=40,B=28,T=14
     if(dd.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
   if(!dd.some(d=>d.t+d.i>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">Las horas por día aparecen desde la segunda sincronización</text>`;
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#0070C9"></i>Trabajando</span><span><i style="background:${FLC.ral}"></i>Ralentí</span></div>`}
-/* ---------- mapa ---------- */
+function flComb(el,dc){const W=Math.max(el.clientWidth,320),H=210,L=46,R=40,B=28,T=14,mx=Math.max(...dc.map(d=>d.c),1),lh=dc.map(d=>d.h?d.c/d.h:null),mxl=Math.max(...lh.filter(x=>x!=null),1),bw=(W-L-R)/Math.max(dc.length,1),y=v=>H-B-(H-B-T)*v/mx,yl=v=>H-B-(H-B-T)*v/(mxl*1.15);let h='';
+  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
+  dc.forEach((d,i)=>{const x=L+i*bw+3,w=Math.max(bw-6,2);h+=`<rect x="${x}" y="${y(d.c)}" width="${w}" height="${(H-B-T)*d.c/mx}" rx="2" fill="#1F9D55"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.c,0)} L${lh[i]!=null?' · '+fmt(lh[i],1)+' L/h':''}</title></rect>`;if(dc.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
+  const pl=lh.map((v,i)=>v==null?null:`${L+i*bw+bw/2},${yl(v)}`).filter(Boolean);if(pl.length>1)h+=`<polyline points="${pl.join(' ')}" fill="none" stroke="#0E2A47" stroke-width="2"/>`+pl.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.6" fill="#0E2A47"/>`).join('');
+  if(!dc.some(d=>d.c>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">El consumo diario aparece cuando la telemetría reporta combustible usado</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#1F9D55"></i>Litros por día</span><span><i style="background:#0E2A47"></i>Litros por hora de motor</span></div>`}
+/* ---------- mapa (ya no se muestra en el tablero; se conserva por si se usa en Avance de cosecha) ---------- */
 function flMapa(cv,T){const W=T?T.W:Math.max(cv.parentElement.clientWidth,500),H=Math.round(W*.66),dpr=T?1:(window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';
   const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#F4F7FA';ctx.fillRect(0,0,W,H);const F={x:0,y:0,w:W,h:H},clip=EMBED_LAYERS.mask,UT=(lo,la)=>llToUtm(lo,la);
   let bb=bboxPts(polyPts(clip).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.04;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
@@ -99,7 +111,7 @@ function flTabla(M,pm){const o=FL.orden,val={nombre:m=>m.nombre||'',tipo:flTipo,
   $$('#flTbl th').forEach(t=>t.onclick=()=>{const k=t.dataset.k;FL.orden=o.k===k?{k,d:-o.d}:{k,d:k==='nombre'||k==='tipo'||k==='div'?1:-1};flDraw()});
   $$('#flTbl tbody tr').forEach(r=>r.onclick=()=>flSel(r.dataset.id));$('#flTn').textContent=fmt(L.length)}
 /* ---------- máquina seleccionada ---------- */
-function flSel(id){FL.sel=FL.sel===id?null:id;const m=FL.d.maq.find(x=>x.id===id);if(FL.sel&&m&&m.lat!=null){const[E,N]=llToUtm(m.lon,m.lat);FL.zm.z=Math.max(FL.zm.z||1,3.5);FL.zm.cx=E;FL.zm.cy=N}flDraw();
+function flSel(id){FL.sel=FL.sel===id?null:id;flDraw();
   if(FL.sel)$('#flDet').scrollIntoView({behavior:'smooth',block:'nearest'})}
 function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);if(!m){el.hidden=true;return}el.hidden=false;const e=flEst(m),R=FL.d.dia.filter(r=>r.id===m.id).sort((a,b)=>a.fecha<b.fecha?-1:1).slice(-30);
   const dd=R.map(r=>({f:r.fecha,t:Math.max((r.horas||0)-(r.ralenti||0),0),i:r.ralenti||0,n:1}));
@@ -111,11 +123,6 @@ function flInit(){if(flInit.ok)return;flInit.ok=true;
   $$('#flPer button').forEach(b=>b.onclick=()=>{FL.per=+b.dataset.d;$$('#flPer button').forEach(x=>x.classList.toggle('on',x===b));flDraw()});
   $('#flSync').onclick=async()=>{const b=$('#flSync');b.disabled=true;b.classList.add('spin');$('#flSt').textContent='Sincronizando con John Deere…';
     try{const r=await fetch('/api/flota/sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'falló la sincronización');await flCargar()}catch(e){$('#flSt').innerHTML=`<span class="fl-err">${xesc(e.message)}</span>`}finally{b.disabled=false;b.classList.remove('spin')}};
-  const cerca=e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=12;FL.pts.forEach(p=>{if(!flPasa(p.m))return;const d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=p}});return{best,x,y,r}};
-  $('#flMap').addEventListener('click',e=>{const{best}=cerca(e);if(best)flSel(best.m.id)});
-  $('#flMap').addEventListener('mousemove',e=>{const{best,x,y,r}=cerca(e),t=$('#flTip');if(!best){t.style.display='none';return}const m=best.m;
-    t.innerHTML=`<b>${xesc(m.nombre||m.id)}</b><br>${xesc(flTipo(m))} · ${xesc(m.modelo||'')}<br>${flEst(m)} · ${flH(m.horas)} h<br><small>${flFecha(flSenal(m))}</small>`;t.style.left=Math.min(x+14,r.width-200)+'px';t.style.top=(y+14)+'px';t.style.display='block'});
-  $('#flMap').addEventListener('mouseleave',()=>{$('#flTip').style.display='none'});
   let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if($('#s-flota').classList.contains('on'))flDraw()},150)});
   setInterval(()=>{if($('#s-flota').classList.contains('on')&&!document.hidden)flCargar()},10*60e3)}
 function flShow(){flInit();if(FL.d)flDraw();flCargar()}

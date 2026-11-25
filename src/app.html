@@ -449,6 +449,7 @@ body.splashing{overflow:hidden}
 .fl-lg i{width:10px;height:10px;border-radius:3px}.fl-lg b{color:#0E2A47}.fl-lg small{color:#8794A3;text-align:right}
 .fl-hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr 44px;gap:10px;align-items:center;width:100%;border:0;background:none;font:inherit;font-size:12.5px;padding:5px 4px;border-radius:6px;cursor:pointer;text-align:left;color:#1F2933}.fl-hb:hover{background:#F1F5F9}.fl-hb.dim{opacity:.35}.fl-hb.on span{font-weight:800;color:#0B4E8C}
 .fl-hb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-hb i{height:12px;background:#EEF2F6;border-radius:6px;overflow:hidden}.fl-hb em{display:block;height:100%;background:linear-gradient(90deg,#0B5394,#0070C9);border-radius:6px;transition:width .5s}.fl-hb b{text-align:right;color:#0E2A47}
+.fl-hb2{grid-template-columns:minmax(110px,36%) 1fr 92px}.fl-hb2 span small,.fl-hb2 b small{display:block;font-size:10.5px;color:#8794A3;font-weight:600}.fl-hb2 i{position:relative;height:14px}.fl-hb2 em{position:absolute;left:0;top:0}.fl-hb2 em.r{background:#F2A900;opacity:.9}
 .fl-tr{display:grid;grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) 78px;gap:10px;align-items:center;padding:7px 6px;border-radius:8px;cursor:pointer}.fl-tr:hover,.fl-tr.sel{background:#F1F5F9}
 .fl-tn{width:22px;height:22px;border-radius:50%;background:#EEF2F6;color:#0E2A47;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}.fl-tl{min-width:0}.fl-tl b,.fl-tl small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-tl b{font-size:13px;color:#0E2A47}.fl-tl small{font-size:11px;color:#8794A3}
 .fl-tb{height:10px;background:#EEF2F6;border-radius:5px;overflow:hidden}.fl-tb i{display:block;height:100%;border-radius:5px;transition:width .5s}.fl-tv{text-align:right;font-weight:800;color:#0E2A47;font-size:13px}.fl-tv small{display:block;font-weight:600;color:#8794A3;font-size:10.5px}
@@ -464,6 +465,14 @@ body.splashing{overflow:hidden}
 .fl-dk{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.fl-dk div{background:#F4F7FA;border-radius:10px;padding:10px 12px}.fl-dk small{display:block;font-size:11px;color:#6B7785;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-dk b{font-size:20px;color:#0E2A47}
 @media(max-width:1100px){.fl-kpis{grid-template-columns:repeat(3,1fr)}.fl-g1,.fl-g2{grid-template-columns:1fr}.fl-dk{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:640px){.fl-kpis{grid-template-columns:repeat(2,1fr)}#s-flota{margin:-16px -12px 0;padding:14px 10px}.fl-ctl input{width:100%}.fl-dk{grid-template-columns:repeat(2,1fr)}}
+
+#s-avance{background:#EEF2F6;margin:-8px -22px 0;padding:16px 22px 24px}.av-kpis{grid-template-columns:repeat(4,1fr)}
+.av-tl{display:flex;align-items:center;gap:12px;margin-top:10px}.av-tl input{flex:1;accent-color:#43A047}.av-tl .fl-sync{background:#0E2A47;color:#fff}.av-f{min-width:84px;text-align:right;font-weight:800;color:#0E2A47}
+.av-lg i{width:12px;height:12px}
+.av-dv{display:grid;grid-template-columns:minmax(0,1fr) 120px 58px;gap:10px;align-items:center;width:100%;border:0;background:none;font:inherit;text-align:left;padding:8px 6px;border-radius:8px;cursor:pointer}.av-dv:hover,.av-dv.on{background:#F1F5F9}
+.av-dv b{display:block;font-size:13px;color:#0E2A47}.av-dv small{display:block;font-size:11px;color:#8794A3}.av-dv i{position:relative;height:12px;background:#E4E9EF;border-radius:6px;overflow:hidden}.av-dv em{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,#1B5E20,#7CB342);border-radius:6px}.av-dv em.c{background:#FF9F1C;border-radius:0}
+.av-dv strong{text-align:right;color:#0E2A47;font-size:13px}
+@media(max-width:1100px){.av-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body class="splashing">
@@ -488,7 +497,7 @@ body.splashing{overflow:hidden}
       <div class="dd"><button type="button">GIS</button><div class="ddm"><a href="#cartografia">Cartografía</a><a href="#mapas">Gestión de mapas</a><a href="#muestreo">Puntos de muestreo</a></div></div>
       <div class="dd"><button type="button">Teledetección</button><div class="ddm"><a href="#surcos">Surcos y despoblación</a><a href="#malezas">Detección de malezas <span class="pr">Próximamente</span></a></div></div>
       <div class="dd"><button type="button">Monitoreo</button><div class="ddm"><a href="#alertas">Monitoreo satelital NAX</a><a href="#tasa-variada">Mapas de prescripción</a><a href="#calidad">Calidad de aplicación</a></div></div>
-      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha <span class="pr">Próximamente</span></a><a href="#cosecha">Piezas terminadas</a><a href="#flota">Flota John Deere</a></div></div>
+      <div class="dd"><button type="button">Cosecha</button><div class="ddm"><a href="#avance">Avance de cosecha</a><a href="#cosecha">Piezas terminadas</a><a href="#flota">Flota John Deere</a></div></div>
       <a href="#riego">Riego <span class="beta">BETA</span></a>
     </nav>
   </div>
@@ -961,16 +970,23 @@ body.splashing{overflow:hidden}
   </div>
 </section>
 <section id="s-avance">
-  <div class="prox card">
-    <h1>Avance de cosecha <span class="pr">Próximamente</span></h1>
-    <p class="note" style="font-size:14px">Avance diario de la cosecha a partir de los datos que registran las cosechadoras John Deere en Operations Center, sin descargas manuales.</p>
-    <ul>
-      <li>Acres y tablones cosechados por día, por división y acumulado de la zafra.</li>
-      <li>Mapa de lo cosechado y de lo que falta, con la posición de las cosechadoras.</li>
-      <li>Horas de motor, ralentí y combustible por cosechadora; litros por tonelada al cruzar con Piezas terminadas.</li>
-      <li>Alertas y códigos de diagnóstico activos de la flota.</li>
-    </ul>
-    <p class="note" style="margin-top:12px">Estado: la plataforma ya está conectada a John Deere. Falta que la organización de Central Romana apruebe el acceso de AgroAP-CR y habilitar la API de operaciones de campo (cosecha). <a href="/jd">Ver la conexión con John Deere</a></p>
+  <div class="fl-wrap">
+    <div class="fl-head">
+      <div><div class="fl-eyebrow">Cosecha · Zafra en curso</div><h1>Avance de cosecha</h1><div class="fl-st" id="avSt"></div></div>
+      <div class="fl-ctl"><button class="fl-sync" id="avHoy">Hoy</button></div>
+    </div>
+    <div class="fl-kpis av-kpis" id="avKpis"></div>
+    <div class="fl-g1">
+      <div class="fl-c av-mapc"><div class="fl-ch"><h2>Mapa de avance</h2><span class="fl-cs">clic en una pieza para ver su detalle · rueda del mouse para acercar</span></div>
+        <div class="mapwrap" style="border:0;background:#0F2338;border-radius:10px;overflow:hidden"><canvas class="map" id="avMap"></canvas><div class="tip" id="avTip"></div></div>
+        <div class="av-tl"><button class="fl-sync" id="avPlay">▶ Reproducir zafra</button><input type="range" id="avT" min="0" max="0" value="0" step="1"><span class="av-f" id="avFecha">Hoy</span></div>
+        <div class="fl-lgh av-lg"><span><i style="background:#C6F432;box-shadow:0 0 8px #C6F432"></i>Terminada en los últimos 3 días</span><span><i style="background:#43A047"></i>Terminada hace 4–14 días</span><span><i style="background:#1B5E20"></i>Terminada hace más de 14 días</span><span><i style="background:#FF9F1C;box-shadow:0 0 8px #FF9F1C"></i>En cosecha</span><span><i style="background:#294A6B"></i>Por cosechar</span><span><i style="background:#fff;border:2px solid #FF9F1C;border-radius:2px"></i>Cosechadora</span></div></div>
+      <div class="fl-col2">
+        <div class="fl-c"><div class="fl-ch"><h2>Avance por división</h2><span class="fl-cs">clic para enfocar</span></div><div id="avDivs"></div></div>
+        <div class="fl-c"><div class="fl-ch"><h2>Acres cosechados por semana</h2></div><div id="avSem"></div></div>
+      </div>
+    </div>
+    <div class="fl-c"><div class="fl-ch"><h2>Piezas en cosecha ahora</h2><span class="fl-cs">cosechadoras trabajando dentro de la pieza en las últimas 48 h</span></div><div class="fl-als" id="avCos"></div></div>
   </div>
 </section>
 <section id="s-flota">
@@ -986,21 +1002,19 @@ body.splashing{overflow:hidden}
     <div class="fl-act" id="flAct"></div>
     <div class="fl-kpis" id="flKpis"></div>
     <div class="fl-g1">
-      <div class="fl-c fl-map"><div class="fl-ch"><h2>Ubicación de la flota</h2><span class="fl-cs">clic en una máquina para ver su detalle</span></div>
-        <div class="mapwrap" style="border:0;background:transparent"><canvas class="map" id="flMap"></canvas><div class="tip" id="flTip"></div></div>
-        <div class="fl-lgh"><span><i style="background:#1F9D55"></i>Encendida</span><span><i style="background:#3B82C4"></i>Reportando / apagada</span><span><i style="background:#E5484D"></i>Sin reportar &gt; 24 h</span><span><i style="background:#A3AEBB"></i>Sin telemetría</span><span><i style="background:#5B6B7C;border-radius:2px"></i>Cosechadora</span></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí · todas las máquinas filtradas</span></div><div id="flDia"></div></div>
       <div class="fl-col2">
         <div class="fl-c"><div class="fl-ch"><h2>Estado de la flota</h2></div><div class="fl-donut" id="flEst"></div></div>
-        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2></div><div id="flDiv"></div></div>
+        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2><span class="fl-cs">según su última posición</span></div><div id="flDiv"></div></div>
       </div>
     </div>
     <div class="fl-det" id="flDet" hidden></div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí</span></div><div id="flDia"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros · y litros por hora de motor</span></div><div id="flComb"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas con más horas</h2><span class="fl-cs">periodo seleccionado</span></div><div id="flTop"></div></div>
     </div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Tipos de máquina</h2></div><div id="flTipoCh"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Horas y ralentí por tipo de máquina</h2><span class="fl-cs">clic para filtrar</span></div><div id="flTipoCh"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Alertas <span class="fl-badge" id="flAlN">0</span></h2></div><div class="fl-als" id="flAl"></div></div>
     </div>
     <div class="fl-c"><div class="fl-ch"><h2>Máquinas <span class="fl-badge" id="flTn">0</span></h2><span class="fl-cs">clic en un encabezado para ordenar</span></div><div class="fl-tw"><table class="fl-t" id="flTbl"></table></div></div>
@@ -1171,6 +1185,7 @@ const VIEWS=['inicio','mapas','cartografia','alertas','tasa-variada','calidad','
 function route(){let h=(location.hash||'#inicio').slice(1),sub='lluvias';if(h==='lluvias')h='mapas';if(h.startsWith('mapas-')){sub=h.slice(6);h='mapas'}const v=VIEWS.includes(h)?h:'inicio';if(v==='inicio')setTimeout(countUp,250);
   $$('main>section').forEach(s=>s.classList.toggle('on',s.id==='s-'+v));$$('#nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+v));$$('#nav .dd').forEach(d=>{d.classList.toggle('on',!!d.querySelector('a.on'));d.classList.remove('open')});
   if(v==='flota')flShow();
+  if(v==='avance')avShow();
   if(v==='mapas')showSub(['lluvias','registro','otros','suelos','variedad','suelo','clase','corte','adm','mimapa','division'].includes(sub)?sub:'lluvias');if(v==='alertas')drawAlerts();if(v==='cartografia')cgDraw();if(v==='cosecha'){const on=$('#s-cosecha .msub button.on');showModSub('cosecha',on?on.dataset.v:'tab')}if(v==='riego'){const on=$('#s-riego .msub button.on');showModSub('riego',on?on.dataset.v:'tab')}if(['tasa-variada','muestreo','calidad','surcos'].includes(v)){const on=$(`#s-${v} .msub button.on`);showModSub(v,on?on.dataset.v:'tab')}}
 
 __INTRO__
@@ -2623,6 +2638,7 @@ __COSECHA__
 __RIEGO__
 __SUELOSJS__
 __FLOTAJS__
+__AVANCEJS__
 /* ---------------- arranque ---------------- */
 /* ================= REGISTRO DE LLUVIAS (base compartida) ================= */
 const LR={cargas:new Map(),dia:new Map(),mes:new Map(),pluv:new Map(),editor:false,listo:{cargas:false,dia:false,mes:false,pluv:false},vista:'dia',pref:{},imp:null};
