@@ -423,6 +423,47 @@ body.splashing{overflow:hidden}
 .imctl button:hover{background:#EEF4FB}.imctl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .imctl button.sat{font-size:12px;margin-top:4px}.imctl button.sat.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .imatt{position:absolute;right:6px;bottom:4px;z-index:3;font-size:10px;color:#fff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:3px;pointer-events:none}
+
+/* ---- Flota John Deere (tablero estilo Power BI) ---- */
+#s-flota{background:#EEF2F6;margin:-8px -22px 0;padding:16px 22px 24px}
+.fl-wrap{max-width:1500px;margin:0 auto}
+.fl-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;background:linear-gradient(120deg,#0E2A47 0%,#123B63 60%,#0B5394 100%);color:#fff;border-radius:14px;padding:22px 24px;margin-bottom:12px}
+.fl-head h1{color:#fff;margin:2px 0 6px;font-size:28px;letter-spacing:-.02em}.fl-eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9CC7F0}
+.fl-st{font-size:12.5px;color:#C9DBEE;display:flex;align-items:center;gap:8px}.fl-err{color:#FFB4B4;font-weight:600}
+.fl-live{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:flp 2s infinite;display:inline-block}@keyframes flp{70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+.fl-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fl-ctl input{height:36px;width:240px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;padding:0 12px;font:inherit;font-size:13px}.fl-ctl input::placeholder{color:#B9CDE2}
+.fl-seg{display:flex;background:rgba(255,255,255,.1);border-radius:8px;padding:3px}.fl-seg button{border:0;background:transparent;color:#C9DBEE;font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:6px;cursor:pointer}.fl-seg button.on{background:#fff;color:#0E2A47}
+.fl-sync{height:36px;border:0;border-radius:8px;background:#fff;color:#0E2A47;font:inherit;font-weight:700;font-size:13px;padding:0 14px;cursor:pointer}.fl-sync.spin{opacity:.7}.fl-sync:hover{background:#E3EEF8}
+.fl-act{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:30px;margin-bottom:10px}.fl-hint{font-size:12px;color:#6B7785}
+.fl-chip{border:1px solid #BFD6EE;background:#E3EEF8;color:#0B4E8C;border-radius:999px;padding:5px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}.fl-clr{border:0;background:none;color:#C62828;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.fl-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:12px}
+.fl-k{background:#fff;border-radius:12px;padding:14px 16px 10px;border:1px solid #E1E7EE;position:relative;overflow:hidden;min-height:118px}.fl-k::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#0070C9}.fl-k.warn::before{background:#F2A900}
+.fl-kt{font-size:11.5px;font-weight:700;color:#6B7785;text-transform:uppercase;letter-spacing:.06em}.fl-kv{font-size:30px;font-weight:800;color:#0E2A47;letter-spacing:-.02em;margin:4px 0 2px;line-height:1.1}.fl-kv small{font-size:15px;color:#8794A3;font-weight:700}
+.fl-ks{font-size:12px;color:#6B7785}.fl-sp{width:100%;height:30px;margin-top:6px;display:block}.fl-dl{font-weight:800;margin-left:4px}.fl-dl.up{color:#1F9D55}.fl-dl.dn{color:#C62828}
+.fl-c{background:#fff;border-radius:12px;border:1px solid #E1E7EE;padding:14px 16px;margin-bottom:12px;min-width:0}.fl-ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}.fl-ch h2{font-size:14px;margin:0;color:#0E2A47;display:flex;align-items:center;gap:8px}.fl-cs{font-size:11.5px;color:#8794A3}
+.fl-badge{background:#0E2A47;color:#fff;border-radius:999px;font-size:11px;padding:2px 8px;font-weight:700}
+.fl-g1{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:12px}.fl-g2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:12px}
+.fl-lgh{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:#5B6673;margin-top:6px}.fl-lgh i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.fl-donut{display:flex;align-items:center;gap:12px}.fl-dn{width:172px;height:172px;flex:none}.fl-hit{cursor:pointer;transition:opacity .2s}
+.fl-lg{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}.fl-lg button{display:grid;grid-template-columns:12px 1fr auto 42px;gap:8px;align-items:center;border:0;background:none;font:inherit;font-size:12.5px;color:#1F2933;text-align:left;padding:6px 6px;border-radius:6px;cursor:pointer}.fl-lg button:hover{background:#F1F5F9}.fl-lg button.dim{opacity:.35}
+.fl-lg i{width:10px;height:10px;border-radius:3px}.fl-lg b{color:#0E2A47}.fl-lg small{color:#8794A3;text-align:right}
+.fl-hb{display:grid;grid-template-columns:minmax(90px,38%) 1fr 44px;gap:10px;align-items:center;width:100%;border:0;background:none;font:inherit;font-size:12.5px;padding:5px 4px;border-radius:6px;cursor:pointer;text-align:left;color:#1F2933}.fl-hb:hover{background:#F1F5F9}.fl-hb.dim{opacity:.35}.fl-hb.on span{font-weight:800;color:#0B4E8C}
+.fl-hb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-hb i{height:12px;background:#EEF2F6;border-radius:6px;overflow:hidden}.fl-hb em{display:block;height:100%;background:linear-gradient(90deg,#0B5394,#0070C9);border-radius:6px;transition:width .5s}.fl-hb b{text-align:right;color:#0E2A47}
+.fl-tr{display:grid;grid-template-columns:22px minmax(0,1.1fr) minmax(0,1fr) 78px;gap:10px;align-items:center;padding:7px 6px;border-radius:8px;cursor:pointer}.fl-tr:hover,.fl-tr.sel{background:#F1F5F9}
+.fl-tn{width:22px;height:22px;border-radius:50%;background:#EEF2F6;color:#0E2A47;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}.fl-tl{min-width:0}.fl-tl b,.fl-tl small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fl-tl b{font-size:13px;color:#0E2A47}.fl-tl small{font-size:11px;color:#8794A3}
+.fl-tb{height:10px;background:#EEF2F6;border-radius:5px;overflow:hidden}.fl-tb i{display:block;height:100%;border-radius:5px;transition:width .5s}.fl-tv{text-align:right;font-weight:800;color:#0E2A47;font-size:13px}.fl-tv small{display:block;font-weight:600;color:#8794A3;font-size:10.5px}
+.fl-als{max-height:310px;overflow:auto}.fl-al{display:flex;gap:10px;align-items:flex-start;padding:8px 6px;border-bottom:1px solid #F0F3F6;cursor:pointer;font-size:12.5px}.fl-al:hover{background:#F8FAFC}.fl-al i{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none}.fl-al small{display:block;color:#8794A3;font-size:11.5px}
+.fl-empty{font-size:12.5px;color:#8794A3;padding:16px 4px;line-height:1.5}
+.fl-tw{max-height:520px;overflow:auto;border-radius:8px}.fl-t{width:100%;border-collapse:collapse;font-size:12.5px}.fl-t th{position:sticky;top:0;background:#0E2A47;color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:9px 10px;text-align:left;cursor:pointer;white-space:nowrap;z-index:1}.fl-t th.n,.fl-t td.n{text-align:right}
+.fl-t td{padding:8px 10px;border-bottom:1px solid #EEF1F5;vertical-align:middle}.fl-t tbody tr{cursor:pointer}.fl-t tbody tr:nth-child(even){background:#FAFBFD}.fl-t tbody tr:hover{background:#EEF5FC}.fl-t tbody tr.sel{background:#DCEBFA}.fl-t td b{color:#0E2A47}.fl-t td small{display:block;color:#8794A3;font-size:11px}
+.fl-pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border-radius:999px;padding:3px 10px;white-space:nowrap}.fl-pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.fl-db{display:inline-flex;align-items:center;gap:8px;justify-content:flex-end;width:100%}.fl-db i{display:block;height:8px;background:#9CC7F0;border-radius:4px;max-width:70px;min-width:0}.fl-db b{min-width:36px}
+.fl-tq{display:inline-block;width:42px;height:7px;background:#EEF2F6;border-radius:4px;overflow:hidden;margin-right:6px;vertical-align:middle}.fl-tq i{display:block;height:100%}
+.fl-det{background:#fff;border-radius:12px;border:2px solid #0070C9;padding:16px 18px;margin-bottom:12px;animation:flin .25s ease}@keyframes flin{from{opacity:0;transform:translateY(-6px)}to{opacity:1}}
+.fl-dh{display:flex;justify-content:space-between;gap:10px}.fl-dh h3{margin:6px 0 2px;font-size:20px;color:#0E2A47}.fl-dh small{color:#6B7785}.fl-x{border:0;background:#EEF2F6;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;color:#0E2A47}
+.fl-dk{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.fl-dk div{background:#F4F7FA;border-radius:10px;padding:10px 12px}.fl-dk small{display:block;font-size:11px;color:#6B7785;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-dk b{font-size:20px;color:#0E2A47}
+@media(max-width:1100px){.fl-kpis{grid-template-columns:repeat(3,1fr)}.fl-g1,.fl-g2{grid-template-columns:1fr}.fl-dk{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){.fl-kpis{grid-template-columns:repeat(2,1fr)}#s-flota{margin:-16px -12px 0;padding:14px 10px}.fl-ctl input{width:100%}.fl-dk{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body class="splashing">
@@ -933,22 +974,37 @@ body.splashing{overflow:hidden}
   </div>
 </section>
 <section id="s-flota">
-  <h1>Flota John Deere</h1>
-  <p class="sub">Telemetría de tractores y cosechadoras desde Operations Center, sincronizada cada hora.</p>
-  <p class="area">Área de Agricultura de Precisión</p>
-  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 14px"><button class="btn sec" id="flSync">Sincronizar ahora</button><div class="status" id="flSt" style="margin:0"></div></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px">
-    <div class="seg" id="flPer" style="flex:0 0 auto"><button data-d="1">Hoy</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>
-    <select id="flTipo" style="width:auto"></select><input type="text" id="flQ" placeholder="Buscar máquina, modelo o serie" style="max-width:260px">
+  <div class="fl-wrap">
+    <div class="fl-head">
+      <div><div class="fl-eyebrow">Cosecha · Telemetría John Deere</div><h1>Flota John Deere</h1><div class="fl-st" id="flSt"></div></div>
+      <div class="fl-ctl">
+        <div class="fl-seg" id="flPer"><button data-d="1">Hoy</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>
+        <input type="text" id="flQ" placeholder="Buscar máquina, modelo o serie">
+        <button class="fl-sync" id="flSync" title="Traer ahora los datos de John Deere">⟳ Sincronizar</button>
+      </div>
+    </div>
+    <div class="fl-act" id="flAct"></div>
+    <div class="fl-kpis" id="flKpis"></div>
+    <div class="fl-g1">
+      <div class="fl-c fl-map"><div class="fl-ch"><h2>Ubicación de la flota</h2><span class="fl-cs">clic en una máquina para ver su detalle</span></div>
+        <div class="mapwrap" style="border:0;background:transparent"><canvas class="map" id="flMap"></canvas><div class="tip" id="flTip"></div></div>
+        <div class="fl-lgh"><span><i style="background:#1F9D55"></i>Encendida</span><span><i style="background:#3B82C4"></i>Reportando / apagada</span><span><i style="background:#E5484D"></i>Sin reportar &gt; 24 h</span><span><i style="background:#A3AEBB"></i>Sin telemetría</span><span><i style="background:#5B6B7C;border-radius:2px"></i>Cosechadora</span></div></div>
+      <div class="fl-col2">
+        <div class="fl-c"><div class="fl-ch"><h2>Estado de la flota</h2></div><div class="fl-donut" id="flEst"></div></div>
+        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2></div><div id="flDiv"></div></div>
+      </div>
+    </div>
+    <div class="fl-det" id="flDet" hidden></div>
+    <div class="fl-g2">
+      <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí</span></div><div id="flDia"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Máquinas con más horas</h2><span class="fl-cs">periodo seleccionado</span></div><div id="flTop"></div></div>
+    </div>
+    <div class="fl-g2">
+      <div class="fl-c"><div class="fl-ch"><h2>Tipos de máquina</h2></div><div id="flTipoCh"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Alertas <span class="fl-badge" id="flAlN">0</span></h2></div><div class="fl-als" id="flAl"></div></div>
+    </div>
+    <div class="fl-c"><div class="fl-ch"><h2>Máquinas <span class="fl-badge" id="flTn">0</span></h2><span class="fl-cs">clic en un encabezado para ordenar</span></div><div class="fl-tw"><table class="fl-t" id="flTbl"></table></div></div>
   </div>
-  <div class="kpis"><div class="kpi"><small>Máquinas</small><div id="flK1">–</div><small id="flK1s"></small></div><div class="kpi"><small>Horas de motor</small><div id="flK2">–</div><small id="flK2s"></small></div><div class="kpi"><small>Ralentí</small><div id="flK3">–</div><small>motor encendido sin trabajar</small></div><div class="kpi"><small>Combustible</small><div id="flK4">–</div><small id="flK4s"></small></div></div>
-  <div class="layout" style="grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)">
-    <div class="card"><h2>Última posición</h2><div class="mapwrap"><canvas class="map" id="flMap"></canvas><div class="tip" id="flTip"></div></div>
-      <p class="note" style="margin-top:6px"><span style="color:#2E9E44">●</span> Motor encendido &nbsp; <span style="color:#0070C9">●</span> Apagado &nbsp; <span style="color:#D32F2F">●</span> Sin reportar más de 24 h &nbsp; ■ cosechadora · ● tractor u otro</p></div>
-    <div><div class="card"><h2>Horas de motor por día</h2><svg class="chart" id="flCh1"></svg></div>
-      <div class="card" style="margin-top:16px"><h2>Horas por máquina</h2><p class="note">Color según ralentí: azul &lt; 20 %, amarillo 20–30 %, rojo &gt; 30 %.</p><svg class="chart" id="flCh2"></svg></div></div>
-  </div>
-  <div class="card" style="margin-top:16px"><h2>Máquinas</h2><div class="scroll"><table id="flTbl"></table></div></div>
 </section>
 <section id="s-malezas">
   <div class="prox card">
@@ -3406,65 +3462,126 @@ async function suLeerExcel(file){const sh=await readTable(file);const hoja=sh.fi
     const vals=ci.map(i=>{const v=i<0?null:+String(r[i]??'').replace(',','.');return v>0?v:null});if(vals.every(v=>v==null))continue;const a=IA>=0?+r[IA]:0;filas.push([d,t,p,a>0?a:null,...vals])}
   if(!filas.length)throw new Error('La hoja no tiene análisis con valores.');return{campos,filas,fuente:file.name,hoja:hoja.name}}
 
-/* ================= FLOTA JOHN DEERE (telemetría ISO 15143-3 + Equipment API, sincronizada cada hora) ================= */
-const FL={d:null,tipo:'',per:7,q:'',zm:{z:1},view:null,cargando:false};
-const flHoras=h=>h==null?'–':fmt(h,1);
+/* ================= FLOTA JOHN DEERE · tablero interactivo (filtros cruzados al estilo Power BI) =================
+   Datos: /api/flota (máquinas con su última lectura + lecturas diarias), sincronizado cada hora desde John Deere. */
+const FL={d:null,per:7,q:'',f:{div:new Set(),tipo:new Set(),est:new Set()},sel:null,zm:{z:1},view:null,pts:[],cargando:false,orden:{k:'senal',d:-1}};
+const FLC={on:'#1F9D55',off:'#0070C9',rep:'#3B82C4',sinr:'#E5484D',sint:'#A3AEBB',ral:'#F2A900',nav:'#0E2A47'};
 const flSenal=m=>{const f=m.f_pos||m.f_horas||m.f_motor;return f?new Date(f):null};
-const flEstado=m=>{const f=flSenal(m);if(m.sin_iso||!f)return['Sin telemetría','#9AA5B1'];const h=(Date.now()-f)/36e5;if(h>24)return['Sin reportar > 24 h','#D32F2F'];return m.motor===true?['Motor encendido','#2E9E44']:m.motor===false?['Motor apagado','#0070C9']:['Reportando','#0070C9']};
-/* tipo corto en español (Operations Center trae p. ej. "Two-wheel Drive Tractors - 90 Hp To Under 140 Hp") */
-const flTipo=m=>{const t=String(m.tipo||''),hp=(t.match(/(\d+)\s*Hp\s*(?:To\s*Under\s*(\d+)|And\s*Above)/i)||[]),r=hp[1]?(hp[2]?` ${hp[1]}–${hp[2]} HP`:` ≥ ${hp[1]} HP`):'';
-  if(/combine|harvest|cosech/i.test(t+' '+(m.modelo||''))||/^CH\d/i.test(m.modelo||''))return'Cosechadora';if(/sprayer|pulveri|fumig/i.test(t))return'Fumigadora';
-  if(/tractor/i.test(t))return(/four|4wd|track/i.test(t)?'Tractor 4WD':'Tractor')+r;if(/loader|cargador/i.test(t))return'Cargador';if(/excavat/i.test(t))return'Excavadora';if(/grader|motonivel/i.test(t))return'Motoniveladora';
-  return t||(/^\d+[A-Z]/.test(m.modelo||'')?'Tractor':'Otro')};
-async function flCargar(){if(FL.cargando)return;FL.cargando=true;$('#flSt').textContent='Cargando…';
-  try{const r=await fetch('/api/flota?dias=60',{cache:'no-store'});if(!r.ok)throw new Error(r.status===401?'Entra a la plataforma para ver la flota.':'No se pudo leer la flota ('+r.status+').');FL.d=await r.json();flDraw()}
-  catch(e){$('#flSt').textContent=e.message;$('#flSt').className='status err'}finally{FL.cargando=false}}
-function flFiltro(){const D=FL.d,q=FL.q.toLowerCase();return D.maq.filter(m=>(!FL.tipo||flTipo(m)===FL.tipo)&&(!q||[m.nombre,m.modelo,m.serie,m.pin,m.id].join(' ').toLowerCase().includes(q)))}
+const flEst=m=>{const f=flSenal(m);if(m.sin_iso||!f)return'Sin telemetría';if((Date.now()-f)/36e5>24)return'Sin reportar';return m.motor===true?'Encendida':m.motor===false?'Apagada':'Reportando'};
+const FL_EC={'Encendida':FLC.on,'Apagada':FLC.off,'Reportando':FLC.rep,'Sin reportar':FLC.sinr,'Sin telemetría':FLC.sint};
+const flTipo=m=>{if(m._t)return m._t;const t=String(m.tipo||''),hp=(t.match(/(\d+)\s*Hp\s*(?:To\s*Under\s*(\d+)|And\s*Above)/i)||[]),r=hp[1]?(hp[2]?` ${hp[1]}–${hp[2]} HP`:` ≥ ${hp[1]} HP`):'';let o;
+  if(/combine|harvest|cosech/i.test(t+' '+(m.modelo||''))||/^CH\d/i.test(m.modelo||''))o='Cosechadora';else if(/sprayer|pulveri|fumig/i.test(t))o='Fumigadora';
+  else if(/tractor/i.test(t))o=(/four|4wd|track/i.test(t)?'Tractor 4WD':'Tractor')+r;else if(/loader|cargador/i.test(t))o='Cargador';else if(/excavat/i.test(t))o='Excavadora';else if(/grader|motonivel/i.test(t))o='Motoniveladora';
+  else o=t||(/^\d+[A-Z]/.test(m.modelo||'')?'Tractor':'Otro');return m._t=o};
+const flDiv=m=>{if(m._d!==undefined)return m._d;if(m.lat==null||m.lon==null)return m._d='Sin ubicación';const d=EMBED_LAYERS.divs.find(d=>pip(m.lon,m.lat,d.polys));return m._d=d?d.name:'Fuera de las divisiones'};
+const flH=h=>h==null||!isFinite(h)?'–':fmt(h,1);
+const flFecha=f=>f?f.toLocaleString('es-DO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
+async function flCargar(){if(FL.cargando)return;FL.cargando=true;
+  try{const r=await fetch('/api/flota?dias=90',{cache:'no-store'});if(!r.ok)throw new Error(r.status===401?'Entra a la plataforma para ver la flota.':'No se pudo leer la flota ('+r.status+').');FL.d=await r.json();flDraw()}
+  catch(e){$('#flSt').innerHTML=`<span class="fl-err">${xesc(e.message)}</span>`}finally{FL.cargando=false}}
+/* ---- filtros: cada visual filtra por todos los filtros menos el propio (filtro cruzado) ---- */
+function flPasa(m,salvo){const F=FL.f,q=FL.q.toLowerCase();
+  if(salvo!=='div'&&F.div.size&&!F.div.has(flDiv(m)))return false;if(salvo!=='tipo'&&F.tipo.size&&!F.tipo.has(flTipo(m)))return false;if(salvo!=='est'&&F.est.size&&!F.est.has(flEst(m)))return false;
+  if(q&&![m.nombre,m.modelo,m.serie,m.pin,m.id,flTipo(m)].join(' ').toLowerCase().includes(q))return false;return true}
+const flTog=(k,v)=>{const S=FL.f[k];S.has(v)?S.delete(v):S.add(v);FL.sel=null;flDraw()};
+function flRango(off){const fin=Date.now()-4*36e5-off*FL.per*864e5,a=new Date(fin-(FL.per-1)*864e5).toISOString().slice(0,10),b=new Date(fin).toISOString().slice(0,10);return[a,b]}
+function flAgg(ids,[a,b]){const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha>=a&&r.fecha<=b),s=k=>R.reduce((t,r)=>t+(r[k]||0),0);return{R,h:s('horas'),i:s('ralenti'),c:s('comb')}}
+const flDelta=(v,p)=>!p||!isFinite(v)?'':`<span class="fl-dl ${v>=p?'up':'dn'}">${v>=p?'▲':'▼'} ${fmt(Math.abs(v-p)/p*100,0)} %</span>`;
+/* ---------- dibujo ---------- */
 function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const D=FL.d,E=D.estado;
-  $('#flSt').className='status';$('#flSt').innerHTML=E?(E.ok?`Última sincronización: ${new Date(E.upd).toLocaleString('es-DO',{dateStyle:'medium',timeStyle:'short'})} · ${fmt(E.n_iso)} máquinas con telemetría${E.n_eq?` · ${fmt(E.n_eq)} equipos en Operations Center`:''}`:`<span style="color:var(--red)">La última sincronización falló: ${xesc(E.error||'')}</span>`):'Todavía no hay datos: dale "Sincronizar ahora".';
-  const tipos=[...new Set(D.maq.map(flTipo))].sort();$('#flTipo').innerHTML='<option value="">Todos los tipos</option>'+tipos.map(t=>`<option${t===FL.tipo?' selected':''}>${xesc(t)}</option>`).join('');
-  const M=flFiltro(),ids=new Set(M.map(m=>m.id)),desde=hoyISO().slice(0,10),lim=new Date(Date.now()-4*36e5-(FL.per-1)*864e5).toISOString().slice(0,10);
-  const R=D.dia.filter(r=>ids.has(r.id)&&r.fecha>=lim),sum=(a,k)=>a.reduce((s,r)=>s+(r[k]||0),0),H=sum(R,'horas'),I=sum(R,'ralenti'),C=sum(R,'comb');
-  const rep=M.filter(m=>{const f=flSenal(m);return f&&Date.now()-f<864e5}).length,on=M.filter(m=>flEstado(m)[0]==='Motor encendido').length,sinr=M.filter(m=>flEstado(m)[0]==='Sin reportar > 24 h').length,sint=M.filter(m=>flEstado(m)[0]==='Sin telemetría').length;
-  $('#flK1').textContent=fmt(M.length);$('#flK1s').textContent=`${fmt(rep)} reportando hoy · ${fmt(sinr)} sin reportar · ${fmt(sint)} sin telemetría`;
-  $('#flK2').textContent=fmt(H,0);$('#flK2s').textContent=(FL.per===1?'hoy':`últimos ${FL.per} días`)+(R.length&&!H?' · se calcula desde la 2.ª lectura':'');
-  $('#flK3').textContent=H?fmt(I/H*100,0)+' %':'–';$('#flK3').style.color=H&&I/H>.3?'var(--red)':H&&I/H>.2?'#C77700':'';
-  $('#flK4').textContent=C?fmt(C,0)+' L':'–';$('#flK4s').textContent=H&&C?fmt(C/H,1)+' L por hora de motor':'combustible usado';
-  flMapa($('#flMap'),null);zoomable($('#flMap'),FL.zm,()=>flMapa($('#flMap'),null),()=>FL.view,()=>[]);
-  const pd=new Map();R.forEach(r=>{if(!pd.has(r.fecha))pd.set(r.fecha,{fecha:r.fecha,h:0,i:0});const o=pd.get(r.fecha);o.h+=r.horas||0;o.i+=r.ralenti||0});
-  periodBars($('#flCh1'),[...pd.values()].map(o=>({fecha:o.fecha,v:o.h})),rs=>rs.reduce((s,r)=>s+r.v,0),{fmt:v=>fmt(v,0)},'dia');
-  const pm=new Map();R.forEach(r=>{pm.set(r.id,(pm.get(r.id)||0)+(r.horas||0))});const nm=new Map(M.map(m=>[m.id,m]));
-  hbars($('#flCh2'),[...pm.entries()].filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,12).map(([id,h])=>{const m=nm.get(id),ii=R.filter(r=>r.id===id).reduce((s,r)=>s+(r.ralenti||0),0);return[xesc((m&&m.nombre)||id).slice(0,18),h,ii/h>.3?'#D32F2F':ii/h>.2?'#F2A900':'#0070C9',`ralentí ${fmt(ii/h*100,0)} %`]}),v=>fmt(v,1)+' h',{L:150});
-  const ag=id=>{const L=R.filter(r=>r.id===id);return{h:sum(L,'horas'),i:sum(L,'ralenti'),c:sum(L,'comb')}};
-  $('#flTbl').innerHTML=`<tr><th>Máquina</th><th>Tipo</th><th>Modelo</th><th>Estado</th><th class="n">Horas motor (acum.)</th><th class="n">Horas ${FL.per===1?'hoy':FL.per+' d'}</th><th class="n">Ralentí</th><th class="n">Combustible</th><th class="n">Tanque</th><th class="n">DEF</th><th>Última señal</th></tr>`+
-    M.slice().sort((a,b)=>(flSenal(b)||0)-(flSenal(a)||0)).map(m=>{const[e,c]=flEstado(m),a=ag(m.id),f=flSenal(m);return`<tr><td><b>${xesc(m.nombre||m.id)}</b><br><small class="note">${xesc(m.pin||m.serie||'')}</small></td><td>${xesc(flTipo(m))}</td><td>${xesc(m.modelo||'')}</td><td><span style="color:${c};font-weight:700">● ${e}</span></td>
-      <td class="n">${flHoras(m.horas)}</td><td class="n">${a.h?fmt(a.h,1):'–'}</td><td class="n" style="${a.h&&a.i/a.h>.3?'color:var(--red);font-weight:700':''}">${a.h?fmt(a.i/a.h*100,0)+' %':'–'}</td><td class="n">${a.c?fmt(a.c,0)+' L':'–'}</td>
-      <td class="n" style="${m.comb_pct!=null&&m.comb_pct<15?'color:var(--red);font-weight:700':''}">${m.comb_pct!=null?fmt(m.comb_pct,0)+' %':'–'}</td><td class="n" style="${m.def_pct!=null&&m.def_pct<15?'color:var(--red);font-weight:700':''}">${m.def_pct!=null?fmt(m.def_pct,0)+' %':'–'}</td>
-      <td>${f?f.toLocaleString('es-DO',{dateStyle:'short',timeStyle:'short'}):'–'}</td></tr>`}).join('')}
-function flMapa(cv,T){const W=T?T.W:Math.max(cv.parentElement.clientWidth,600),H=Math.round(W*.62),dpr=T?1:(window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';
-  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);const F={x:10,y:10,w:W-20,h:H-20},clip=EMBED_LAYERS.mask,UT=(lo,la)=>llToUtm(lo,la);
-  let bb=bboxPts(polyPts(clip).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.03;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
+  $('#flSt').innerHTML=E?(E.ok?`<i class="fl-live"></i>Actualizado ${flFecha(new Date(E.upd))} · ${fmt(E.n_iso)} con telemetría · ${fmt(E.n_eq)} equipos en Operations Center`:`<span class="fl-err">Falló la última sincronización: ${xesc(E.error||'')}</span>`):'Sin datos todavía: dale "Sincronizar".';
+  const M=D.maq.filter(m=>flPasa(m)),ids=new Set(M.map(m=>m.id)),A=flAgg(ids,flRango(0)),P=flAgg(ids,flRango(1));
+  const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]));
+  $('#flAct').innerHTML=act.length?act.map(([k,v])=>`<button class="fl-chip on" data-k="${k}" data-v="${xesc(v)}">${xesc(v)} ✕</button>`).join('')+`<button class="fl-clr" id="flClr">Limpiar filtros</button>`:'<span class="fl-hint">Haz clic en cualquier gráfico para filtrar todo el tablero.</span>';
+  $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>flTog(b.dataset.k,b.dataset.v));if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
+  const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size;
+  const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(r[k]||0),0))}return flSpark(L)};
+  const K=[['Máquinas reportando',`${fmt(rep)}<small> / ${fmt(M.length)}</small>`,`${fmt(M.filter(m=>flEst(m)==='Sin reportar').length)} sin reportar más de 24 h`,''],
+    ['Horas de motor',fmt(A.h,0),`${dias===1?'hoy':'últimos '+dias+' días'} ${flDelta(A.h,P.h)}`,spark('horas')],
+    ['Horas por máquina activa',act7?fmt(A.h/act7/dias,1):'–',`por día · ${fmt(act7)} máquinas trabajaron`,''],
+    ['Ralentí',A.h?fmt(A.i/A.h*100,0)+' %':'–','motor encendido sin trabajar',spark('ralenti')],
+    ['Combustible',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'según telemetría',spark('comb')]];
+  $('#flKpis').innerHTML=K.map(([t,v,s,g],i)=>`<div class="fl-k${i===3&&A.h&&A.i/A.h>.25?' warn':''}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
+  const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
+  flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
+  const cnt=(k,fn)=>{const g=new Map();D.maq.filter(m=>flPasa(m,k)).forEach(m=>{const v=fn(m);g.set(v,(g.get(v)||0)+1)});return[...g.entries()].sort((a,b)=>b[1]-a[1])};
+  flHB($('#flDiv'),cnt('div',flDiv),FL.f.div,v=>flTog('div',v),v=>fmt(v));flHB($('#flTipoCh'),cnt('tipo',flTipo).slice(0,8),FL.f.tipo,v=>flTog('tipo',v),v=>fmt(v));
+  const nd=Math.max(14,FL.per),dd=[];for(let i=nd-1;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10),R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f);
+    const h=R.reduce((t,r)=>t+(r.horas||0),0),ii=R.reduce((t,r)=>t+(r.ralenti||0),0);dd.push({f,t:Math.max(h-ii,0),i:ii,n:R.filter(r=>r.horas>0).length})}
+  flCols($('#flDia'),dd);
+  const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=r.comb||0;pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
+  const top=[...pm.entries()].filter(x=>x[1].h>0).sort((a,b)=>b[1].h-a[1].h).slice(0,10);
+  $('#flTop').innerHTML=top.length?top.map(([id,o],i)=>{const m=byId.get(id),mx=top[0][1].h,ri=o.h?o.i/o.h:0;return`<div class="fl-tr${FL.sel===id?' sel':''}" data-id="${xesc(id)}"><span class="fl-tn">${i+1}</span><span class="fl-tl"><b>${xesc(m?m.nombre:id)}</b><small>${xesc(m?flTipo(m):'')}</small></span><span class="fl-tb"><i style="width:${o.h/mx*100}%;background:${ri>.3?FLC.sinr:ri>.2?FLC.ral:FLC.off}"></i></span><span class="fl-tv">${fmt(o.h,1)} h<small>${o.i?'ralentí '+fmt(ri*100,0)+' %':''}</small></span></div>`}).join(''):'<div class="fl-empty">Las horas trabajadas aparecen desde la segunda sincronización: cada hora se compara la lectura nueva con la anterior.</div>';
+  $$('#flTop .fl-tr').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
+  const al=[];M.forEach(m=>{const e=flEst(m);if(e==='Sin reportar')al.push([3,FLC.sinr,'Sin reportar',m,`última señal ${flFecha(flSenal(m))}`]);if(m.comb_pct!=null&&m.comb_pct<20&&e!=='Sin telemetría')al.push([2,FLC.ral,'Tanque bajo',m,`${fmt(m.comb_pct,0)} % de combustible`]);
+    if(m.def_pct!=null&&m.def_pct<15)al.push([2,FLC.ral,'DEF bajo',m,`${fmt(m.def_pct,0)} % de DEF`]);const o=pm.get(m.id);if(o&&o.h>=4&&o.i/o.h>.35)al.push([1,FLC.ral,'Ralentí alto',m,`${fmt(o.i/o.h*100,0)} % del tiempo encendida`])});
+  al.sort((a,b)=>b[0]-a[0]);$('#flAlN').textContent=al.length;
+  $('#flAl').innerHTML=al.length?al.slice(0,40).map(([,c,t,m,d])=>`<div class="fl-al" data-id="${xesc(m.id)}"><i style="background:${c}"></i><span><b>${t}</b> · ${xesc(m.nombre||m.id)}<small>${xesc(flTipo(m))} · ${d}</small></span></div>`).join(''):'<div class="fl-empty">Sin alertas con los filtros actuales.</div>';
+  $$('#flAl .fl-al').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
+  flMapa($('#flMap'),null);zoomable($('#flMap'),FL.zm,()=>flMapa($('#flMap'),null),()=>FL.view,()=>[]);flTabla(M,pm);flDet()}
+/* ---------- visuales SVG ---------- */
+function flSpark(v){const W=120,H=30,mx=Math.max(...v,1e-9);if(!v.some(x=>x>0))return'';const p=v.map((x,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-2-x/mx*(H-6)).toFixed(1)}`).join(' ');
+  return`<svg class="fl-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="0,${H} ${p} ${W},${H}" fill="rgba(0,112,201,.12)" stroke="none"/><polyline points="${p}" fill="none" stroke="#0070C9" stroke-width="1.6"/></svg>`}
+function flDonut(el,items,S,on,c,sub){const tot=items.reduce((t,x)=>t+x[1],0)||1,R1=74,R0=50,cx=86,cy=86;let a0=-Math.PI/2,h='';
+  items.forEach(([t,n,col])=>{const a1=a0+n/tot*Math.PI*2-1e-4,lg=a1-a0>Math.PI?1:0,P=(r,a)=>`${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`,dim=S.size&&!S.has(t);
+    h+=`<path class="fl-hit" data-v="${xesc(t)}" d="M${P(R1,a0)} A${R1},${R1} 0 ${lg} 1 ${P(R1,a1)} L${P(R0,a1)} A${R0},${R0} 0 ${lg} 0 ${P(R0,a0)}Z" fill="${col}" opacity="${dim?.25:1}" stroke="#fff" stroke-width="2"><title>${t}: ${fmt(n)}</title></path>`;a0=a1+1e-4});
+  h+=`<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="26" font-weight="800" fill="#0E2A47">${c}</text><text x="${cx}" y="${cy+21}" text-anchor="middle" font-size="11" fill="#6B7785">${sub}</text>`;
+  el.innerHTML=`<svg viewBox="0 0 172 172" class="fl-dn">${h}</svg><div class="fl-lg">${items.map(([t,n,col])=>`<button class="fl-hit${S.size&&!S.has(t)?' dim':''}" data-v="${xesc(t)}"><i style="background:${col}"></i>${t}<b>${fmt(n)}</b><small>${fmt(n/tot*100,0)} %</small></button>`).join('')}</div>`;
+  el.querySelectorAll('.fl-hit').forEach(e=>e.onclick=()=>on(e.dataset.v))}
+function flHB(el,items,S,on,fv){const mx=Math.max(...items.map(x=>x[1]),1);el.innerHTML=items.length?items.map(([t,v])=>`<button class="fl-hb${S.size&&!S.has(t)?' dim':''}${S.has(t)?' on':''}" data-v="${xesc(t)}"><span>${xesc(t)}</span><i><em style="width:${v/mx*100}%"></em></i><b>${fv(v)}</b></button>`).join(''):'<div class="fl-empty">Sin datos</div>';
+  el.querySelectorAll('.fl-hb').forEach(e=>e.onclick=()=>on(e.dataset.v))}
+function flCols(el,dd){const W=Math.max(el.clientWidth,320),H=230,L=40,B=28,T=14,mx=Math.max(...dd.map(d=>d.t+d.i),1),bw=(W-L-6)/Math.max(dd.length,1),y=v=>H-B-(H-B-T)*v/mx;let h='';
+  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
+  dd.forEach((d,i)=>{const x=L+i*bw+3,w=Math.max(bw-6,2),ht=(H-B-T)*d.t/mx,hi=(H-B-T)*d.i/mx;
+    h+=`<g class="fl-col"><rect x="${x}" y="${y(d.t+d.i)}" width="${w}" height="${hi}" rx="2" fill="${FLC.ral}"/><rect x="${x}" y="${y(d.t)}" width="${w}" height="${ht}" rx="2" fill="#0070C9"/><rect x="${x-3}" y="${T}" width="${bw}" height="${H-B-T}" fill="transparent"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.t+d.i,1)} h de motor · ${fmt(d.i,1)} h en ralentí · ${d.n} máquinas</title></rect></g>`;
+    if(dd.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
+  if(!dd.some(d=>d.t+d.i>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">Las horas por día aparecen desde la segunda sincronización</text>`;
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#0070C9"></i>Trabajando</span><span><i style="background:${FLC.ral}"></i>Ralentí</span></div>`}
+/* ---------- mapa ---------- */
+function flMapa(cv,T){const W=T?T.W:Math.max(cv.parentElement.clientWidth,500),H=Math.round(W*.66),dpr=T?1:(window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;if(!T)cv.style.height=H+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#F4F7FA';ctx.fillRect(0,0,W,H);const F={x:0,y:0,w:W,h:H},clip=EMBED_LAYERS.mask,UT=(lo,la)=>llToUtm(lo,la);
+  let bb=bboxPts(polyPts(clip).map(q=>UT(q[0],q[1])));const pd=Math.max(bb[2]-bb[0],bb[3]-bb[1])*.04;bb=[bb[0]-pd,bb[1]-pd,bb[2]+pd,bb[3]+pd];
   let sc=Math.min(F.w/(bb[2]-bb[0]),F.h/(bb[3]-bb[1])),cx=(bb[0]+bb[2])/2,cy=(bb[1]+bb[3])/2;{const v=aplicaZoom(FL.zm,F,{sc,cx,cy,bb});sc=v.sc;cx=v.cx;cy=v.cy}
   const toPx=(E,N)=>[F.x+F.w/2+(E-cx)*sc,F.y+F.h/2-(N-cy)*sc],toE=(x,y)=>[cx+(x-F.x-F.w/2)/sc,cy-(y-F.y-F.h/2)/sc],px=(lo,la)=>toPx(...UT(lo,la));
   const ring=r=>{let x0,y0;r.forEach((q,i)=>{const[x,y]=px(q[0],q[1]);if(i)ctx.lineTo(x,y);else{ctx.moveTo(x,y);x0=x;y0=y}});ctx.lineTo(x0,y0)},path=Pl=>{ctx.beginPath();for(const p of Pl)for(const r of p)ring(r)};
-  ctx.save();ctx.beginPath();ctx.rect(F.x,F.y,F.w,F.h);ctx.clip();path(clip);ctx.fillStyle='#EEF2F6';ctx.fill('evenodd');
-  if(FL.zm.z>2.5){ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(120,135,150,.45)';ctx.lineWidth=.5;ctx.stroke()}
-  EMBED_LAYERS.divs.forEach(d=>{path(d.polys);ctx.strokeStyle='#8A99AA';ctx.lineWidth=1.2;ctx.stroke()});path(clip);ctx.strokeStyle='#334';ctx.lineWidth=1.6;ctx.stroke();
-  ctx.font='bold 12px Arial';ctx.textAlign='center';EMBED_LAYERS.divs.forEach(d=>{const[x,y]=px(d.lab[0],d.lab[1]);ctx.fillStyle='#7A8A9C';ctx.fillText(d.name,x,y)});
-  const pts=[];flFiltro().forEach(m=>{if(m.lat==null||m.lon==null)return;const[x,y]=px(m.lon,m.lat),[e,c]=flEstado(m);pts.push({m,x,y});const cos=/cosech/i.test(flTipo(m));
-    ctx.beginPath();if(cos)ctx.rect(x-6,y-6,12,12);else ctx.arc(x,y,6,0,7);ctx.fillStyle=c;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#fff';ctx.stroke();
-    if(FL.zm.z>2){ctx.font='600 11px Arial';ctx.textAlign='left';ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.9)';ctx.strokeText(m.nombre||'',x+9,y+4);ctx.fillStyle='#0E2A47';ctx.fillText(m.nombre||'',x+9,y+4)}});
-  ctx.restore();ctx.strokeStyle='#C9D2DC';ctx.strokeRect(F.x,F.y,F.w,F.h);if(!T){FL.view={toPx,toE,px,F,sc};FL.pts=pts}}
+  EMBED_LAYERS.divs.forEach(d=>{path(d.polys);ctx.fillStyle=FL.f.div.has(d.name)?'#DCEBFA':'#FFFFFF';ctx.fill('evenodd')});
+  if(FL.zm.z>2.5){ctx.beginPath();EMBED_PIECES.forEach(p=>ring(p[3]));ctx.strokeStyle='rgba(140,155,170,.35)';ctx.lineWidth=.5;ctx.stroke()}
+  EMBED_LAYERS.divs.forEach(d=>{path(d.polys);ctx.strokeStyle='#B6C2CF';ctx.lineWidth=1.1;ctx.stroke()});path(clip);ctx.strokeStyle='#5B6B7C';ctx.lineWidth=1.4;ctx.stroke();
+  ctx.font='700 11px Inter,Arial';ctx.textAlign='center';EMBED_LAYERS.divs.forEach(d=>{const[x,y]=px(d.lab[0],d.lab[1]);ctx.fillStyle='#9AA8B6';ctx.fillText(d.name.toUpperCase(),x,y)});
+  const pts=[];FL.d.maq.forEach(m=>{if(m.lat==null||m.lon==null)return;const ok=flPasa(m),[x,y]=px(m.lon,m.lat),c=FL_EC[flEst(m)],cos=/cosech/i.test(flTipo(m)),s=FL.sel===m.id;pts.push({m,x,y});
+    ctx.globalAlpha=ok?1:.15;ctx.beginPath();if(cos)ctx.rect(x-6,y-6,12,12);else ctx.arc(x,y,5.5,0,7);ctx.fillStyle=c;ctx.fill();ctx.lineWidth=s?3:1.6;ctx.strokeStyle=s?'#0E2A47':'#fff';ctx.stroke();
+    if(ok&&(s||FL.zm.z>2.2)){ctx.font='600 11px Inter,Arial';ctx.textAlign='left';ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.95)';ctx.strokeText(m.nombre||'',x+9,y+4);ctx.fillStyle='#0E2A47';ctx.fillText(m.nombre||'',x+9,y+4)}ctx.globalAlpha=1});
+  if(!T){FL.view={toPx,toE,px,F,sc};FL.pts=pts}}
+/* ---------- tabla ---------- */
+function flTabla(M,pm){const o=FL.orden,val={nombre:m=>m.nombre||'',tipo:flTipo,div:flDiv,est:flEst,hacum:m=>m.horas??-1,h:m=>(pm.get(m.id)||{}).h||0,ral:m=>{const x=pm.get(m.id);return x&&x.h?x.i/x.h:-1},tq:m=>m.comb_pct??-1,senal:m=>+(flSenal(m)||0)};
+  const L=M.slice().sort((a,b)=>{const x=val[o.k](a),y=val[o.k](b);return(x>y?1:x<y?-1:0)*o.d}),mxh=Math.max(...M.map(m=>(pm.get(m.id)||{}).h||0),1);
+  const th=(k,t,n)=>`<th class="${n?'n':''}" data-k="${k}">${t}${o.k===k?(o.d>0?' ▲':' ▼'):''}</th>`;
+  $('#flTbl').innerHTML=`<thead><tr>${th('nombre','Máquina')}${th('tipo','Tipo')}${th('div','División')}${th('est','Estado')}${th('hacum','Horas acum.',1)}${th('h','Horas periodo',1)}${th('ral','Ralentí',1)}${th('tq','Tanque',1)}${th('senal','Última señal')}</tr></thead><tbody>`+
+    L.map(m=>{const x=pm.get(m.id)||{h:0,i:0},e=flEst(m),ri=x.h&&x.i?x.i/x.h:null;return`<tr data-id="${xesc(m.id)}" class="${FL.sel===m.id?'sel':''}"><td><b>${xesc(m.nombre||m.id)}</b><small>${xesc(m.modelo||'')} · ${xesc(m.pin||m.serie||'')}</small></td><td>${xesc(flTipo(m))}</td><td>${xesc(flDiv(m))}</td>
+      <td><span class="fl-pill" style="--c:${FL_EC[e]}">${e}</span></td><td class="n">${flH(m.horas)}</td><td class="n"><span class="fl-db"><i style="width:${x.h/mxh*100}%"></i><b>${x.h?fmt(x.h,1):'–'}</b></span></td>
+      <td class="n" style="${ri>.3?'color:#C62828;font-weight:700':''}">${ri==null?'–':fmt(ri*100,0)+' %'}</td><td class="n">${m.comb_pct==null?'–':`<span class="fl-tq"><i style="width:${m.comb_pct}%;background:${m.comb_pct<20?FLC.sinr:m.comb_pct<40?FLC.ral:FLC.on}"></i></span>${fmt(m.comb_pct,0)} %`}</td><td>${flFecha(flSenal(m))}</td></tr>`}).join('')+'</tbody>';
+  $$('#flTbl th').forEach(t=>t.onclick=()=>{const k=t.dataset.k;FL.orden=o.k===k?{k,d:-o.d}:{k,d:k==='nombre'||k==='tipo'||k==='div'?1:-1};flDraw()});
+  $$('#flTbl tbody tr').forEach(r=>r.onclick=()=>flSel(r.dataset.id));$('#flTn').textContent=fmt(L.length)}
+/* ---------- máquina seleccionada ---------- */
+function flSel(id){FL.sel=FL.sel===id?null:id;const m=FL.d.maq.find(x=>x.id===id);if(FL.sel&&m&&m.lat!=null){const[E,N]=llToUtm(m.lon,m.lat);FL.zm.z=Math.max(FL.zm.z||1,3.5);FL.zm.cx=E;FL.zm.cy=N}flDraw();
+  if(FL.sel)$('#flDet').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);if(!m){el.hidden=true;return}el.hidden=false;const e=flEst(m),R=FL.d.dia.filter(r=>r.id===m.id).sort((a,b)=>a.fecha<b.fecha?-1:1).slice(-30);
+  const dd=R.map(r=>({f:r.fecha,t:Math.max((r.horas||0)-(r.ralenti||0),0),i:r.ralenti||0,n:1}));
+  el.innerHTML=`<div class="fl-dh"><div><span class="fl-pill" style="--c:${FL_EC[e]}">${e}</span><h3>${xesc(m.nombre||m.id)}</h3><small>${xesc(flTipo(m))} · ${xesc(m.marca||'')} ${xesc(m.modelo||'')} · ${xesc(m.pin||m.serie||'')} · ${xesc(flDiv(m))}</small></div><button class="fl-x" id="flDx" title="Cerrar">✕</button></div>
+    <div class="fl-dk"><div><small>Horas de motor</small><b>${flH(m.horas)}</b></div><div><small>Ralentí acumulado</small><b>${flH(m.ralenti)}</b></div><div><small>Tanque</small><b>${m.comb_pct==null?'–':fmt(m.comb_pct,0)+' %'}</b></div><div><small>DEF</small><b>${m.def_pct==null?'–':fmt(m.def_pct,0)+' %'}</b></div><div><small>Combustible acumulado</small><b>${m.comb==null?'–':fmt(m.comb,0)+' '+(m.comb_u||'L')}</b></div><div><small>Última señal</small><b style="font-size:14px">${flFecha(flSenal(m))}</b></div></div>
+    <div id="flDch"></div>`;flCols($('#flDch'),dd);$('#flDx').onclick=()=>{FL.sel=null;flDraw()}}
 function flInit(){if(flInit.ok)return;flInit.ok=true;
-  $('#flTipo').onchange=()=>{FL.tipo=$('#flTipo').value;flDraw()};$('#flQ').oninput=()=>{FL.q=$('#flQ').value;flDraw()};
+  $('#flQ').oninput=()=>{FL.q=$('#flQ').value;flDraw()};
   $$('#flPer button').forEach(b=>b.onclick=()=>{FL.per=+b.dataset.d;$$('#flPer button').forEach(x=>x.classList.toggle('on',x===b));flDraw()});
-  $('#flSync').onclick=async()=>{const b=$('#flSync');b.disabled=true;$('#flSt').className='status';$('#flSt').textContent='Sincronizando con John Deere…';
-    try{const r=await fetch('/api/flota/sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'falló la sincronización');await flCargar()}catch(e){$('#flSt').className='status err';$('#flSt').textContent=e.message}finally{b.disabled=false}};
-  $('#flMap').addEventListener('click',e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,t=$('#flTip');let best=null,bd=14;(FL.pts||[]).forEach(p=>{const d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=p}});
-    if(!best){t.style.display='none';return}const m=best.m,[e2,c]=flEstado(m),f=flSenal(m);
-    t.innerHTML=`<b>${xesc(m.nombre||m.id)}</b><br>${xesc(flTipo(m))} · ${xesc(m.modelo||'')}<br><span style="color:${c};font-weight:700">● ${e2}</span><br>Horas motor: <b>${flHoras(m.horas)}</b> · ralentí acum.: ${flHoras(m.ralenti)}<br>Tanque: ${m.comb_pct!=null?fmt(m.comb_pct,0)+' %':'–'} · DEF: ${m.def_pct!=null?fmt(m.def_pct,0)+' %':'–'}<br><small>Última posición: ${f?f.toLocaleString('es-DO',{dateStyle:'short',timeStyle:'short'}):'–'}</small>`;
-    t.style.left=Math.min(x+12,r.width-240)+'px';t.style.top=(y+12)+'px';t.style.display='block'});
-  addEventListener('resize',()=>{if($('#s-flota').classList.contains('on'))flDraw()})}
+  $('#flSync').onclick=async()=>{const b=$('#flSync');b.disabled=true;b.classList.add('spin');$('#flSt').textContent='Sincronizando con John Deere…';
+    try{const r=await fetch('/api/flota/sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'falló la sincronización');await flCargar()}catch(e){$('#flSt').innerHTML=`<span class="fl-err">${xesc(e.message)}</span>`}finally{b.disabled=false;b.classList.remove('spin')}};
+  const cerca=e=>{const r=e.target.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;let best=null,bd=12;FL.pts.forEach(p=>{if(!flPasa(p.m))return;const d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=p}});return{best,x,y,r}};
+  $('#flMap').addEventListener('click',e=>{const{best}=cerca(e);if(best)flSel(best.m.id)});
+  $('#flMap').addEventListener('mousemove',e=>{const{best,x,y,r}=cerca(e),t=$('#flTip');if(!best){t.style.display='none';return}const m=best.m;
+    t.innerHTML=`<b>${xesc(m.nombre||m.id)}</b><br>${xesc(flTipo(m))} · ${xesc(m.modelo||'')}<br>${flEst(m)} · ${flH(m.horas)} h<br><small>${flFecha(flSenal(m))}</small>`;t.style.left=Math.min(x+14,r.width-200)+'px';t.style.top=(y+14)+'px';t.style.display='block'});
+  $('#flMap').addEventListener('mouseleave',()=>{$('#flTip').style.display='none'});
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if($('#s-flota').classList.contains('on'))flDraw()},150)});
+  setInterval(()=>{if($('#s-flota').classList.contains('on')&&!document.hidden)flCargar()},10*60e3)}
 function flShow(){flInit();if(FL.d)flDraw();flCargar()}
 
 /* ---------------- arranque ---------------- */
