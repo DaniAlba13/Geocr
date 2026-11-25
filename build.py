@@ -14,6 +14,7 @@ rep = {'__NAXENGINE__': open(s('nax_engine.js'), encoding='utf-8').read(), '__SH
        '__RIEGO__': open(s('riego.js'), encoding='utf-8').read(),
        '__FLOTAJS__': open(s('flota.js'), encoding='utf-8').read(),
        '__AVANCEJS__': open(s('avance.js'), encoding='utf-8').read(),
+       '__HOMEJS__': open(s('home.js'), encoding='utf-8').read(),
        '__SUELOSJS__': open(s('suelos.js'), encoding='utf-8').read().replace('__SUELOS__', open(s('suelos.json'), encoding='utf-8').read()),
        '__CAMPO__': open(s('campo.json'), encoding='utf-8').read().replace('</', '<\\/')}
 for k, v in rep.items():
