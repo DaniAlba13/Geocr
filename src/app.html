@@ -422,6 +422,7 @@ body.splashing{overflow:hidden}
 .imctl button{min-width:32px;height:32px;border:1px solid #CFD8E3;background:#fff;border-radius:6px;font:700 17px/1 Inter,Arial;color:var(--navy);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 8px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .imctl button:hover{background:#EEF4FB}.imctl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .imctl button.sat{font-size:12px;margin-top:4px}.imctl button.sat.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.imq{position:absolute;top:8px;left:8px;z-index:3;width:min(300px,calc(100% - 140px))}.imq input{width:100%;height:34px;border:1px solid #CFD8E3;border-radius:8px;padding:0 10px 0 32px;font:500 13px Inter,Arial;color:var(--navy);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7785' stroke-width='2.2'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") no-repeat 9px center/16px;box-shadow:0 1px 3px rgba(0,0,0,.15)}.imq input.err{border-color:#D32F2F}.imq-op{display:flex;flex-direction:column;gap:4px;margin-top:4px;align-items:flex-start}.imq-op button{height:28px;padding:0 10px;border:1px solid #CFD8E3;background:#fff;border-radius:6px;font:600 12px Inter,Arial;color:var(--navy);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.12)}.imq-op button:hover{background:#EEF4FB}
 .imatt{position:absolute;right:6px;bottom:4px;z-index:3;font-size:10px;color:#fff;background:rgba(0,0,0,.45);padding:1px 6px;border-radius:3px;pointer-events:none}
 
 /* ---- Flota John Deere (tablero estilo Power BI) ---- */
@@ -1058,7 +1059,7 @@ body.splashing{overflow:hidden}
     </div>
     <div class="fl-kpis av-kpis" id="avKpis"></div>
     <div class="fl-g1">
-      <div class="fl-c av-mapc"><div class="fl-ch"><h2>Mapa de avance</h2><span class="fl-cs">clic en una pieza para ver su detalle · rueda del mouse para acercar</span></div>
+      <div class="fl-c av-mapc"><div class="fl-ch"><h2>Mapa de avance</h2><span class="fl-cs">clic en una pieza para ver su detalle · Ctrl + rueda o botones para acercar</span></div>
         <div class="mapwrap" style="border:0;background:#0F2338;border-radius:10px;overflow:hidden"><canvas class="map" id="avMap"></canvas><div class="tip" id="avTip"></div></div>
         <div class="av-tl"><button class="fl-sync" id="avPlay">▶ Reproducir zafra</button><input type="range" id="avT" min="0" max="0" value="0" step="1"><span class="av-f" id="avFecha">Hoy</span></div>
         <div class="fl-lgh av-lg"><span><i style="background:#C6F432;box-shadow:0 0 8px #C6F432"></i>Terminada en los últimos 3 días</span><span><i style="background:#43A047"></i>Terminada hace 4–14 días</span><span><i style="background:#1B5E20"></i>Terminada hace más de 14 días</span><span><i style="background:#FF9F1C;box-shadow:0 0 8px #FF9F1C"></i>En cosecha</span><span><i style="background:#294A6B"></i>Por cosechar</span><span><i style="background:#fff;border:2px solid #FF9F1C;border-radius:2px"></i>Cosechadora</span></div></div>
