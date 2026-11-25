@@ -507,6 +507,29 @@ body.splashing{overflow:hidden}
 .fl-big{font-size:34px;font-weight:800;color:#0E2A47;letter-spacing:-.02em}.fl-big small{font-size:14px;color:#8794A3;font-weight:700}.fl-cl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:12.5px;margin-top:10px;color:#5B6673}.fl-cl b{color:#0E2A47;text-align:right}
 .fl-hm{display:grid;grid-template-columns:34px repeat(24,1fr);gap:2px;font-size:9.5px;color:#8794A3}.fl-hm i{display:block;height:17px;border-radius:3px;background:#EEF2F6}.fl-hm span{display:flex;align-items:center}.fl-hm em{font-style:normal;text-align:center}
 @media(max-width:1100px){.fl-g3{grid-template-columns:1fr}}
+
+/* ---- Flota: tema oscuro tipo sala de control ---- */
+#s-flota{background:#0B1622;color:#DCE6F0}
+#s-flota .fl-head{background:linear-gradient(120deg,#0F2236,#13304D 70%,#0D3A63);border:1px solid #1E3550}
+#s-flota .fl-c,#s-flota .fl-det{background:#111F2E;border:1px solid #1E3247;color:#DCE6F0}
+#s-flota .fl-ch h2,#s-flota .fl-dh h3{color:#F1F6FB}#s-flota .fl-cs,#s-flota .fl-hint,#s-flota .fl-empty,#s-flota .note{color:#7F95AB}
+#s-flota svg text{fill:#8EA3B8}#s-flota svg line{stroke:rgba(255,255,255,.07)}#s-flota .fl-dn text:first-of-type{fill:#fff}
+#s-flota .fl-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.1fr);gap:12px;margin-bottom:12px}
+#s-flota .fl-kpis{grid-template-columns:1fr;margin:0;gap:10px}
+#s-flota .fl-k{background:linear-gradient(135deg,#0F5C57,#11766B);border:0;min-height:0;padding:12px 16px;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px}
+#s-flota .fl-k::before{display:none}#s-flota .fl-k.k2{background:linear-gradient(135deg,#124A7A,#1666A8)}#s-flota .fl-k.k3{background:linear-gradient(135deg,#3E2F78,#5A43A6)}
+#s-flota .fl-kt{color:#BFEDE5;grid-column:1/-1}#s-flota .fl-k.k2 .fl-kt{color:#BFD9F5}#s-flota .fl-k.k3 .fl-kt{color:#D9D0F7}#s-flota .fl-kv{color:#fff;font-size:30px}#s-flota .fl-kv small{color:rgba(255,255,255,.6)}#s-flota .fl-ks{color:rgba(255,255,255,.78);grid-column:1/-1}
+#s-flota .fl-sp{grid-column:1/-1}#s-flota .fl-sp polyline:last-child{stroke:#fff}#s-flota .fl-sp polyline:first-child{fill:rgba(255,255,255,.14)}
+#s-flota .fl-dl.up{color:#7CF2B0}#s-flota .fl-dl.dn{color:#FFB4B4}
+.fl-gc{display:flex;flex-direction:column}#flGauge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fl-gx{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:6px}.fl-gx div{background:#0B1622;border:1px solid #1E3247;border-radius:10px;padding:10px 12px}.fl-gx small{display:block;font-size:11px;color:#7F95AB;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.fl-gx b{font-size:22px;color:#fff}
+#s-flota .fl-lg button{color:#DCE6F0}#s-flota .fl-lg button:hover,#s-flota .fl-hb:hover,#s-flota .fl-tr:hover,#s-flota .fl-tr.sel,#s-flota .fl-al:hover{background:#18293B}#s-flota .fl-lg b,#s-flota .fl-hb b,#s-flota .fl-tv,#s-flota .fl-tl b,#s-flota .fl-dk b,#s-flota .fl-big,#s-flota .fl-cl b{color:#fff}
+#s-flota .fl-hb{color:#DCE6F0}#s-flota .fl-hb i,#s-flota .fl-tb,#s-flota .fl-tq{background:#1B2D40}#s-flota .fl-hb em{background:linear-gradient(90deg,#14B8A6,#38BDF8)}#s-flota .fl-hb2 em.r{background:#F2A900}#s-flota .fl-tn{background:#1B2D40;color:#fff}
+#s-flota .fl-al{border-bottom-color:#1B2D40}#s-flota .fl-al b{color:#F1F6FB}#s-flota .fl-dk div{background:#0B1622}#s-flota .fl-x{background:#1B2D40;color:#fff}
+#s-flota .fl-t th{background:#0B1622;color:#9FB3C8;border-bottom:1px solid #1E3247}#s-flota .fl-t td{border-bottom-color:#1B2D40;color:#C9D6E3}#s-flota .fl-t tbody tr:nth-child(even){background:#0F1C2A}#s-flota .fl-t tbody tr:hover{background:#18293B}#s-flota .fl-t tbody tr.sel{background:#1A3A5C}#s-flota .fl-t td b{color:#fff}
+#s-flota .fl-pill{background:color-mix(in srgb,var(--c) 22%,#111F2E)}#s-flota .fl-hm i[style*="#EEF2F6"]{background:#1B2D40!important}#s-flota .fl-cfg input{background:#0B1622;border-color:#1E3247;color:#fff}#s-flota .fl-gear{background:#1B2D40;border-color:#2A425A;color:#fff}
+#s-flota .fl-chip{background:#12375A;border-color:#1E5A8F;color:#BFD9F5}#s-flota .fl-badge{background:#38BDF8;color:#0B1622}#s-flota .fl-lgh{color:#8EA3B8}#s-flota .fl-cl{color:#9FB3C8}#s-flota a{color:#7DD3FC}
+@media(max-width:1100px){#s-flota .fl-top{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="splashing">
@@ -1049,13 +1072,14 @@ body.splashing{overflow:hidden}
       </div>
     </div>
     <div class="fl-act" id="flAct"></div>
-    <div class="fl-kpis" id="flKpis"></div>
+    <div class="fl-top">
+      <div class="fl-kpis" id="flKpis"></div>
+      <div class="fl-c fl-gc"><div class="fl-ch"><h2>Utilización de la flota</h2><span class="fl-cs" id="flGs"></span></div><div id="flGauge"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Estado de la flota</h2></div><div class="fl-donut" id="flEst"></div></div>
+    </div>
     <div class="fl-g1">
       <div class="fl-c"><div class="fl-ch"><h2>Horas de motor por día</h2><span class="fl-cs">trabajando y en ralentí · todas las máquinas filtradas</span></div><div id="flDia"></div></div>
-      <div class="fl-col2">
-        <div class="fl-c"><div class="fl-ch"><h2>Estado de la flota</h2></div><div class="fl-donut" id="flEst"></div></div>
-        <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2><span class="fl-cs">según su última posición</span></div><div id="flDiv"></div></div>
-      </div>
+      <div class="fl-c"><div class="fl-ch"><h2>Máquinas por división</h2><span class="fl-cs">según su última posición</span></div><div id="flDiv"></div></div>
     </div>
     <div class="fl-det" id="flDet" hidden></div>
     <div class="fl-g2">

@@ -41,7 +41,9 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
     ['Promedio diario por máquina',md?fmt(A.h/md,1)+' h':'–',`horas de motor en los días que trabajó · ${fmt(act7)} máquinas trabajaron`,''],
     ['Ralentí',A.h?fmt(A.i/A.h*100,0)+' %':'–','motor encendido sin trabajar',spark('ralenti')],
     ['Combustible',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'según telemetría',spark('comb')]];
-  $('#flKpis').innerHTML=K.map(([t,v,s,g],i)=>`<div class="fl-k${i===3&&A.h&&A.i/A.h>.25?' warn':''}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
+  $('#flKpis').innerHTML=K.slice(0,3).map(([t,v,s,g],i)=>`<div class="fl-k k${i+1}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
+  {const tot=A.R.length,w=A.R.filter(r=>r.horas>0).length,u=tot?w/tot*100:null;$('#flGs').textContent=FL.per===1?'hoy':`últimos ${FL.per} días`;
+    $('#flGauge').innerHTML=flGauge(u,tot?`${fmt(w)} de ${fmt(tot)} días-máquina con horas`:'se calcula con las lecturas diarias')+`<div class="fl-gx"><div><small>Ralentí</small><b style="color:${A.h&&A.i/A.h>.3?'#FF8A8A':A.h&&A.i/A.h>.2?'#FFD166':'#7CF2B0'}">${A.h?fmt(A.i/A.h*100,0)+' %':'–'}</b></div><div><small>Combustible</small><b>${A.c?fmt(A.c,0)+' L':'–'}</b></div></div>`}
   const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
   flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
   const cnt=(k,fn)=>{const g=new Map();D.maq.filter(m=>flPasa(m,k)).forEach(m=>{const v=fn(m);g.set(v,(g.get(v)||0)+1)});return[...g.entries()].sort((a,b)=>b[1]-a[1])};
@@ -66,6 +68,12 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   $$('#flAl .fl-al').forEach(e=>e.onclick=()=>flSel(e.dataset.id));
   flExtra(M,ids,A,pm,byId);flTabla(M,pm);flDet()}
 /* ---------- visuales SVG ---------- */
+function flGauge(v,sub){const W=260,H=160,cx=130,cy=138,R=104,a=t=>Math.PI*(1-t),P=(r,t)=>`${(cx+r*Math.cos(a(t))).toFixed(1)},${(cy-r*Math.sin(a(t))).toFixed(1)}`;
+  const seg=(t0,t1,c)=>`<path d="M${P(R,t0)} A${R},${R} 0 0 1 ${P(R,t1)}" stroke="${c}" stroke-width="20" fill="none"/>`;
+  const C=[['#E5484D',0,.2],['#F97316',.2,.4],['#F2A900',.4,.6],['#A3E635',.6,.8],['#22C55E',.8,1]];let h=C.map(([c,a0,a1])=>seg(a0+.004,a1-.004,c)).join('');
+  for(let i=0;i<=10;i++){const t=i/10;h+=`<line x1="${P(R-16,t).split(',')[0]}" y1="${P(R-16,t).split(',')[1]}" x2="${P(R-22,t).split(',')[0]}" y2="${P(R-22,t).split(',')[1]}" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>`}
+  if(v!=null){const t=Math.max(0,Math.min(1,v/100));h+=`<line x1="${cx}" y1="${cy}" x2="${P(R-30,t).split(',')[0]}" y2="${P(R-30,t).split(',')[1]}" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="7" fill="#fff"/>`}
+  return`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:300px">${h}</svg><div style="font-size:44px;font-weight:800;color:#fff;line-height:1;margin-top:-8px">${v==null?'–':fmt(v,0)+'%'}</div><div style="font-size:12px;color:#8EA3B8;margin-top:4px">${sub}</div>`}
 function flSpark(v){const W=120,H=30,mx=Math.max(...v,1e-9);if(!v.some(x=>x>0))return'';const p=v.map((x,i)=>`${(i/(v.length-1)*W).toFixed(1)},${(H-2-x/mx*(H-6)).toFixed(1)}`).join(' ');
   return`<svg class="fl-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="0,${H} ${p} ${W},${H}" fill="rgba(0,112,201,.12)" stroke="none"/><polyline points="${p}" fill="none" stroke="#0070C9" stroke-width="1.6"/></svg>`}
 function flDonut(el,items,S,on,c,sub){const tot=items.reduce((t,x)=>t+x[1],0)||1,R1=74,R0=50,cx=86,cy=86;let a0=-Math.PI/2,h='';
@@ -86,9 +94,9 @@ function flCols(el,dd){const W=Math.max(el.clientWidth,320),H=230,L=40,B=28,T=14
 function flComb(el,dc){const W=Math.max(el.clientWidth,320),H=210,L=46,R=40,B=28,T=14,mx=Math.max(...dc.map(d=>d.c),1),lh=dc.map(d=>d.h?d.c/d.h:null),mxl=Math.max(...lh.filter(x=>x!=null),1),bw=(W-L-R)/Math.max(dc.length,1),y=v=>H-B-(H-B-T)*v/mx,yl=v=>H-B-(H-B-T)*v/(mxl*1.15);let h='';
   niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
   dc.forEach((d,i)=>{const x=L+i*bw+3,w=Math.max(bw-6,2);h+=`<rect x="${x}" y="${y(d.c)}" width="${w}" height="${(H-B-T)*d.c/mx}" rx="2" fill="#1F9D55"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.c,0)} L${lh[i]!=null?' · '+fmt(lh[i],1)+' L/h':''}</title></rect>`;if(dc.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
-  const pl=lh.map((v,i)=>v==null?null:`${L+i*bw+bw/2},${yl(v)}`).filter(Boolean);if(pl.length>1)h+=`<polyline points="${pl.join(' ')}" fill="none" stroke="#0E2A47" stroke-width="2"/>`+pl.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.6" fill="#0E2A47"/>`).join('');
+  const pl=lh.map((v,i)=>v==null?null:`${L+i*bw+bw/2},${yl(v)}`).filter(Boolean);if(pl.length>1)h+=`<polyline points="${pl.join(' ')}" fill="none" stroke="#FFD166" stroke-width="2"/>`+pl.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.6" fill="#FFD166"/>`).join('');
   if(!dc.some(d=>d.c>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">El consumo diario aparece cuando la telemetría reporta combustible usado</text>`;
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#1F9D55"></i>Litros por día</span><span><i style="background:#0E2A47"></i>Litros por hora de motor</span></div>`}
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#1F9D55"></i>Litros por día</span><span><i style="background:#FFD166"></i>Litros por hora de motor</span></div>`}
 /* ---------- utilización, horario, costo del ralentí, servicio y paradas ---------- */
 function flExtra(M,ids,A,pm,byId){const D=FL.d,hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10);
   /* utilización diaria: máquinas con horas / máquinas con lectura ese día */
