@@ -433,6 +433,7 @@ body.splashing{overflow:hidden}
 .fl-st{font-size:12.5px;color:#C9DBEE;display:flex;align-items:center;gap:8px}.fl-err{color:#FFB4B4;font-weight:600}
 .fl-live{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 0 rgba(74,222,128,.7);animation:flp 2s infinite;display:inline-block}@keyframes flp{70%{box-shadow:0 0 0 8px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
 .fl-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fl-ctl input{height:36px;width:240px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;padding:0 12px;font:inherit;font-size:13px}.fl-ctl input::placeholder{color:#B9CDE2}
+.fl-q{position:relative;display:inline-flex;width:240px}.fl-q input{padding-right:34px}.fl-q button{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:6px;background:rgba(255,255,255,.16);color:#fff;font-size:13px;cursor:pointer}.fl-q button:hover{background:rgba(255,255,255,.3)}.fl-q button[hidden]{display:none}
 .fl-seg{display:flex;background:rgba(255,255,255,.1);border-radius:8px;padding:3px}.fl-seg button{border:0;background:transparent;color:#C9DBEE;font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:6px;cursor:pointer}.fl-seg button.on{background:#fff;color:#0E2A47}
 .fl-sync{height:36px;border:0;border-radius:8px;background:#fff;color:#0E2A47;font:inherit;font-weight:700;font-size:13px;padding:0 14px;cursor:pointer}.fl-sync.spin{opacity:.7}.fl-sync:hover{background:#E3EEF8}
 .fl-act{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:30px;margin-bottom:10px}.fl-hint{font-size:12px;color:#6B7785}
@@ -465,7 +466,7 @@ body.splashing{overflow:hidden}
 .fl-dh{display:flex;justify-content:space-between;gap:10px}.fl-dh h3{margin:6px 0 2px;font-size:20px;color:#0E2A47}.fl-dh small{color:#6B7785}.fl-x{border:0;background:#EEF2F6;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;color:#0E2A47}
 .fl-dk{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}.fl-dk div{background:#F4F7FA;border-radius:10px;padding:10px 12px}.fl-dk small{display:block;font-size:11px;color:#6B7785;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-dk b{font-size:20px;color:#0E2A47}
 @media(max-width:1100px){.fl-kpis{grid-template-columns:repeat(3,1fr)}.fl-g1,.fl-g2{grid-template-columns:1fr}.fl-dk{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:640px){.fl-kpis{grid-template-columns:repeat(2,1fr)}#s-flota{margin:-16px -12px 0;padding:14px 10px}.fl-ctl input{width:100%}.fl-dk{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.fl-kpis{grid-template-columns:repeat(2,1fr)}#s-flota{margin:-16px -12px 0;padding:14px 10px}.fl-ctl input,.fl-q{width:100%}.fl-dk{grid-template-columns:repeat(2,1fr)}}
 
 #s-avance{background:#EEF2F6;margin:-8px -22px 0;padding:16px 22px 24px}.av-kpis{grid-template-columns:repeat(4,1fr)}
 .av-tl{display:flex;align-items:center;gap:12px;margin-top:10px}.av-tl input{flex:1;accent-color:#43A047}.av-tl .fl-sync{background:#0E2A47;color:#fff}.av-f{min-width:84px;text-align:right;font-weight:800;color:#0E2A47}
@@ -1078,7 +1079,7 @@ body.splashing{overflow:hidden}
       <div><div class="fl-eyebrow">Cosecha · Telemetría John Deere</div><h1>Flota John Deere</h1><div class="fl-st" id="flSt"></div></div>
       <div class="fl-ctl">
         <div class="fl-seg" id="flPer"><button data-d="1">Hoy</button><button data-d="7" class="on">7 días</button><button data-d="30">30 días</button></div>
-        <input type="text" id="flQ" placeholder="Buscar máquina, modelo o serie">
+        <span class="fl-q"><input type="text" id="flQ" placeholder="Buscar máquina, modelo o serie" aria-label="Buscar máquina"><button type="button" id="flQx" aria-label="Quitar búsqueda" title="Quitar búsqueda" hidden>✕</button></span>
         <button class="fl-sync" id="flSync" title="Traer ahora los datos de John Deere">⟳ Sincronizar</button>
       </div>
     </div>
@@ -3644,9 +3645,9 @@ const flDelta=(v,p)=>!p||!isFinite(v)?'':`<span class="fl-dl ${v>=p?'up':'dn'}">
 function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const D=FL.d,E=D.estado;
   $('#flSt').innerHTML=E?(E.ok?`<i class="fl-live"></i>Actualizado ${flFecha(new Date(E.upd))} · ${fmt(E.n_iso)} con telemetría · ${fmt(E.n_eq)} equipos en Operations Center`:`<span class="fl-err">Falló la última sincronización: ${xesc(E.error||'')}</span>`):'Sin datos todavía: dale "Sincronizar".';
   const M=D.maq.filter(m=>flPasa(m)),ids=new Set(M.map(m=>m.id)),A=flAgg(ids,flRango(0)),P=flAgg(ids,flRango(1));
-  const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]));
+  const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]),FL.q&&FL.q.trim()?[['q','Búsqueda: '+FL.q.trim()]]:[]);$('#flQx').hidden=!FL.q;
   $('#flAct').innerHTML=act.length?act.map(([k,v])=>`<button class="fl-chip on" data-k="${k}" data-v="${xesc(v)}">${xesc(v)} ✕</button>`).join('')+`<button class="fl-clr" id="flClr">Limpiar filtros</button>`:'<span class="fl-hint">Haz clic en cualquier gráfico para filtrar todo el tablero.</span>';
-  $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>flTog(b.dataset.k,b.dataset.v));if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
+  $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>{if(b.dataset.k==='q'){FL.q='';$('#flQ').value='';flDraw()}else flTog(b.dataset.k,b.dataset.v)});if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
   const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size,md=A.R.filter(r=>r.horas>0).length;
   const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(r[k]||0),0))}return flSpark(L)};
   const K=[['Máquinas reportando',`${fmt(rep)}<small> / ${fmt(M.length)}</small>`,`${fmt(M.filter(m=>flEst(m)==='Sin reportar').length)} sin reportar más de 24 h`,''],
@@ -3770,7 +3771,7 @@ function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);
     <div class="fl-dk"><div><small>Horas de motor</small><b>${flH(m.horas)}</b></div><div><small>Ralentí acumulado</small><b>${flH(m.ralenti)}</b></div><div><small>Tanque</small><b>${m.comb_pct==null?'–':fmt(m.comb_pct,0)+' %'}</b></div><div><small>DEF</small><b>${m.def_pct==null?'–':fmt(m.def_pct,0)+' %'}</b></div><div><small>Combustible acumulado</small><b>${m.comb==null?'–':fmt(m.comb,0)+' '+(m.comb_u||'L')}</b></div><div><small>Última señal</small><b style="font-size:14px">${flFecha(flSenal(m))}</b></div></div>
     <div id="flDch"></div>`;flCols($('#flDch'),dd);$('#flDx').onclick=()=>{FL.sel=null;flDraw()}}
 function flInit(){if(flInit.ok)return;flInit.ok=true;
-  $('#flQ').oninput=()=>{FL.q=$('#flQ').value;flDraw()};
+  const flQset=v=>{$('#flQ').value=v;FL.q=v;$('#flQx').hidden=!v;flDraw()};$('#flQ').oninput=()=>flQset($('#flQ').value);$('#flQ').onkeydown=e=>{if(e.key==='Escape')flQset('')};$('#flQx').onclick=()=>{flQset('');$('#flQ').focus()};
   $('#flCfgB').onclick=()=>{$('#flCfg').hidden=!$('#flCfg').hidden};$('#flPr').value=FL_CFG.pr||'';$('#flIdl').value=FL_CFG.idl;$('#flSrv').value=FL_CFG.srv;
   ['flPr','flIdl','flSrv'].forEach(id=>$('#'+id).onchange=()=>{const v=x=>{x=parseFloat(String(x).replace(',','.'));return isFinite(x)&&x>0?x:null};FL_CFG.pr=v($('#flPr').value);FL_CFG.idl=v($('#flIdl').value)||3;FL_CFG.srv=v($('#flSrv').value)||250;
     try{localStorage.setItem('agroap-fl-cfg',JSON.stringify(FL_CFG))}catch(e){}flDraw()});

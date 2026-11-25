@@ -31,9 +31,9 @@ const flDelta=(v,p)=>!p||!isFinite(v)?'':`<span class="fl-dl ${v>=p?'up':'dn'}">
 function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const D=FL.d,E=D.estado;
   $('#flSt').innerHTML=E?(E.ok?`<i class="fl-live"></i>Actualizado ${flFecha(new Date(E.upd))} · ${fmt(E.n_iso)} con telemetría · ${fmt(E.n_eq)} equipos en Operations Center`:`<span class="fl-err">Falló la última sincronización: ${xesc(E.error||'')}</span>`):'Sin datos todavía: dale "Sincronizar".';
   const M=D.maq.filter(m=>flPasa(m)),ids=new Set(M.map(m=>m.id)),A=flAgg(ids,flRango(0)),P=flAgg(ids,flRango(1));
-  const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]));
+  const act=[...FL.f.div].map(v=>['div',v]).concat([...FL.f.tipo].map(v=>['tipo',v]),[...FL.f.est].map(v=>['est',v]),FL.q&&FL.q.trim()?[['q','Búsqueda: '+FL.q.trim()]]:[]);$('#flQx').hidden=!FL.q;
   $('#flAct').innerHTML=act.length?act.map(([k,v])=>`<button class="fl-chip on" data-k="${k}" data-v="${xesc(v)}">${xesc(v)} ✕</button>`).join('')+`<button class="fl-clr" id="flClr">Limpiar filtros</button>`:'<span class="fl-hint">Haz clic en cualquier gráfico para filtrar todo el tablero.</span>';
-  $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>flTog(b.dataset.k,b.dataset.v));if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
+  $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>{if(b.dataset.k==='q'){FL.q='';$('#flQ').value='';flDraw()}else flTog(b.dataset.k,b.dataset.v)});if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
   const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size,md=A.R.filter(r=>r.horas>0).length;
   const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(r[k]||0),0))}return flSpark(L)};
   const K=[['Máquinas reportando',`${fmt(rep)}<small> / ${fmt(M.length)}</small>`,`${fmt(M.filter(m=>flEst(m)==='Sin reportar').length)} sin reportar más de 24 h`,''],
@@ -157,7 +157,7 @@ function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);
     <div class="fl-dk"><div><small>Horas de motor</small><b>${flH(m.horas)}</b></div><div><small>Ralentí acumulado</small><b>${flH(m.ralenti)}</b></div><div><small>Tanque</small><b>${m.comb_pct==null?'–':fmt(m.comb_pct,0)+' %'}</b></div><div><small>DEF</small><b>${m.def_pct==null?'–':fmt(m.def_pct,0)+' %'}</b></div><div><small>Combustible acumulado</small><b>${m.comb==null?'–':fmt(m.comb,0)+' '+(m.comb_u||'L')}</b></div><div><small>Última señal</small><b style="font-size:14px">${flFecha(flSenal(m))}</b></div></div>
     <div id="flDch"></div>`;flCols($('#flDch'),dd);$('#flDx').onclick=()=>{FL.sel=null;flDraw()}}
 function flInit(){if(flInit.ok)return;flInit.ok=true;
-  $('#flQ').oninput=()=>{FL.q=$('#flQ').value;flDraw()};
+  const flQset=v=>{$('#flQ').value=v;FL.q=v;$('#flQx').hidden=!v;flDraw()};$('#flQ').oninput=()=>flQset($('#flQ').value);$('#flQ').onkeydown=e=>{if(e.key==='Escape')flQset('')};$('#flQx').onclick=()=>{flQset('');$('#flQ').focus()};
   $('#flCfgB').onclick=()=>{$('#flCfg').hidden=!$('#flCfg').hidden};$('#flPr').value=FL_CFG.pr||'';$('#flIdl').value=FL_CFG.idl;$('#flSrv').value=FL_CFG.srv;
   ['flPr','flIdl','flSrv'].forEach(id=>$('#'+id).onchange=()=>{const v=x=>{x=parseFloat(String(x).replace(',','.'));return isFinite(x)&&x>0?x:null};FL_CFG.pr=v($('#flPr').value);FL_CFG.idl=v($('#flIdl').value)||3;FL_CFG.srv=v($('#flSrv').value)||250;
     try{localStorage.setItem('agroap-fl-cfg',JSON.stringify(FL_CFG))}catch(e){}flDraw()});
