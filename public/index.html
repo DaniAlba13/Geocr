@@ -3410,8 +3410,12 @@ async function suLeerExcel(file){const sh=await readTable(file);const hoja=sh.fi
 const FL={d:null,tipo:'',per:7,q:'',zm:{z:1},view:null,cargando:false};
 const flHoras=h=>h==null?'–':fmt(h,1);
 const flSenal=m=>{const f=m.f_pos||m.f_horas||m.f_motor;return f?new Date(f):null};
-const flEstado=m=>{const f=flSenal(m);if(m.sin_iso||!f)return['Sin telemetría','#9AA5B1'];const h=(Date.now()-f)/36e5;if(h>24)return['Sin reportar > 24 h','#D32F2F'];return m.motor?['Motor encendido','#2E9E44']:['Motor apagado','#0070C9']};
-const flTipo=m=>m.tipo||(/CH\d|COSECH/i.test((m.modelo||'')+' '+(m.nombre||''))?'Cosechadora':/^\d+[A-Z]/.test(m.modelo||'')?'Tractor':'Otro');
+const flEstado=m=>{const f=flSenal(m);if(m.sin_iso||!f)return['Sin telemetría','#9AA5B1'];const h=(Date.now()-f)/36e5;if(h>24)return['Sin reportar > 24 h','#D32F2F'];return m.motor===true?['Motor encendido','#2E9E44']:m.motor===false?['Motor apagado','#0070C9']:['Reportando','#0070C9']};
+/* tipo corto en español (Operations Center trae p. ej. "Two-wheel Drive Tractors - 90 Hp To Under 140 Hp") */
+const flTipo=m=>{const t=String(m.tipo||''),hp=(t.match(/(\d+)\s*Hp\s*(?:To\s*Under\s*(\d+)|And\s*Above)/i)||[]),r=hp[1]?(hp[2]?` ${hp[1]}–${hp[2]} HP`:` ≥ ${hp[1]} HP`):'';
+  if(/combine|harvest|cosech/i.test(t+' '+(m.modelo||''))||/^CH\d/i.test(m.modelo||''))return'Cosechadora';if(/sprayer|pulveri|fumig/i.test(t))return'Fumigadora';
+  if(/tractor/i.test(t))return(/four|4wd|track/i.test(t)?'Tractor 4WD':'Tractor')+r;if(/loader|cargador/i.test(t))return'Cargador';if(/excavat/i.test(t))return'Excavadora';if(/grader|motonivel/i.test(t))return'Motoniveladora';
+  return t||(/^\d+[A-Z]/.test(m.modelo||'')?'Tractor':'Otro')};
 async function flCargar(){if(FL.cargando)return;FL.cargando=true;$('#flSt').textContent='Cargando…';
   try{const r=await fetch('/api/flota?dias=60',{cache:'no-store'});if(!r.ok)throw new Error(r.status===401?'Entra a la plataforma para ver la flota.':'No se pudo leer la flota ('+r.status+').');FL.d=await r.json();flDraw()}
   catch(e){$('#flSt').textContent=e.message;$('#flSt').className='status err'}finally{FL.cargando=false}}
@@ -3421,9 +3425,9 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const tipos=[...new Set(D.maq.map(flTipo))].sort();$('#flTipo').innerHTML='<option value="">Todos los tipos</option>'+tipos.map(t=>`<option${t===FL.tipo?' selected':''}>${xesc(t)}</option>`).join('');
   const M=flFiltro(),ids=new Set(M.map(m=>m.id)),desde=hoyISO().slice(0,10),lim=new Date(Date.now()-4*36e5-(FL.per-1)*864e5).toISOString().slice(0,10);
   const R=D.dia.filter(r=>ids.has(r.id)&&r.fecha>=lim),sum=(a,k)=>a.reduce((s,r)=>s+(r[k]||0),0),H=sum(R,'horas'),I=sum(R,'ralenti'),C=sum(R,'comb');
-  const rep=M.filter(m=>{const f=flSenal(m);return f&&Date.now()-f<864e5}).length,on=M.filter(m=>flEstado(m)[0]==='Motor encendido').length;
-  $('#flK1').textContent=fmt(M.length);$('#flK1s').textContent=`${fmt(rep)} reportando · ${fmt(on)} encendidas`;
-  $('#flK2').textContent=fmt(H,0);$('#flK2s').textContent=FL.per===1?'hoy':`últimos ${FL.per} días`;
+  const rep=M.filter(m=>{const f=flSenal(m);return f&&Date.now()-f<864e5}).length,on=M.filter(m=>flEstado(m)[0]==='Motor encendido').length,sinr=M.filter(m=>flEstado(m)[0]==='Sin reportar > 24 h').length,sint=M.filter(m=>flEstado(m)[0]==='Sin telemetría').length;
+  $('#flK1').textContent=fmt(M.length);$('#flK1s').textContent=`${fmt(rep)} reportando hoy · ${fmt(sinr)} sin reportar · ${fmt(sint)} sin telemetría`;
+  $('#flK2').textContent=fmt(H,0);$('#flK2s').textContent=(FL.per===1?'hoy':`últimos ${FL.per} días`)+(R.length&&!H?' · se calcula desde la 2.ª lectura':'');
   $('#flK3').textContent=H?fmt(I/H*100,0)+' %':'–';$('#flK3').style.color=H&&I/H>.3?'var(--red)':H&&I/H>.2?'#C77700':'';
   $('#flK4').textContent=C?fmt(C,0)+' L':'–';$('#flK4s').textContent=H&&C?fmt(C/H,1)+' L por hora de motor':'combustible usado';
   flMapa($('#flMap'),null);zoomable($('#flMap'),FL.zm,()=>flMapa($('#flMap'),null),()=>FL.view,()=>[]);
