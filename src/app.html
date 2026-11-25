@@ -500,6 +500,13 @@ body.splashing{overflow:hidden}
 @media(max-width:1200px){.hm-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:900px){.hm-hero{grid-template-columns:minmax(0,1fr)}.hm-l{padding:40px 18px 10px}.hm-r{min-height:320px}.hm-grid{grid-template-columns:1fr 1fr}.hm-live{margin-top:14px}}
 @media(max-width:560px){.hm-grid{grid-template-columns:1fr}.hm-stats{gap:20px}.hm-st b{font-size:24px}}
+
+.fl-g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fl-gear{border:1px solid #DCE3EA;background:#fff;border-radius:8px;font:inherit;font-size:12px;font-weight:700;color:#0E2A47;padding:5px 10px;cursor:pointer}
+.fl-cfg[hidden]{display:none}.fl-cfg{display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #EEF1F5}.fl-cfg label{font-size:11.5px;font-weight:700;color:#6B7785;display:grid;gap:4px}.fl-cfg input{height:32px;border:1px solid #DCE3EA;border-radius:6px;padding:0 10px;font:inherit;font-size:13px}
+.fl-big{font-size:34px;font-weight:800;color:#0E2A47;letter-spacing:-.02em}.fl-big small{font-size:14px;color:#8794A3;font-weight:700}.fl-cl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;font-size:12.5px;margin-top:10px;color:#5B6673}.fl-cl b{color:#0E2A47;text-align:right}
+.fl-hm{display:grid;grid-template-columns:34px repeat(24,1fr);gap:2px;font-size:9.5px;color:#8794A3}.fl-hm i{display:block;height:17px;border-radius:3px;background:#EEF2F6}.fl-hm span{display:flex;align-items:center}.fl-hm em{font-style:normal;text-align:center}
+@media(max-width:1100px){.fl-g3{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="splashing">
@@ -1058,6 +1065,16 @@ body.splashing{overflow:hidden}
     <div class="fl-g2">
       <div class="fl-c"><div class="fl-ch"><h2>Horas y ralentí por tipo de máquina</h2><span class="fl-cs">clic para filtrar</span></div><div id="flTipoCh"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Alertas <span class="fl-badge" id="flAlN">0</span></h2></div><div class="fl-als" id="flAl"></div></div>
+    </div>
+    <div class="fl-g2">
+      <div class="fl-c"><div class="fl-ch"><h2>Utilización de la flota</h2><span class="fl-cs">% de las máquinas que reportan y trabajaron cada día</span></div><div id="flUti"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>¿A qué hora trabaja la flota?</h2><span class="fl-cs">horas de motor por día de la semana y hora · últimos 14 días</span></div><div id="flHeat"></div></div>
+    </div>
+    <div class="fl-g3">
+      <div class="fl-c"><div class="fl-ch"><h2>Costo del ralentí</h2><button class="fl-gear" id="flCfgB" title="Ajustar precio y consumo">⚙ Ajustes</button></div><div id="flCost"></div>
+        <div class="fl-cfg" id="flCfg" hidden><label>Precio del gasoil (RD$ por galón)<input type="text" id="flPr" inputmode="decimal" placeholder="ej. 224"></label><label>Consumo en ralentí (litros por hora)<input type="text" id="flIdl" inputmode="decimal"></label><label>Intervalo de servicio (horas de motor)<input type="text" id="flSrv" inputmode="decimal"></label></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Próximo servicio <span class="fl-badge" id="flMtN">0</span></h2><span class="fl-cs" id="flMtS"></span></div><div class="fl-als" id="flMt"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Máquinas paradas <span class="fl-badge" id="flPaN">0</span></h2><span class="fl-cs">reportan pero sin horas en 3 días</span></div><div class="fl-als" id="flPa"></div></div>
     </div>
     <div class="fl-c"><div class="fl-ch"><h2>Máquinas <span class="fl-badge" id="flTn">0</span></h2><span class="fl-cs">clic en un encabezado para ordenar</span></div><div class="fl-tw"><table class="fl-t" id="flTbl"></table></div></div>
   </div>
