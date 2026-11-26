@@ -25,7 +25,9 @@ function flPasa(m,salvo){const F=FL.f,q=FL.q.toLowerCase();
   if(q&&![m.nombre,m.modelo,m.serie,m.pin,m.id,flTipo(m)].join(' ').toLowerCase().includes(q))return false;return true}
 const flTog=(k,v)=>{const S=FL.f[k];S.has(v)?S.delete(v):S.add(v);FL.sel=null;flDraw()};
 function flRango(off){const fin=Date.now()-4*36e5-off*FL.per*864e5,a=new Date(fin-(FL.per-1)*864e5).toISOString().slice(0,10),b=new Date(fin).toISOString().slice(0,10);return[a,b]}
-function flAgg(ids,[a,b]){const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha>=a&&r.fecha<=b),s=k=>R.reduce((t,r)=>t+(r[k]||0),0);return{R,h:s('horas'),i:s('ralenti'),c:s('comb')}}
+/* consumo del día: diferencia del acumulado de combustible; si la máquina no lo reporta, el 'usado en las últimas 24 h' de la telemetría */
+const flC=r=>r.comb>0?r.comb:(r.comb24>0?r.comb24:0);
+function flAgg(ids,[a,b]){const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha>=a&&r.fecha<=b),s=k=>R.reduce((t,r)=>t+(r[k]||0),0);return{R,h:s('horas'),i:s('ralenti'),c:R.reduce((t,r)=>t+flC(r),0)}}
 const flDelta=(v,p)=>!p||!isFinite(v)?'':`<span class="fl-dl ${v>=p?'up':'dn'}">${v>=p?'▲':'▼'} ${fmt(Math.abs(v-p)/p*100,0)} %</span>`;
 /* ---------- dibujo ---------- */
 function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const D=FL.d,E=D.estado;
@@ -35,7 +37,7 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   $('#flAct').innerHTML=act.length?act.map(([k,v])=>`<button class="fl-chip on" data-k="${k}" data-v="${xesc(v)}">${xesc(v)} ✕</button>`).join('')+`<button class="fl-clr" id="flClr">Limpiar filtros</button>`:'<span class="fl-hint">Haz clic en cualquier gráfico para filtrar todo el tablero.</span>';
   $$('#flAct .fl-chip').forEach(b=>b.onclick=()=>{if(b.dataset.k==='q'){FL.q='';$('#flQ').value='';flDraw()}else flTog(b.dataset.k,b.dataset.v)});if($('#flClr'))$('#flClr').onclick=()=>{Object.values(FL.f).forEach(S=>S.clear());FL.q='';$('#flQ').value='';flDraw()};
   const rep=M.filter(m=>['Encendida','Apagada','Reportando'].includes(flEst(m))).length,dias=FL.per,act7=new Set(A.R.filter(r=>r.horas>0).map(r=>r.id)).size,md=A.R.filter(r=>r.horas>0).length;
-  const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(r[k]||0),0))}return flSpark(L)};
+  const spark=k=>{const L=[];for(let i=13;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10);L.push(FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f).reduce((t,r)=>t+(k==='comb'?flC(r):(r[k]||0)),0))}return flSpark(L)};
   const K=[['Máquinas reportando',`${fmt(rep)}<small> / ${fmt(M.length)}</small>`,`${fmt(M.filter(m=>flEst(m)==='Sin reportar').length)} sin reportar más de 24 h`,''],
     ['Horas de motor',fmt(A.h,0),`${dias===1?'hoy':'últimos '+dias+' días'} ${flDelta(A.h,P.h)}`,spark('horas')],
     ['Promedio diario por máquina',md?fmt(A.h/md,1)+' h':'–',`horas de motor en los días que trabajó · ${fmt(act7)} máquinas trabajaron`,''],
@@ -43,7 +45,8 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
     ['Combustible',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'según telemetría',spark('comb')]];
   $('#flKpis').innerHTML=K.slice(0,3).map(([t,v,s,g],i)=>`<div class="fl-k k${i+1}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
   {const tot=A.R.length,w=A.R.filter(r=>r.horas>0).length,u=tot?w/tot*100:null;$('#flGs').textContent=FL.per===1?'hoy':`últimos ${FL.per} días`;
-    $('#flGauge').innerHTML=flGauge(u,tot?`${fmt(w)} de ${fmt(tot)} días-máquina con horas`:'se calcula con las lecturas diarias')+`<div class="fl-gx"><div><small>Ralentí</small><b style="color:${A.h&&A.i/A.h>.3?'#FF8A8A':A.h&&A.i/A.h>.2?'#FFD166':'#7CF2B0'}">${A.h?fmt(A.i/A.h*100,0)+' %':'–'}</b></div><div><small>Combustible</small><b>${A.c?fmt(A.c,0)+' L':'–'}</b></div></div>`}
+    $('#flGauge').innerHTML=flGauge(u,tot?`${fmt(w)} de ${fmt(tot)} días-máquina con horas`:'se calcula con las lecturas diarias')+`<div class="fl-gx"><div><small>Ralentí</small><b style="color:${A.h&&A.i/A.h>.3?'#FF8A8A':A.h&&A.i/A.h>.2?'#FFD166':'#7CF2B0'}">${A.h?fmt(A.i/A.h*100,0)+' %':'–'}</b></div><div><small>Combustible ${FL.per===1?'hoy':FL.per+' días'}</small><b>${A.c?fmt(A.c,0)+' L':'–'}</b></div>${(()=>{const hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10),pd=new Map();A.R.forEach(r=>pd.set(r.fecha,(pd.get(r.fecha)||0)+flC(r)));const fs=[...pd.keys()].filter(f=>pd.get(f)>0).sort(),ul=fs[fs.length-1],dm=fs.length?fs.reduce((t,f)=>t+pd.get(f),0)/fs.length:0;
+      return`<div><small>${ul&&ul!==hoy?'Consumo del '+ul.slice(8,10)+'/'+ul.slice(5,7):'Consumo de hoy'}</small><b>${ul?fmt(pd.get(ul),0)+' L':'–'}</b></div><div><small>Promedio diario</small><b>${fs.length?fmt(dm,0)+' L':'–'}</b><small style="text-transform:none;letter-spacing:0;font-weight:500;margin-top:2px">${fs.length?'en '+fs.length+(fs.length===1?' día':' días')+' con datos':'sin datos todavía'}</small></div>`})()}</div>`}
   const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
   flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
   const cnt=(k,fn)=>{const g=new Map();D.maq.filter(m=>flPasa(m,k)).forEach(m=>{const v=fn(m);g.set(v,(g.get(v)||0)+1)});return[...g.entries()].sort((a,b)=>b[1]-a[1])};
@@ -51,8 +54,8 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const nd=Math.max(14,FL.per),dd=[];for(let i=nd-1;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10),R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f);
     const h=R.reduce((t,r)=>t+(r.horas||0),0),ii=R.reduce((t,r)=>t+(r.ralenti||0),0);dd.push({f,t:Math.max(h-ii,0),i:ii,n:R.filter(r=>r.horas>0).length})}
   flCols($('#flDia'),dd);
-  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+(r.comb||0),0),h:d.t+d.i}});flComb($('#flComb'),dc);
-  const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=r.comb||0;pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
+  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+flC(r),0),h:d.t+d.i}});flComb($('#flComb'),dc);
+  const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=flC(r);pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
   {const g=new Map(),cn=new Map();D.maq.filter(m=>flPasa(m,'tipo')).forEach(m=>{const t=flTipo(m);cn.set(t,(cn.get(t)||0)+1)});
     FL.d.dia.forEach(r=>{const m=byId.get(r.id);if(!m||!flPasa(m,'tipo'))return;const[a,b]=flRango(0);if(r.fecha<a||r.fecha>b)return;const t=flTipo(m),o=g.get(t)||{h:0,i:0};o.h+=r.horas||0;o.i+=r.ralenti||0;g.set(t,o)});
     const L=[...cn.keys()].map(t=>[t,(g.get(t)||{h:0}).h,(g.get(t)||{i:0}).i,cn.get(t)]).sort((a,b)=>b[1]-a[1]||b[3]-a[3]).slice(0,10),mx=Math.max(...L.map(x=>x[1]),1);
