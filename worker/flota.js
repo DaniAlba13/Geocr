@@ -134,6 +134,7 @@ export async function rutaFlota(request, env, path) {
     const r = await env.DB.prepare('SELECT id,ts,lat,lon,horas FROM flota_pos WHERE ts >= ?1 ORDER BY id, ts').bind(new Date(Date.now() - d * 864e5).toISOString()).all();
     return J(r.results || []);
   }
+  if (path[1] === 'combustible') return diagComb(env);   // diagnóstico: qué dice John Deere del combustible de cada máquina
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
   const x = await datos(env, dias); return J({ estado: x.estado, maq: x.maq, dia: porDia(x.dia) });
@@ -148,4 +149,35 @@ export async function rutaPBI(request, env, url) {
   if (t === 'maquinas') return new Response(csv(x.maq, ['id', 'nombre', 'tipo', 'marca', 'modelo', 'anio', 'serie', 'pin', 'horas', 'ralenti', 'comb', 'comb_u', 'comb_pct', 'def_pct', 'motor', 'lat', 'lon', 'f_pos', 'f_horas', 'upd']), { headers: h });
   if (t === 'diario') return new Response(csv(porDia(x.dia), ['id', 'fecha', 'horas', 'ralenti', 'comb', 'comb24', 'horas_acum', 'lat', 'lon']), { headers: h });
   return new Response('Tablas: /pbi/maquinas.csv y /pbi/diario.csv', { status: 404 });
+}
+
+// ---- diagnóstico del combustible: lectura en vivo de John Deere + lo guardado por día ----
+async function diagComb(env) {
+  const e = v => String(v ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let url = aemp(env) + '/Fleet/1'; const filas = [], tags = new Map(); let err = '';
+  try {
+    for (let i = 0; i < 40 && url; i++) {
+      const r = await getJD(env, url, 'application/xml'); if (r.status !== 200) throw new Error('John Deere respondió ' + r.status);
+      const x = r.txt;
+      (x.match(/<(?:\w+:)?Equipment\b[\s\S]*?<\/(?:\w+:)?Equipment>/g) || []).forEach(b => {
+        [...b.matchAll(/<(?:\w+:)?(\w*Fuel\w*)\b/gi)].forEach(m => tags.set(m[1], (tags.get(m[1]) || 0) + 1));
+        const m = isoEquipo(b), fu = tag(b, 'FuelUsed'), f24 = tag(b, 'FuelUsedLast24');
+        filas.push({ id: clave(m.pin || m.serie || m.equipo), eq: m.equipo || m.modelo, modelo: m.modelo, horas: m.horas, f_horas: m.f_horas, comb: m.comb, u: m.comb_u, f_comb: m.f_comb,
+          c24: m.comb24, f24: fdt(f24), pct: m.comb_pct, crudo: ((fu ? fu.v : '') + (f24 ? ' | 24h: ' + f24.v : '')).replace(/\s+/g, ' ').slice(0, 300) });
+      });
+      const nx = [...x.matchAll(/<Links>([\s\S]*?)<\/Links>/g)].map(m => m[1]).find(l => /<rel>\s*next\s*<\/rel>/i.test(l)); url = nx ? txt(nx, 'href') : null;
+    }
+  } catch (x) { err = String(x.message || x); }
+  await tablas(env.DB);
+  const d = await env.DB.prepare('SELECT id,fecha,data FROM flota_dia WHERE fecha >= ?1 ORDER BY fecha').bind(new Date(Date.now() - 4 * 864e5).toISOString().slice(0, 10)).all();
+  const g = new Map(); (d.results || []).forEach(r => { const o = JSON.parse(r.data); if (!g.has(r.id)) g.set(r.id, []); g.get(r.id).push(`${r.fecha.slice(8, 10)}/${r.fecha.slice(5, 7)}: ${o.c_ini ?? '–'} → ${o.c_fin ?? '–'}${o.c24 != null ? ' (24h ' + o.c24 + ')' : ''} · ${o.n || 0} lect.`); });
+  const n = filas.length, nA = filas.filter(f => f.comb != null).length, n24 = filas.filter(f => f.c24 != null).length, nT = filas.filter(f => f.pct != null).length;
+  const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagnóstico combustible · AgroAP-CR</title>
+<style>body{font:13px/1.45 Inter,Arial,sans-serif;margin:16px;color:#0E2A47}h1{font-size:18px}table{border-collapse:collapse;width:100%;font-size:12px}td,th{border-bottom:1px solid #E1E8F0;padding:5px 6px;text-align:left;vertical-align:top}th{background:#F4F7FA}.k{display:inline-block;margin:0 8px 8px 0;padding:8px 12px;border-radius:8px;background:#EEF4FB}.k b{font-size:18px;display:block}code{font-size:11px;color:#555;word-break:break-all}.w{overflow-x:auto}</style>
+<h1>Diagnóstico de combustible (lectura en vivo de John Deere)</h1>${err ? `<p style="color:#C62828">Error: ${e(err)}</p>` : ''}
+<div><span class="k"><b>${n}</b>máquinas con telemetría</span><span class="k"><b>${nA}</b>envían combustible acumulado</span><span class="k"><b>${n24}</b>envían combustible últimas 24 h</span><span class="k"><b>${nT}</b>envían % de tanque</span></div>
+<p><b>Etiquetas de combustible encontradas en el XML:</b> ${[...tags].map(([k, v]) => e(k) + ' (' + v + ')').join(', ') || 'ninguna'}</p>
+<div class="w"><table><tr><th>Máquina</th><th>Horas</th><th>Comb. acumulado</th><th>Últimas 24 h</th><th>Tanque</th><th>Guardado por día (inicio → fin)</th><th>XML</th></tr>
+${filas.map(f => `<tr><td><b>${e(f.eq)}</b><br>${e(f.modelo)}</td><td>${e(f.horas)}<br><small>${e(f.f_horas)}</small></td><td>${f.comb == null ? '–' : e(f.comb) + ' ' + e(f.u)}<br><small>${e(f.f_comb)}</small></td><td>${f.c24 == null ? '–' : e(f.c24)}<br><small>${e(f.f24)}</small></td><td>${f.pct == null ? '–' : e(f.pct) + ' %'}</td><td>${(g.get(f.id) || []).map(e).join('<br>') || '–'}</td><td><code>${e(f.crudo) || '–'}</code></td></tr>`).join('')}</table></div>`;
+  return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
 }
