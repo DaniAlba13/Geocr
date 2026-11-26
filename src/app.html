@@ -524,6 +524,8 @@ body.splashing{overflow:hidden}
 #s-flota .fl-sp{grid-column:1/-1}#s-flota .fl-sp polyline:last-child{stroke:#fff}#s-flota .fl-sp polyline:first-child{fill:rgba(255,255,255,.14)}
 #s-flota .fl-dl.up{color:#7CF2B0}#s-flota .fl-dl.dn{color:#FFB4B4}
 .fl-gc{display:flex;flex-direction:column}#flGauge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fl-empty{display:flex;flex-direction:column;gap:8px;padding:22px 18px;border:1px dashed #2A4360;border-radius:12px;color:#B9CDE2;font-size:13px;line-height:1.5;margin-top:8px}.fl-empty>b{color:#fff;font-size:15px}
+.fl-nota{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:#8FA3B8}.fl-cres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 4px}.fl-cres div{background:#0B1622;border:1px solid #1E3247;border-radius:10px;padding:8px 10px}.fl-cres small{display:block;font-size:10.5px;color:#7F95AB;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-cres b{font-size:18px;color:#fff}
 .fl-gx{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:6px}.fl-gx div{background:#0B1622;border:1px solid #1E3247;border-radius:10px;padding:10px 12px}.fl-gx small{display:block;font-size:11px;color:#7F95AB;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.fl-gx b{font-size:22px;color:#fff}
 #s-flota .fl-lg button{color:#DCE6F0}#s-flota .fl-lg button:hover,#s-flota .fl-hb:hover,#s-flota .fl-tr:hover,#s-flota .fl-tr.sel,#s-flota .fl-al:hover{background:#18293B}#s-flota .fl-lg b,#s-flota .fl-hb b,#s-flota .fl-tv,#s-flota .fl-tl b,#s-flota .fl-dk b,#s-flota .fl-big,#s-flota .fl-cl b{color:#fff}
 #s-flota .fl-hb{color:#DCE6F0}#s-flota .fl-hb i,#s-flota .fl-tb,#s-flota .fl-tq{background:#1B2D40}#s-flota .fl-hb em{background:linear-gradient(90deg,#14B8A6,#38BDF8)}#s-flota .fl-hb2 em.r{background:#F2A900}#s-flota .fl-tn{background:#1B2D40;color:#fff}
@@ -1095,7 +1097,7 @@ body.splashing{overflow:hidden}
     </div>
     <div class="fl-det" id="flDet" hidden></div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros · y litros por hora de motor</span></div><div id="flComb"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros estimados que gastó la flota cada día</span></div><div id="flComb"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas con más horas</h2><span class="fl-cs">periodo seleccionado</span></div><div id="flTop"></div></div>
     </div>
     <div class="fl-g2">
@@ -1108,7 +1110,7 @@ body.splashing{overflow:hidden}
     </div>
     <div class="fl-g3">
       <div class="fl-c"><div class="fl-ch"><h2>Costo del ralentí</h2><button class="fl-gear" id="flCfgB" title="Ajustar precio y consumo">⚙ Ajustes</button></div><div id="flCost"></div>
-        <div class="fl-cfg" id="flCfg" hidden><label>Precio del gasoil (RD$ por galón)<input type="text" id="flPr" inputmode="decimal" placeholder="ej. 224"></label><label>Consumo en ralentí (litros por hora)<input type="text" id="flIdl" inputmode="decimal"></label><label>Intervalo de servicio (horas de motor)<input type="text" id="flSrv" inputmode="decimal"></label></div></div>
+        <div class="fl-cfg" id="flCfg" hidden><label>Precio del gasoil (RD$ por galón)<input type="text" id="flPr" inputmode="decimal" placeholder="ej. 224"></label><input type="hidden" id="flIdl"><label>Intervalo de servicio (horas de motor)<input type="text" id="flSrv" inputmode="decimal"></label></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Próximo servicio <span class="fl-badge" id="flMtN">0</span></h2><span class="fl-cs" id="flMtS"></span></div><div class="fl-als" id="flMt"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas paradas <span class="fl-badge" id="flPaN">0</span></h2><span class="fl-cs">reportan pero sin horas en 3 días</span></div><div class="fl-als" id="flPa"></div></div>
     </div>

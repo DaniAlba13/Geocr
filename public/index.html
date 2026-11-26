@@ -524,6 +524,8 @@ body.splashing{overflow:hidden}
 #s-flota .fl-sp{grid-column:1/-1}#s-flota .fl-sp polyline:last-child{stroke:#fff}#s-flota .fl-sp polyline:first-child{fill:rgba(255,255,255,.14)}
 #s-flota .fl-dl.up{color:#7CF2B0}#s-flota .fl-dl.dn{color:#FFB4B4}
 .fl-gc{display:flex;flex-direction:column}#flGauge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.fl-empty{display:flex;flex-direction:column;gap:8px;padding:22px 18px;border:1px dashed #2A4360;border-radius:12px;color:#B9CDE2;font-size:13px;line-height:1.5;margin-top:8px}.fl-empty>b{color:#fff;font-size:15px}
+.fl-nota{margin:6px 0 0;font-size:11.5px;line-height:1.45;color:#8FA3B8}.fl-cres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 4px}.fl-cres div{background:#0B1622;border:1px solid #1E3247;border-radius:10px;padding:8px 10px}.fl-cres small{display:block;font-size:10.5px;color:#7F95AB;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-cres b{font-size:18px;color:#fff}
 .fl-gx{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:6px}.fl-gx div{background:#0B1622;border:1px solid #1E3247;border-radius:10px;padding:10px 12px}.fl-gx small{display:block;font-size:11px;color:#7F95AB;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.fl-gx b{font-size:22px;color:#fff}
 #s-flota .fl-lg button{color:#DCE6F0}#s-flota .fl-lg button:hover,#s-flota .fl-hb:hover,#s-flota .fl-tr:hover,#s-flota .fl-tr.sel,#s-flota .fl-al:hover{background:#18293B}#s-flota .fl-lg b,#s-flota .fl-hb b,#s-flota .fl-tv,#s-flota .fl-tl b,#s-flota .fl-dk b,#s-flota .fl-big,#s-flota .fl-cl b{color:#fff}
 #s-flota .fl-hb{color:#DCE6F0}#s-flota .fl-hb i,#s-flota .fl-tb,#s-flota .fl-tq{background:#1B2D40}#s-flota .fl-hb em{background:linear-gradient(90deg,#14B8A6,#38BDF8)}#s-flota .fl-hb2 em.r{background:#F2A900}#s-flota .fl-tn{background:#1B2D40;color:#fff}
@@ -1095,7 +1097,7 @@ body.splashing{overflow:hidden}
     </div>
     <div class="fl-det" id="flDet" hidden></div>
     <div class="fl-g2">
-      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros · y litros por hora de motor</span></div><div id="flComb"></div></div>
+      <div class="fl-c"><div class="fl-ch"><h2>Consumo de combustible por día</h2><span class="fl-cs">litros estimados que gastó la flota cada día</span></div><div id="flComb"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas con más horas</h2><span class="fl-cs">periodo seleccionado</span></div><div id="flTop"></div></div>
     </div>
     <div class="fl-g2">
@@ -1108,7 +1110,7 @@ body.splashing{overflow:hidden}
     </div>
     <div class="fl-g3">
       <div class="fl-c"><div class="fl-ch"><h2>Costo del ralentí</h2><button class="fl-gear" id="flCfgB" title="Ajustar precio y consumo">⚙ Ajustes</button></div><div id="flCost"></div>
-        <div class="fl-cfg" id="flCfg" hidden><label>Precio del gasoil (RD$ por galón)<input type="text" id="flPr" inputmode="decimal" placeholder="ej. 224"></label><label>Consumo en ralentí (litros por hora)<input type="text" id="flIdl" inputmode="decimal"></label><label>Intervalo de servicio (horas de motor)<input type="text" id="flSrv" inputmode="decimal"></label></div></div>
+        <div class="fl-cfg" id="flCfg" hidden><label>Precio del gasoil (RD$ por galón)<input type="text" id="flPr" inputmode="decimal" placeholder="ej. 224"></label><input type="hidden" id="flIdl"><label>Intervalo de servicio (horas de motor)<input type="text" id="flSrv" inputmode="decimal"></label></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Próximo servicio <span class="fl-badge" id="flMtN">0</span></h2><span class="fl-cs" id="flMtS"></span></div><div class="fl-als" id="flMt"></div></div>
       <div class="fl-c"><div class="fl-ch"><h2>Máquinas paradas <span class="fl-badge" id="flPaN">0</span></h2><span class="fl-cs">reportan pero sin horas en 3 días</span></div><div class="fl-als" id="flPa"></div></div>
     </div>
@@ -3639,8 +3641,8 @@ function flPasa(m,salvo){const F=FL.f,q=FL.q.toLowerCase();
   if(q&&![m.nombre,m.modelo,m.serie,m.pin,m.id,flTipo(m)].join(' ').toLowerCase().includes(q))return false;return true}
 const flTog=(k,v)=>{const S=FL.f[k];S.has(v)?S.delete(v):S.add(v);FL.sel=null;flDraw()};
 function flRango(off){const fin=Date.now()-4*36e5-off*FL.per*864e5,a=new Date(fin-(FL.per-1)*864e5).toISOString().slice(0,10),b=new Date(fin).toISOString().slice(0,10);return[a,b]}
-/* consumo del día: diferencia del acumulado de combustible; si la máquina no lo reporta, el 'usado en las últimas 24 h' de la telemetría */
-const flC=r=>r.comb>0?r.comb:(r.comb24>0?r.comb24:0);
+/* consumo del día: el de la telemetría si John Deere lo envía; si no, el estimado del servidor (bajada del % de tanque × capacidad, o horas × consumo típico del modelo) */
+const flC=r=>r.comb>0?r.comb:(r.comb24>0?r.comb24:(r.comb_est>0?r.comb_est:0));
 function flAgg(ids,[a,b]){const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha>=a&&r.fecha<=b),s=k=>R.reduce((t,r)=>t+(r[k]||0),0);return{R,h:s('horas'),i:s('ralenti'),c:R.reduce((t,r)=>t+flC(r),0)}}
 const flDelta=(v,p)=>!p||!isFinite(v)?'':`<span class="fl-dl ${v>=p?'up':'dn'}">${v>=p?'▲':'▼'} ${fmt(Math.abs(v-p)/p*100,0)} %</span>`;
 /* ---------- dibujo ---------- */
@@ -3656,10 +3658,10 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
     ['Horas de motor',fmt(A.h,0),`${dias===1?'hoy':'últimos '+dias+' días'} ${flDelta(A.h,P.h)}`,spark('horas')],
     ['Promedio diario por máquina',md?fmt(A.h/md,1)+' h':'–',`horas de motor en los días que trabajó · ${fmt(act7)} máquinas trabajaron`,''],
     ['Ralentí',A.h?fmt(A.i/A.h*100,0)+' %':'–','motor encendido sin trabajar',spark('ralenti')],
-    ['Combustible',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'según telemetría',spark('comb')]];
+    ['Combustible estimado',A.c?fmt(A.c,0)+' L':'–',A.h&&A.c?fmt(A.c/A.h,1)+' L por hora de motor':'por nivel de tanque u horas de motor',spark('comb')]];
   $('#flKpis').innerHTML=K.slice(0,3).map(([t,v,s,g],i)=>`<div class="fl-k k${i+1}"><div class="fl-kt">${t}</div><div class="fl-kv">${v}</div><div class="fl-ks">${s}</div>${g}</div>`).join('');
   {const tot=A.R.length,w=A.R.filter(r=>r.horas>0).length,u=tot?w/tot*100:null;$('#flGs').textContent=FL.per===1?'hoy':`últimos ${FL.per} días`;
-    $('#flGauge').innerHTML=flGauge(u,tot?`${fmt(w)} de ${fmt(tot)} días-máquina con horas`:'se calcula con las lecturas diarias')+`<div class="fl-gx"><div><small>Ralentí</small><b style="color:${A.h&&A.i/A.h>.3?'#FF8A8A':A.h&&A.i/A.h>.2?'#FFD166':'#7CF2B0'}">${A.h?fmt(A.i/A.h*100,0)+' %':'–'}</b></div><div><small>Combustible ${FL.per===1?'hoy':FL.per+' días'}</small><b>${A.c?fmt(A.c,0)+' L':'–'}</b></div>${(()=>{const hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10),pd=new Map();A.R.forEach(r=>pd.set(r.fecha,(pd.get(r.fecha)||0)+flC(r)));const fs=[...pd.keys()].filter(f=>pd.get(f)>0).sort(),ul=fs[fs.length-1],dm=fs.length?fs.reduce((t,f)=>t+pd.get(f),0)/fs.length:0;
+    $('#flGauge').innerHTML=flGauge(u,tot?`${fmt(w)} de ${fmt(tot)} días-máquina con horas`:'se calcula con las lecturas diarias')+`<div class="fl-gx"><div><small>Ralentí</small><b style="color:${A.h&&A.i/A.h>.3?'#FF8A8A':A.h&&A.i/A.h>.2?'#FFD166':'#7CF2B0'}">${A.h?fmt(A.i/A.h*100,0)+' %':'–'}</b></div><div><small>Combustible est. ${FL.per===1?'hoy':FL.per+' días'}</small><b>${A.c?fmt(A.c,0)+' L':'–'}</b></div>${(()=>{const hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10),pd=new Map();A.R.forEach(r=>pd.set(r.fecha,(pd.get(r.fecha)||0)+flC(r)));const fs=[...pd.keys()].filter(f=>pd.get(f)>0).sort(),ul=fs[fs.length-1],dm=fs.length?fs.reduce((t,f)=>t+pd.get(f),0)/fs.length:0;
       return`<div><small>${ul&&ul!==hoy?'Consumo del '+ul.slice(8,10)+'/'+ul.slice(5,7):'Consumo de hoy'}</small><b>${ul?fmt(pd.get(ul),0)+' L':'–'}</b></div><div><small>Promedio diario</small><b>${fs.length?fmt(dm,0)+' L':'–'}</b><small style="text-transform:none;letter-spacing:0;font-weight:500;margin-top:2px">${fs.length?'en '+fs.length+(fs.length===1?' día':' días')+' con datos':'sin datos todavía'}</small></div>`})()}</div>`}
   const est=['Encendida','Apagada','Reportando','Sin reportar','Sin telemetría'].map(e=>[e,D.maq.filter(m=>flPasa(m,'est')&&flEst(m)===e).length,FL_EC[e]]).filter(x=>x[1]);
   flDonut($('#flEst'),est,FL.f.est,v=>flTog('est',v),fmt(est.reduce((t,x)=>t+x[1],0)),'máquinas');
@@ -3668,7 +3670,7 @@ function flDraw(){if(!FL.d||!$('#s-flota').classList.contains('on'))return;const
   const nd=Math.max(14,FL.per),dd=[];for(let i=nd-1;i>=0;i--){const f=new Date(Date.now()-4*36e5-i*864e5).toISOString().slice(0,10),R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===f);
     const h=R.reduce((t,r)=>t+(r.horas||0),0),ii=R.reduce((t,r)=>t+(r.ralenti||0),0);dd.push({f,t:Math.max(h-ii,0),i:ii,n:R.filter(r=>r.horas>0).length})}
   flCols($('#flDia'),dd);
-  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+flC(r),0),h:d.t+d.i}});flComb($('#flComb'),dc);
+  const dc=dd.map(d=>{const R=FL.d.dia.filter(r=>ids.has(r.id)&&r.fecha===d.f);return{f:d.f,c:R.reduce((t,r)=>t+flC(r),0),h:d.t+d.i}});flComb($('#flComb'),dc,M);
   const pm=new Map();A.R.forEach(r=>{const o=pm.get(r.id)||{h:0,i:0,c:0};o.h+=r.horas||0;o.i+=r.ralenti||0;o.c+=flC(r);pm.set(r.id,o)});const byId=new Map(D.maq.map(m=>[m.id,m]));
   {const g=new Map(),cn=new Map();D.maq.filter(m=>flPasa(m,'tipo')).forEach(m=>{const t=flTipo(m);cn.set(t,(cn.get(t)||0)+1)});
     FL.d.dia.forEach(r=>{const m=byId.get(r.id);if(!m||!flPasa(m,'tipo'))return;const[a,b]=flRango(0);if(r.fecha<a||r.fecha>b)return;const t=flTipo(m),o=g.get(t)||{h:0,i:0};o.h+=r.horas||0;o.i+=r.ralenti||0;g.set(t,o)});
@@ -3708,12 +3710,20 @@ function flCols(el,dd){const W=Math.max(el.clientWidth,320),H=230,L=40,B=28,T=14
     if(dd.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
   if(!dd.some(d=>d.t+d.i>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">Las horas por día aparecen desde la segunda sincronización</text>`;
   el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#0070C9"></i>Trabajando</span><span><i style="background:${FLC.ral}"></i>Ralentí</span></div>`}
-function flComb(el,dc){const W=Math.max(el.clientWidth,320),H=210,L=46,R=40,B=28,T=14,mx=Math.max(...dc.map(d=>d.c),1),lh=dc.map(d=>d.h?d.c/d.h:null),mxl=Math.max(...lh.filter(x=>x!=null),1),bw=(W-L-R)/Math.max(dc.length,1),y=v=>H-B-(H-B-T)*v/mx,yl=v=>H-B-(H-B-T)*v/(mxl*1.15);let h='';
-  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#EEF1F5"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#6B7785">${fmt(t)}</text>`});
-  dc.forEach((d,i)=>{const x=L+i*bw+3,w=Math.max(bw-6,2);h+=`<rect x="${x}" y="${y(d.c)}" width="${w}" height="${(H-B-T)*d.c/mx}" rx="2" fill="#1F9D55"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.c,0)} L${lh[i]!=null?' · '+fmt(lh[i],1)+' L/h':''}</title></rect>`;if(dc.length<=16||i%2===0)h+=`<text x="${x+w/2}" y="${H-B+14}" font-size="10" text-anchor="middle" fill="#6B7785">${+d.f.slice(8,10)}</text>`});
-  const pl=lh.map((v,i)=>v==null?null:`${L+i*bw+bw/2},${yl(v)}`).filter(Boolean);if(pl.length>1)h+=`<polyline points="${pl.join(' ')}" fill="none" stroke="#FFD166" stroke-width="2"/>`+pl.map(p=>`<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="2.6" fill="#FFD166"/>`).join('');
-  if(!dc.some(d=>d.c>0))h+=`<text x="${(L+W)/2}" y="${H/2}" text-anchor="middle" font-size="12" fill="#6B7785">El consumo diario aparece cuando la telemetría reporta combustible usado</text>`;
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">${h}</svg><div class="fl-lgh"><span><i style="background:#1F9D55"></i>Litros por día</span><span><i style="background:#FFD166"></i>Litros por hora de motor</span></div>`}
+function flComb(el,dc,M){
+  if(!dc.some(d=>d.c>0)){const n=(M||[]).length,a=(M||[]).filter(m=>m.comb!=null||m.comb24!=null).length,t=(M||[]).filter(m=>m.comb_pct!=null).length;
+    el.innerHTML=`<div class="fl-empty"><b>Todavía no hay consumo de combustible para mostrar</b><span>Este gráfico suma los litros que gasta la flota cada día. Se estima con la bajada del nivel de tanque o con las horas de motor de cada máquina; aparecerá en cuanto haya horas trabajadas en el período${t?` (${fmt(t)} de ${fmt(n)} máquinas reportan nivel de tanque)`:''}.</span></div>`;return}
+  let k=dc.findIndex(d=>d.c>0);k=Math.max(0,Math.min(k,dc.length-7));dc=dc.slice(k);
+  const W=Math.max(el.clientWidth,280),H=220,L=44,R=12,B=30,T=22,mx=Math.max(...dc.map(d=>d.c),1)*1.08,bw=(W-L-R)/dc.length,y=v=>H-B-(H-B-T)*v/mx;let h='';
+  niceBreaks(mx,4).forEach(t=>{if(t>mx)return;h+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="#1E3247"/><text x="${L-6}" y="${y(t)+4}" font-size="10" text-anchor="end" fill="#7F95AB">${fmt(t)}</text>`});
+  dc.forEach((d,i)=>{const x=L+i*bw+bw*.15,w=Math.max(bw*.7,3),lh=d.c>0&&d.h>0?d.c/d.h:null;
+    if(d.c>0){h+=`<rect x="${x}" y="${y(d.c)}" width="${w}" height="${H-B-y(d.c)}" rx="3" fill="#1F9D55"><title>${d.f.slice(8,10)}/${d.f.slice(5,7)}: ${fmt(d.c,0)} L${lh!=null?' · '+fmt(lh,1)+' L por hora de motor':''}</title></rect>`;
+      if(bw>=30)h+=`<text x="${x+w/2}" y="${y(d.c)-6}" font-size="11" font-weight="700" text-anchor="middle" fill="#E8F0F8">${fmt(d.c,0)}</text>`}
+    else h+=`<text x="${x+w/2}" y="${H-B-6}" font-size="10" text-anchor="middle" fill="#4F6378">sin dato</text>`.repeat(bw>=40?1:0);
+    const st=Math.ceil((bw>=34?34:20)/bw);if(i%st===0)h+=`<text x="${x+w/2}" y="${H-B+16}" font-size="10" text-anchor="middle" fill="#7F95AB">${+d.f.slice(8,10)}${bw>=34?'/'+(+d.f.slice(5,7)):''}</text>`});
+  const C=dc.filter(d=>d.c>0),tot=C.reduce((t,d)=>t+d.c,0),hh=C.reduce((t,d)=>t+d.h,0);
+  const ids=new Set((M||[]).map(m=>m.id)),f0=dc[0].f,f1=dc[dc.length-1].f,cm={telemetria:0,tanque:0,horas:0};FL.d.dia.forEach(r=>{if(ids.has(r.id)&&r.fecha>=f0&&r.fecha<=f1&&flC(r)>0)cm[r.comb_met||'telemetria']=(cm[r.comb_met||'telemetria']||0)+flC(r)});const ct=cm.telemetria+cm.tanque+cm.horas||1,pc=v=>fmt(v/ct*100,0)+' %';
+  el.innerHTML=`<div class="fl-cres"><div><small>Promedio por día</small><b>${fmt(tot/C.length,0)} L</b></div><div><small>Por hora de motor</small><b>${hh?fmt(tot/hh,1)+' L/h':'–'}</b></div><div><small>Días con datos</small><b>${C.length}</b></div></div><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Litros de combustible por día">${h}</svg><p class="fl-nota">Litros <b>estimados</b>: John Deere no envía el combustible usado de esta flota. ${cm.tanque?`${pc(cm.tanque)} sale de la bajada del nivel de tanque × capacidad del tanque del modelo; `:''}${cm.horas?`${pc(cm.horas)} de las horas de motor × consumo típico del modelo (≈ 0.25 L por kWh a media carga; en ralentí, mucho menos)`:''}${cm.telemetria?`; ${pc(cm.telemetria)} reportado por la telemetría`:''}.</p>`}
 /* ---------- utilización, horario, costo del ralentí, servicio y paradas ---------- */
 function flExtra(M,ids,A,pm,byId){const D=FL.d,hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10);
   /* utilización diaria: máquinas con horas / máquinas con lectura ese día */
@@ -3729,9 +3739,9 @@ function flExtra(M,ids,A,pm,byId){const D=FL.d,hoy=new Date(Date.now()-4*36e5).t
     $('#flHeat').innerHTML=G.flat().some(v=>v>0)?`<div class="fl-hm"><span></span>${Array.from({length:24},(_,h)=>`<em>${h%3===0?h:''}</em>`).join('')}${G.map((r,d)=>`<span>${DS[d]}</span>${r.map((v,h)=>`<i style="background:${v?`rgba(0,112,201,${(.12+.88*v/mx).toFixed(2)})`:'#EEF2F6'}" title="${DS[d]} ${h}:00 · ${fmt(v,1)} h de motor"></i>`).join('')}`).join('')}</div><div class="fl-lgh" style="margin-top:8px"><span>Más claro = menos horas · más oscuro = más horas de motor en esa hora</span></div>`:'<div class="fl-empty">Se arma con las lecturas de cada hora; en uno o dos días ya se ve el patrón de trabajo de la flota.</div>'}
   else $('#flHeat').innerHTML='<div class="fl-empty">Cargando lecturas por hora…</div>';
   /* costo del ralentí */
-  {const L=A.i*(+FL_CFG.idl||0),gal=L/3.785,pr=+FL_CFG.pr||0;$('#flCost').innerHTML=A.i?`<div class="fl-big">${fmt(A.i,A.i<10?1:0)} h<small> en ralentí</small></div>
+  {const ES=new Map(FL.d.maq.map(m=>[m.id,m.espec])),L=A.R.reduce((t,r)=>{const e=ES.get(r.id);return t+Math.min(r.ralenti||0,r.horas||0)*(e?e.lh_ral:2.5)},0),gal=L/3.785,pr=+FL_CFG.pr||0;$('#flCost').innerHTML=A.i?`<div class="fl-big">${fmt(A.i,A.i<10?1:0)} h<small> en ralentí</small></div>
       <div class="fl-cl"><span>Combustible estimado en ralentí</span><b>${fmt(L,0)} L · ${fmt(gal,0)} gal</b><span>Costo estimado</span><b>${pr?'RD$ '+fmt(gal*pr,0):'<a href="#" id="flPrL">pon el precio del gasoil</a>'}</b><span>Ralentí sobre horas de motor</span><b>${fmt(A.h?A.i/A.h*100:0,0)} %</b></div>
-      <p class="note" style="margin-top:8px">Estimado con ${fmt(+FL_CFG.idl||0,1)} L/h en ralentí; ajústalo con el consumo real de sus equipos.</p>`:'<div class="fl-empty">El costo se calcula cuando la telemetría reporta horas de ralentí.</div>';
+      <p class="note" style="margin-top:8px">Estimado con el consumo en ralentí de cada modelo (≈ ${fmt(A.i?L/A.i:0,1)} L/h en promedio: de 1.5 a 3 L/h en tractores y unos 5 L/h en cosechadoras).</p>`:'<div class="fl-empty">El costo se calcula cuando la telemetría reporta horas de ralentí.</div>';
     const pl=$('#flPrL');if(pl)pl.onclick=e=>{e.preventDefault();$('#flCfg').hidden=false;$('#flPr').focus()}}
   /* próximo servicio por horas de motor */
   {const S=+FL_CFG.srv||250,L=M.filter(m=>m.horas!=null&&!m.sin_iso).map(m=>({m,f:S-(m.horas%S)})).filter(x=>x.f<=S*.1).sort((a,b)=>a.f-b.f);$('#flMtN').textContent=L.length;$('#flMtS').textContent=`cada ${fmt(S)} h · faltan ≤ ${fmt(S*.1)} h`;
@@ -3771,7 +3781,7 @@ function flSel(id){FL.sel=FL.sel===id?null:id;flDraw();
 function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);if(!m){el.hidden=true;return}el.hidden=false;const e=flEst(m),R=FL.d.dia.filter(r=>r.id===m.id).sort((a,b)=>a.fecha<b.fecha?-1:1).slice(-30);
   const dd=R.map(r=>({f:r.fecha,t:Math.max((r.horas||0)-(r.ralenti||0),0),i:r.ralenti||0,n:1}));
   el.innerHTML=`<div class="fl-dh"><div><span class="fl-pill" style="--c:${FL_EC[e]}">${e}</span><h3>${xesc(m.nombre||m.id)}</h3><small>${xesc(flTipo(m))} · ${xesc(m.marca||'')} ${xesc(m.modelo||'')} · ${xesc(m.pin||m.serie||'')} · ${xesc(flDiv(m))}</small></div><button class="fl-x" id="flDx" title="Cerrar">✕</button></div>
-    <div class="fl-dk"><div><small>Horas de motor</small><b>${flH(m.horas)}</b></div><div><small>Ralentí acumulado</small><b>${flH(m.ralenti)}</b></div><div><small>Tanque</small><b>${m.comb_pct==null?'–':fmt(m.comb_pct,0)+' %'}</b></div><div><small>DEF</small><b>${m.def_pct==null?'–':fmt(m.def_pct,0)+' %'}</b></div><div><small>Combustible acumulado</small><b>${m.comb==null?'–':fmt(m.comb,0)+' '+(m.comb_u||'L')}</b></div><div><small>Última señal</small><b style="font-size:14px">${flFecha(flSenal(m))}</b></div></div>
+    <div class="fl-dk"><div><small>Horas de motor</small><b>${flH(m.horas)}</b></div><div><small>Ralentí acumulado</small><b>${flH(m.ralenti)}</b></div>${m.espec?`<div><small>Consumo típico (${m.espec.fuente==='ficha'?m.espec.mod+' · '+m.espec.hp+' hp':'clase ~'+m.espec.hp+' hp'})</small><b>${fmt(m.espec.lh,1)} L/h</b></div>`:''}<div><small>Tanque</small><b>${m.comb_pct==null?'–':fmt(m.comb_pct,0)+' %'}</b></div><div><small>DEF</small><b>${m.def_pct==null?'–':fmt(m.def_pct,0)+' %'}</b></div><div><small>Combustible acumulado</small><b>${m.comb==null?'–':fmt(m.comb,0)+' '+(m.comb_u||'L')}</b></div><div><small>Última señal</small><b style="font-size:14px">${flFecha(flSenal(m))}</b></div></div>
     <div id="flDch"></div>`;flCols($('#flDch'),dd);$('#flDx').onclick=()=>{FL.sel=null;flDraw()}}
 function flInit(){if(flInit.ok)return;flInit.ok=true;
   const flQset=v=>{$('#flQ').value=v;FL.q=v;$('#flQx').hidden=!v;flDraw()};$('#flQ').oninput=()=>flQset($('#flQ').value);$('#flQ').onkeydown=e=>{if(e.key==='Escape')flQset('')};$('#flQx').onclick=()=>{flQset('');$('#flQ').focus()};
