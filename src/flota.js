@@ -1,7 +1,7 @@
 /* ================= FLOTA JOHN DEERE · tablero interactivo (filtros cruzados al estilo Power BI) =================
    Datos: /api/flota (máquinas con su última lectura + lecturas diarias), sincronizado cada hora desde John Deere. */
 const FL={d:null,per:7,q:'',f:{div:new Set(),tipo:new Set(),est:new Set()},sel:null,zm:{z:1},view:null,pts:[],cargando:false,orden:{k:'senal',d:-1}};
-const FL_CFG=(()=>{try{return Object.assign({pr:null,idl:3,srv:250},JSON.parse(localStorage.getItem('agroap-fl-cfg')||'{}'))}catch(e){return{pr:null,idl:3,srv:250}}})();
+const FL_CFG=(()=>{try{return Object.assign({pr:null,idl:3,srv:250,x:0.4},JSON.parse(localStorage.getItem('agroap-fl-cfg')||'{}'))}catch(e){return{pr:null,idl:3,srv:250}}})();
 const FLC={on:'#1F9D55',off:'#0070C9',rep:'#3B82C4',sinr:'#E5484D',sint:'#A3AEBB',ral:'#F2A900',nav:'#0E2A47'};
 const flSenal=m=>{const f=m.f_pos||m.f_horas||m.f_motor;return f?new Date(f):null};
 const flEst=m=>{const f=flSenal(m);if(m.sin_iso||!f)return'Sin telemetría';if((Date.now()-f)/36e5>24)return'Sin reportar';return m.motor===true?'Encendida':m.motor===false?'Apagada':'Reportando'};
@@ -17,7 +17,7 @@ const flDiv=m=>{if(m._d!==undefined)return m._d;if(m.lat==null||m.lon==null)retu
 const flH=h=>h==null||!isFinite(h)?'–':fmt(h,1);
 const flFecha=f=>f?f.toLocaleString('es-DO',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'–';
 async function flCargar(){if(FL.cargando)return;FL.cargando=true;fetch('/api/flota/pos?dias=14',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(p=>{if(p){FL.pos=p;flDraw()}}).catch(()=>{});
-  try{const r=await fetch('/api/flota?dias=90',{cache:'no-store'});if(!r.ok)throw new Error(r.status===401?'Entra a la plataforma para ver la flota.':'No se pudo leer la flota ('+r.status+').');FL.d=await r.json();flDraw()}
+  try{const r=await fetch('/api/flota?dias=90&carga='+(+FL_CFG.x||0.4),{cache:'no-store'});if(!r.ok)throw new Error(r.status===401?'Entra a la plataforma para ver la flota.':'No se pudo leer la flota ('+r.status+').');FL.d=await r.json();flDraw()}
   catch(e){$('#flSt').innerHTML=`<span class="fl-err">${xesc(e.message)}</span>`}finally{FL.cargando=false}}
 /* ---- filtros: cada visual filtra por todos los filtros menos el propio (filtro cruzado) ---- */
 function flPasa(m,salvo){const F=FL.f,q=FL.q.toLowerCase();
@@ -107,7 +107,7 @@ function flComb(el,dc,M){
     const st=Math.ceil((bw>=34?34:20)/bw);if(i%st===0)h+=`<text x="${x+w/2}" y="${H-B+16}" font-size="10" text-anchor="middle" fill="#7F95AB">${+d.f.slice(8,10)}${bw>=34?'/'+(+d.f.slice(5,7)):''}</text>`});
   const C=dc.filter(d=>d.c>0),tot=C.reduce((t,d)=>t+d.c,0),hh=C.reduce((t,d)=>t+d.h,0);
   const ids=new Set((M||[]).map(m=>m.id)),f0=dc[0].f,f1=dc[dc.length-1].f,cm={telemetria:0,tanque:0,horas:0};FL.d.dia.forEach(r=>{if(ids.has(r.id)&&r.fecha>=f0&&r.fecha<=f1&&flC(r)>0)cm[r.comb_met||'telemetria']=(cm[r.comb_met||'telemetria']||0)+flC(r)});const ct=cm.telemetria+cm.tanque+cm.horas||1,pc=v=>fmt(v/ct*100,0)+' %';
-  el.innerHTML=`<div class="fl-cres"><div><small>Promedio por día</small><b>${fmt(tot/C.length,0)} L</b></div><div><small>Por hora de motor</small><b>${hh?fmt(tot/hh,1)+' L/h':'–'}</b></div><div><small>Días con datos</small><b>${C.length}</b></div></div><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Litros de combustible por día">${h}</svg><p class="fl-nota">Litros <b>estimados</b>: John Deere no envía el combustible usado de esta flota. ${cm.tanque?`${pc(cm.tanque)} sale de la bajada del nivel de tanque × capacidad del tanque del modelo; `:''}${cm.horas?`${pc(cm.horas)} de las horas de motor × consumo típico del modelo (≈ 0.25 L por kWh a media carga; en ralentí, mucho menos)`:''}${cm.telemetria?`; ${pc(cm.telemetria)} reportado por la telemetría`:''}.</p>`}
+  el.innerHTML=`<div class="fl-cres"><div><small>Promedio por día</small><b>${fmt(tot/C.length,0)} L</b></div><div><small>Por hora de motor</small><b>${hh?fmt(tot/hh,1)+' L/h':'–'}</b></div><div><small>Días con datos</small><b>${C.length}</b></div></div><svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="Litros de combustible por día">${h}</svg><p class="fl-nota">Litros <b>estimados</b>: John Deere no envía el combustible usado de esta flota. ${cm.tanque?`${pc(cm.tanque)} sale de la bajada del nivel de tanque × capacidad del tanque del modelo; `:''}${cm.horas?`${pc(cm.horas)} de las horas de motor con la ecuación estándar ASABE D497 (consumo según la potencia del modelo y una carga media del ${fmt((+FL_CFG.x||0.4)*100,0)} %, ajustable en ⚙; el ralentí se cuenta aparte, con mucho menos consumo)`:''}${cm.telemetria?`; ${pc(cm.telemetria)} reportado por la telemetría`:''}.</p>`}
 /* ---------- utilización, horario, costo del ralentí, servicio y paradas ---------- */
 function flExtra(M,ids,A,pm,byId){const D=FL.d,hoy=new Date(Date.now()-4*36e5).toISOString().slice(0,10);
   /* utilización diaria: máquinas con horas / máquinas con lectura ese día */
@@ -169,8 +169,8 @@ function flDet(){const el=$('#flDet'),m=FL.sel&&FL.d.maq.find(x=>x.id===FL.sel);
     <div id="flDch"></div>`;flCols($('#flDch'),dd);$('#flDx').onclick=()=>{FL.sel=null;flDraw()}}
 function flInit(){if(flInit.ok)return;flInit.ok=true;
   const flQset=v=>{$('#flQ').value=v;FL.q=v;$('#flQx').hidden=!v;flDraw()};$('#flQ').oninput=()=>flQset($('#flQ').value);$('#flQ').onkeydown=e=>{if(e.key==='Escape')flQset('')};$('#flQx').onclick=()=>{flQset('');$('#flQ').focus()};
-  $('#flCfgB').onclick=()=>{$('#flCfg').hidden=!$('#flCfg').hidden};$('#flPr').value=FL_CFG.pr||'';$('#flIdl').value=FL_CFG.idl;$('#flSrv').value=FL_CFG.srv;
-  ['flPr','flIdl','flSrv'].forEach(id=>$('#'+id).onchange=()=>{const v=x=>{x=parseFloat(String(x).replace(',','.'));return isFinite(x)&&x>0?x:null};FL_CFG.pr=v($('#flPr').value);FL_CFG.idl=v($('#flIdl').value)||3;FL_CFG.srv=v($('#flSrv').value)||250;
+  $('#flCfgB').onclick=()=>{$('#flCfg').hidden=!$('#flCfg').hidden};$('#flPr').value=FL_CFG.pr||'';$('#flCarga').value=String(+FL_CFG.x||0.4);$('#flCarga').onchange=()=>{FL_CFG.x=+$('#flCarga').value||0.4;try{localStorage.setItem('agroap-fl-cfg',JSON.stringify(FL_CFG))}catch(e){}flCargar()};$('#flSrv').value=FL_CFG.srv;
+  ['flPr','flSrv'].forEach(id=>$('#'+id).onchange=()=>{const v=x=>{x=parseFloat(String(x).replace(',','.'));return isFinite(x)&&x>0?x:null};FL_CFG.pr=v($('#flPr').value);FL_CFG.srv=v($('#flSrv').value)||250;
     try{localStorage.setItem('agroap-fl-cfg',JSON.stringify(FL_CFG))}catch(e){}flDraw()});
   $$('#flPer button').forEach(b=>b.onclick=()=>{FL.per=+b.dataset.d;$$('#flPer button').forEach(x=>x.classList.toggle('on',x===b));flDraw()});
   $('#flSync').onclick=async()=>{const b=$('#flSync');b.disabled=true;b.classList.add('spin');$('#flSt').textContent='Sincronizando con John Deere…';

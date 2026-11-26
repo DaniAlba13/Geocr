@@ -114,12 +114,12 @@ export async function syncFlota(env) {
   }
 }
 
-async function datos(env, dias) {
+async function datos(env, dias, X) {
   const db = env.DB; await tablas(db);
   const desde = hoyRD(Date.now() - dias * 864e5);
   const [m, d, s, q] = await Promise.all([db.prepare('SELECT data FROM flota_maq').all(), db.prepare('SELECT id,fecha,data FROM flota_dia WHERE fecha>=?1 ORDER BY fecha').bind(desde).all(),
     db.prepare("SELECT v FROM flota_meta WHERE k='estado'").first(), db.prepare('SELECT id,ts,pct FROM flota_tq WHERE ts>=?1 ORDER BY id,ts').bind(new Date(Date.now() - (dias + 1) * 864e5).toISOString()).all()]);
-  const maq = (m.results || []).map(r => JSON.parse(r.data)); maq.forEach(x => { const e = especMaq(x); if (e) x.espec = e; });
+  const maq = (m.results || []).map(r => JSON.parse(r.data)); maq.forEach(x => { const e = especMaq(x, X); if (e) x.espec = e; });
   return { maq, dia: (d.results || []).map(r => ({ id: r.id, fecha: r.fecha, ...JSON.parse(r.data) })), tq: q.results || [], estado: s ? JSON.parse(s.v) : null };
 }
 // lo trabajado cada día = diferencia de los acumulados contra la última lectura del día anterior (o la primera del mismo día)
@@ -141,7 +141,8 @@ export async function rutaFlota(request, env, path) {
   if (path[1] === 'combustible') return diagComb(env);   // diagnóstico: qué dice John Deere del combustible de cada máquina
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
-  const x = await datos(env, dias); return J({ estado: x.estado, maq: x.maq, dia: estimaComb(porDia(x.dia), x.maq, x.tq) });
+  const X = Math.min(Math.max(parseFloat(u.searchParams.get('carga')) || X_TRAC, 0.15), 0.9);
+  const x = await datos(env, dias, X); return J({ estado: x.estado, maq: x.maq, dia: estimaComb(porDia(x.dia), x.maq, x.tq) });
 }
 // ---- Power BI: CSV sin sesión, con la clave PBI_KEY ----
 const csv = (rows, cols) => '﻿' + cols.join(',') + '\n' + rows.map(r => cols.map(c => { const v = r[c]; if (v == null) return ''; const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\n');
@@ -190,7 +191,8 @@ ${filas.map(f => `<tr><td><b>${e(f.eq)}</b><br>${e(f.modelo)}</td><td>${e(f.hora
 // John Deere (feed ISO 15143-3) no envía el combustible usado de esta flota, solo el % de tanque.
 // Por eso el consumo diario se estima, en este orden:
 //  1) "tanque": bajada del nivel de tanque (%) × capacidad del tanque del modelo; las subidas de más de 5 puntos son llenados y no cuentan.
-//  2) "horas": horas trabajando × consumo típico + horas en ralentí × consumo en ralentí, según la potencia del modelo.
+//  2) "horas": horas trabajando × consumo de la ecuación ASABE D497 (Grisso et al., Virginia Tech BSE-328) a la carga media X
+//     Q (gal/h) = (0.0434·X + 0.019) · P_TDF(hp), a plena aceleración; + horas en ralentí × consumo de ralentí del motor.
 // Fichas técnicas John Deere (potencia hp, tanque L). Modelos sin ficha: potencia según la clase de hp que da John Deere.
 const ESPEC = [
   [/CH ?670/i, 'CH670', 405, 605, 'cos'], [/CH ?570/i, 'CH570', 375, 605, 'cos'], [/CH ?9[56]0/i, 'CH950/960', 460, 750, 'cos'], [/3520/, '3520', 337, 600, 'cos'],
@@ -201,16 +203,17 @@ const ESPEC = [
   [/7185J/i, '7185J', 185, 392], [/7200J/i, '7200J', 200, 392], [/7205J/i, '7205J', 205, 392], [/7215J/i, '7215J', 215, 392], [/7225J/i, '7225J', 225, 392], [/7230J/i, '7230J', 230, 392],
   [/7230R/i, '7230R', 230, 500], [/5075E/i, '5075E', 75, 68], [/5076E/i, '5076E', 77, 95], [/5078E/i, '5078E', 78, 95], [/5082E/i, '5082E', 82, 95], [/5090E/i, '5090E', 90, 110],
 ];
-const L_KWH = 0.25, CARGA = 0.5, CARGA_COS = 0.6, RAL_KW = 0.018;   // L por kWh a plena carga, carga media trabajando, ralentí (L/h por kW)
-function especMaq(m) {
+const X_TRAC = 0.4, X_COS = 0.55, TDF = 0.85, RAL_KW = 0.018, GAL = 3.785;   // carga media (fracción de la potencia), potencia a la TDF / motor, ralentí (L/h por kW de motor)
+const asabe = (X, hp) => (0.0434 * X + 0.019) * hp * GAL;   // L/h
+function especMaq(m, X) {
   const t = [m.modelo, m.nombre, m.equipo].filter(Boolean).join(' ');
   const e = ESPEC.find(x => x[0].test(t));
   let hp, tanque = null, mod, fuente, cos = /cosech|combine|harvest/i.test((m.tipo || '') + ' ' + t);
   if (e) { mod = e[1]; hp = e[2]; tanque = e[3]; fuente = 'ficha'; cos = cos || e[4] === 'cos'; }
   else { const c = String(m.tipo || '').match(/(\d+)\s*hp\s*to\s*under\s*(\d+)/i), o = String(m.tipo || '').match(/(\d+)\s*hp\s*(?:and|&)\s*(?:over|above)/i);
     if (c) hp = (+c[1] + +c[2]) / 2; else if (o) hp = +o[1] * 1.15; else if (cos) hp = 375; else return null; mod = m.modelo || ''; fuente = 'clase'; }
-  const kw = hp * 0.7457;
-  return { mod, hp: Math.round(hp), tanque, fuente, lh: +(kw * L_KWH * (cos ? CARGA_COS : CARGA)).toFixed(1), lh_ral: +(kw * RAL_KW).toFixed(1) };
+  const x = cos ? X_COS : (X > 0 ? X : X_TRAC);
+  return { mod, hp: Math.round(hp), tanque, fuente, x, lh: +asabe(x, cos ? hp : hp * TDF).toFixed(1), lh_ral: +(hp * 0.7457 * RAL_KW).toFixed(1) };
 }
 const hoyRDts = ts => new Date(Date.parse(ts) - 4 * 36e5).toISOString().slice(0, 10);
 function estimaComb(dia, maq, tq) {
