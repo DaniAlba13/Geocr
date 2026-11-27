@@ -138,7 +138,8 @@ export async function rutaFlota(request, env, path) {
     const r = await env.DB.prepare('SELECT id,ts,lat,lon,horas FROM flota_pos WHERE ts >= ?1 ORDER BY id, ts').bind(new Date(Date.now() - d * 864e5).toISOString()).all();
     return J(r.results || []);
   }
-  if (path[1] === 'combustible') return diagComb(env);   // diagnóstico: qué dice John Deere del combustible de cada máquina
+  if (path[1] === 'combustible') return diagComb(env);
+  if (path[1] === 'historia') return probarHistoria(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
   const X = Math.min(Math.max(parseFloat(u.searchParams.get('carga')) || X_TRAC, 0.15), 0.9);
@@ -231,4 +232,23 @@ function estimaComb(dia, maq, tq) {
     if (k != null && (ph == null || (k <= ph * 2.5 + 20 && (h < 1 || k > 0)))) return { ...r, comb_est: +k.toFixed(1), comb_met: 'tanque' };
     if (ph != null && h > 0) return { ...r, comb_est: +ph.toFixed(1), comb_met: 'horas' };
     return r; });
+}
+
+// ---- prueba de histórico: endpoints de series de tiempo ISO 15143-3 y horas de operación de Operations Center ----
+async function probarHistoria(env) {
+  await tablas(env.DB);
+  const r = await env.DB.prepare('SELECT data FROM flota_maq').all(), M = (r.results || []).map(x => JSON.parse(x.data)).filter(m => m.pin || m.equipo).slice(0, 2);
+  const iso = d => d.toISOString().replace(/\.\d{3}Z$/, 'Z'), fin = new Date(), ini = new Date(Date.now() - 90 * 864e5), A = aemp(env), out = [];
+  for (const m of M) {
+    const ids = [...new Set([m.pin, m.equipo, m.serie].filter(Boolean))];
+    for (const id of ids) for (const t of ['', '/CumulativeOperatingHours', '/OperatingHours', '/CumulativeIdleHours', '/Locations', '/FuelRemaining', '/CumulativeFuelUsed']) {
+      const url = `${A}/Fleet/Equipment/ID/${encodeURIComponent(id)}${t}${t ? `/${iso(ini)}/${iso(fin)}/1` : ''}`;
+      try { const x = await getJD(env, url, 'application/xml'); out.push({ maquina: m.nombre || m.equipo, id, serie: t || '(ficha)', estado: x.status, bytes: (x.txt || '').length, muestra: (x.txt || '').replace(/\s+/g, ' ').slice(0, 400) }); }
+      catch (e) { out.push({ maquina: m.nombre || m.equipo, id, serie: t || '(ficha)', error: String(e.message || e) }); }
+    }
+    if (m.eq_id) for (const u of [`https://partnerapi.deere.com/platform/machines/${m.eq_id}/hoursOfOperation?startDate=${iso(ini)}&endDate=${iso(fin)}`, `https://partnerapi.deere.com/platform/machines/${m.eq_id}/engineHours`, `https://equipmentapi.deere.com/isg/equipment/${m.eq_id}/engineHours`]) {
+      try { const x = await getJD(env, u); out.push({ maquina: m.nombre, serie: u.split('/').pop().split('?')[0], estado: x.status, bytes: (x.txt || '').length, muestra: (x.txt || '').replace(/\s+/g, ' ').slice(0, 400) }); } catch (e) { out.push({ maquina: m.nombre, serie: u, error: String(e.message || e) }); }
+    }
+  }
+  return J({ desde: iso(ini), hasta: iso(fin), pruebas: out });
 }
