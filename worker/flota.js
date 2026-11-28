@@ -141,7 +141,8 @@ export async function rutaFlota(request, env, path) {
   }
   if (path[1] === 'combustible') return diagComb(env);
   if (path[1] === 'historia') return probarHistoria(env);
-  if (path[1] === 'historia2') return probarMaquinas(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
+  if (path[1] === 'historia2') return probarMaquinas(env);
+  if (path[1] === 'cosecha-prueba') return probarCosecha(env);   // prueba: operaciones de cosecha (Field Operations, permiso ag2)   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
   if (path[1] === 'historial') {   // avance y muestra de la carga del historial; ?correr=1 avanza una parte ahora
     if (new URL(request.url).searchParams.get('correr')) { let r; try { r = await avanzarHistoria(env); } catch (e) { r = { error: String(e && e.stack || e) }; } const m = await (await muestraHist(env)).json(); return J({ corrida: r, ...m }); }
     return muestraHist(env);
@@ -290,4 +291,19 @@ async function probarMaquinas(env) {
     }
   }
   return J({ org: st.org, pruebas: out });
+}
+
+// ---- prueba: datos de cosecha (Harvest Monitor) por Field Operations ----
+async function probarCosecha(env) {
+  const P = 'https://partnerapi.deere.com/platform', A = 'application/vnd.deere.axiom.v3+json', out = [];
+  const iso = d => d.toISOString().replace(/\.\d{3}Z$/, 'Z'), ini = iso(new Date(Date.now() - 120 * 864e5)), fin = iso(new Date());
+  const get = async (n, u) => { try { const x = await getJD(env, u, A); out.push({ prueba: n, estado: x.status, bytes: (x.txt || '').length, muestra: (x.txt || '').replace(/\s+/g, ' ').slice(0, 1500) }); return x; } catch (e) { out.push({ prueba: n, error: String(e.message || e) }); return null; } };
+  const org = await get('organización / permisos', `${P}/organizations/1750121`);
+  const op = await get('operaciones de cosecha (org)', `${P}/organizations/1750121/fieldOperations?fieldOperationType=HARVEST&startDate=${ini}&endDate=${fin}`);
+  const fl = await get('campos', `${P}/organizations/1750121/fields?itemLimit=5`);
+  const F = (fl && fl.json && fl.json.values) || [];
+  for (const f of F.slice(0, 3)) await get('cosecha en campo ' + (f.name || f.id), `${P}/organizations/1750121/fields/${f.id}/fieldOperations?fieldOperationType=HARVEST`);
+  const O = (op && op.json && op.json.values) || [];
+  if (O[0]) { const id = O[0].id; await get('detalle operación', `${P}/fieldOperations/${id}`); await get('tipos de medición', `${P}/fieldOperations/${id}/measurementTypes`); }
+  return J({ pruebas: out });
 }

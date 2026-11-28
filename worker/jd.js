@@ -8,7 +8,7 @@
 const WELL_KNOWN = 'https://signin.johndeere.com/oauth2/aus78tnlaysMraFhC1t7/.well-known/oauth-authorization-server';
 const ACCEPT = 'application/vnd.deere.axiom.v3+json';
 const api = env => String(env.JD_API || 'https://sandboxapi.deere.com/platform').replace(/\/+$/, '');
-const scopes = env => String(env.JD_SCOPES || 'org1 eq1 offline_access');
+const scopes = env => String(env.JD_SCOPES || 'org1 eq1 ag1 ag2 offline_access');
 const retorno = url => url.origin + '/jd/callback';
 const ST = 'agroap_jd_state';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -51,7 +51,7 @@ export async function tokenJD(env) {
   const t = await leerTok(env.DB);
   if (!t) return null;
   if (t.exp && Date.now() < t.exp - 120e3) return t.access_token;
-  const j = await pedirToken(env, { grant_type: 'refresh_token', refresh_token: t.refresh_token, scope: scopes(env) });
+  const j = await pedirToken(env, { grant_type: 'refresh_token', refresh_token: t.refresh_token, scope: t.scope || scopes(env) });   // al renovar se piden solo los permisos ya concedidos
   const n = { access_token: j.access_token, refresh_token: j.refresh_token || t.refresh_token, exp: Date.now() + (j.expires_in || 3600) * 1000, scope: j.scope || t.scope, desde: t.desde, por: t.por };
   await guardarTok(env.DB, n);
   return n.access_token;
