@@ -48,7 +48,7 @@ export default {
     if (event.cron === '0 * * * *') {
       const H = new Date(event.scheduledTime).getUTCHours();
       if (H === 10 || H === 18) ctx.waitUntil(dispararRobot(env, `0 ${H} * * *`));
-      ctx.waitUntil(syncFlota(env).catch(e => console.log('Flota:', e && e.message)));
+      ctx.waitUntil(syncFlota(env).catch(e => console.log('Flota:', e && e.message)).then(() => avanzarHistoria(env)).catch(e => console.log('Historial:', e && e.message)));
     } else if (event.cron === '*/5 * * * *') ctx.waitUntil(avanzarHistoria(env).catch(e => console.log('Historial:', e && e.message)));
     else ctx.waitUntil(dispararRobot(env, event.cron));
   },

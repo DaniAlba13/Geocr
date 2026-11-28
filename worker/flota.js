@@ -5,7 +5,7 @@
 // Rutas: GET /api/flota (tablero, con sesión) · POST /api/flota/sync (sincronizar ahora, con sesión)
 //        GET /pbi/<tabla>.csv?k=PBI_KEY (Power BI, sin sesión, con la clave del secret PBI_KEY)
 import { getJD } from './jd.js';
-import { horasHist, alertasJD, muestraHist } from './historia.js';
+import { horasHist, alertasJD, muestraHist, avanzarHistoria } from './historia.js';
 
 const EQ = 'https://equipmentapi.deere.com/isg/equipment';
 const aemp = env => String(env.JD_AEMP || 'https://partneraemp.deere.com').replace(/\/+$/, '');
@@ -142,7 +142,10 @@ export async function rutaFlota(request, env, path) {
   if (path[1] === 'combustible') return diagComb(env);
   if (path[1] === 'historia') return probarHistoria(env);
   if (path[1] === 'historia2') return probarMaquinas(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
-  if (path[1] === 'historial') return muestraHist(env);   // avance y muestra de la carga del historial
+  if (path[1] === 'historial') {   // avance y muestra de la carga del historial; ?correr=1 avanza una parte ahora
+    if (new URL(request.url).searchParams.get('correr')) { let r; try { r = await avanzarHistoria(env); } catch (e) { r = { error: String(e && e.stack || e) }; } const m = await (await muestraHist(env)).json(); return J({ corrida: r, ...m }); }
+    return muestraHist(env);
+  }   // avance y muestra de la carga del historial
   if (path[1] === 'alertas') {   // alertas de diagnóstico John Deere agrupadas (para informes)
     const u = new URL(request.url), d = u.searchParams.get('desde') || hoyRD(Date.now() - 7 * 864e5), h = u.searchParams.get('hasta') || hoyRD();
     return J(await alertasJD(env, d + 'T04:00:00Z', new Date(Date.parse(h + 'T04:00:00Z') + 864e5).toISOString(), u.searchParams.get('id') || null));
