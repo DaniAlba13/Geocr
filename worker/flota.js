@@ -139,7 +139,8 @@ export async function rutaFlota(request, env, path) {
     return J(r.results || []);
   }
   if (path[1] === 'combustible') return diagComb(env);
-  if (path[1] === 'historia') return probarHistoria(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
+  if (path[1] === 'historia') return probarHistoria(env);
+  if (path[1] === 'historia2') return probarMaquinas(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
   const X = Math.min(Math.max(parseFloat(u.searchParams.get('carga')) || X_TRAC, 0.15), 0.9);
@@ -251,4 +252,29 @@ async function probarHistoria(env) {
     }
   }
   return J({ desde: iso(ini), hasta: iso(fin), pruebas: out });
+}
+
+// ---- prueba 2: APIs de máquinas de Operations Center (horas de operación, horas de motor, ubicaciones, alertas) ----
+async function probarMaquinas(env) {
+  await tablas(env.DB);
+  const org = (await env.DB.prepare("SELECT v FROM flota_meta WHERE k='estado'").first()), out = [];
+  const st = org ? JSON.parse(org.v) : {};
+  const r = await getJD(env, `${EQ}?organizationIds=1750121&itemLimit=3`, 'application/json'), V = (r.json && r.json.values) || [];
+  out.push({ paso: 'equipo (crudo)', estado: r.status, muestra: JSON.stringify(V[0] || r.json).slice(0, 1500) });
+  const iso = d => d.toISOString().replace(/\.\d{3}Z$/, 'Z'), fin = new Date(), ini = new Date(Date.now() - 30 * 864e5);
+  for (const v of V.slice(0, 2)) {
+    const cand = [...new Set([v.id, v.principalId, v.legacyId, v.machineId, v.vin, v.serialNumber, ...(((v.links || []).filter(l => /machine/i.test(l.rel || ''))).map(l => String(l.uri).split('/').pop()))].filter(Boolean).map(String))];
+    out.push({ paso: 'candidatos de id', equipo: v.name, ids: cand, links: (v.links || []).map(l => l.rel + ' → ' + l.uri) });
+    for (const id of cand) for (const [n, u] of [
+      ['hoursOfOperation', `https://partnerapi.deere.com/platform/machines/${id}/hoursOfOperation?startDate=${iso(ini)}&endDate=${iso(fin)}`],
+      ['engineHours', `https://partnerapi.deere.com/platform/machines/${id}/engineHours`],
+      ['locationHistory', `https://partnerapi.deere.com/platform/machines/${id}/locationHistory?startDate=${iso(ini)}&endDate=${iso(fin)}`],
+      ['alerts', `https://partnerapi.deere.com/platform/machines/${id}/alerts?startDate=${iso(ini)}&endDate=${iso(fin)}`],
+      ['eq engineHours', `https://equipmentapi.deere.com/isg/equipment/${id}/engineHours`],
+      ['eq hoursOfOperation', `https://equipmentapi.deere.com/isg/equipment/${id}/hoursOfOperation?startDate=${iso(ini)}&endDate=${iso(fin)}`]]) {
+      try { const x = await getJD(env, u); out.push({ equipo: v.name, id, api: n, estado: x.status, bytes: (x.txt || '').length, muestra: (x.txt || '').replace(/\s+/g, ' ').slice(0, 500) }); }
+      catch (e) { out.push({ equipo: v.name, id, api: n, error: String(e.message || e) }); }
+    }
+  }
+  return J({ org: st.org, pruebas: out });
 }
