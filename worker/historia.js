@@ -78,6 +78,7 @@ async function guardar(env, j, V) {
 // una corrida del cron: avanza los trabajos pendientes
 export async function avanzarHistoria(env) {
   const db = env.DB; await tablasHist(db); await planificar(env);
+  await db.prepare("UPDATE flota_job SET estado='pendiente' WHERE estado='error' AND err LIKE '404%No Equipments%' AND upd < ?1").bind(iso(Date.now() - 6 * 36e5)).run();   // reintento cada 6 h
   const P = (await db.prepare("SELECT * FROM flota_job WHERE estado='pendiente' ORDER BY CASE tipo WHEN 'hoursOfOperation' THEN 0 WHEN 'alerts' THEN 1 ELSE 2 END, k LIMIT 40").all()).results || [];
   let llamadas = 0;
   for (const j of P) {
@@ -86,6 +87,12 @@ export async function avanzarHistoria(env) {
       llamadas++;
       let r; try { r = await getJD(env, url); } catch (e) { await db.prepare("UPDATE flota_job SET err=?2, upd=?3 WHERE k=?1").bind(j.k, String(e.message || e).slice(0, 200), iso(Date.now())).run(); return { llamadas, error: String(e.message || e) }; }
       if (r.status === 429) return { llamadas, pausa: 'John Deere pidió esperar (429)' };
+      if (r.status === 404 && /No Equipments found/i.test(r.txt || '') && !j._re) {   // id de equipo distinto: buscarlo por número de serie
+        j._re = 1; llamadas++;
+        const q = await getJD(env, `https://equipmentapi.deere.com/isg/equipment?organizationIds=1750121&serialNumbers=${encodeURIComponent(j.id)}`, 'application/json').catch(() => null);
+        const v = q && q.json && (q.json.values || []).find(x => String(x.id) !== String(j.mid));
+        if (v) { url = url.replace(`/machines/${j.mid}/`, `/machines/${v.id}/`); await db.prepare('UPDATE flota_job SET mid=?2, url=?3 WHERE k=?1').bind(j.k, String(v.id), url).run(); j.mid = String(v.id); continue; }
+      }
       if (r.status !== 200) { await db.prepare("UPDATE flota_job SET estado='error', err=?2, upd=?3 WHERE k=?1").bind(j.k, (r.status + ' ' + (r.txt || '')).slice(0, 200), iso(Date.now())).run(); url = null; break; }
       const V = (r.json && r.json.values) || []; await guardar(env, j, V); n += V.length;
       const nx = ((r.json && r.json.links) || []).find(l => l.rel === 'nextPage'); url = nx ? nx.uri : null;
