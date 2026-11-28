@@ -5,6 +5,7 @@
 // Rutas: GET /api/flota (tablero, con sesión) · POST /api/flota/sync (sincronizar ahora, con sesión)
 //        GET /pbi/<tabla>.csv?k=PBI_KEY (Power BI, sin sesión, con la clave del secret PBI_KEY)
 import { getJD } from './jd.js';
+import { horasHist, alertasJD, muestraHist } from './historia.js';
 
 const EQ = 'https://equipmentapi.deere.com/isg/equipment';
 const aemp = env => String(env.JD_AEMP || 'https://partneraemp.deere.com').replace(/\/+$/, '');
@@ -141,10 +142,19 @@ export async function rutaFlota(request, env, path) {
   if (path[1] === 'combustible') return diagComb(env);
   if (path[1] === 'historia') return probarHistoria(env);
   if (path[1] === 'historia2') return probarMaquinas(env);   // prueba: ¿John Deere entrega histórico (series de tiempo)?   // diagnóstico: qué dice John Deere del combustible de cada máquina
+  if (path[1] === 'historial') return muestraHist(env);   // avance y muestra de la carga del historial
+  if (path[1] === 'alertas') {   // alertas de diagnóstico John Deere agrupadas (para informes)
+    const u = new URL(request.url), d = u.searchParams.get('desde') || hoyRD(Date.now() - 7 * 864e5), h = u.searchParams.get('hasta') || hoyRD();
+    return J(await alertasJD(env, d + 'T04:00:00Z', new Date(Date.parse(h + 'T04:00:00Z') + 864e5).toISOString(), u.searchParams.get('id') || null));
+  }
   if (path[1] === 'muestra') { await tablas(env.DB); const r = await env.DB.prepare("SELECT v FROM flota_meta WHERE k='muestra'").first(); return J(r ? JSON.parse(r.v) : {}); }
   const u = new URL(request.url), dias = Math.min(Math.max(parseInt(u.searchParams.get('dias') || '45', 10) || 45, 1), 400);
   const X = Math.min(Math.max(parseFloat(u.searchParams.get('carga')) || X_TRAC, 0.15), 0.9);
-  const x = await datos(env, dias, X); return J({ estado: x.estado, maq: x.maq, dia: estimaComb(porDia(x.dia), x.maq, x.tq) });
+  const x = await datos(env, dias, X), D = porDia(x.dia), ya = new Set(D.map(r => r.id + '|' + r.fecha));
+  // días anteriores a la telemetría propia: horas encendida del historial de John Deere (sin separar el ralentí)
+  (await horasHist(env, hoyRD(Date.now() - dias * 864e5)).catch(() => [])).forEach(h => { if (!ya.has(h.id + '|' + h.fecha) && h.horas > 0) D.push({ id: h.id, fecha: h.fecha, horas: h.horas, hist: 1 }); });
+  const al = await alertasJD(env, hoyRD(Date.now() - dias * 864e5) + 'T04:00:00Z', new Date(Date.now() + 864e5).toISOString()).catch(() => []);
+  return J({ estado: x.estado, maq: x.maq, dia: estimaComb(D, x.maq, x.tq), alj: al });
 }
 // ---- Power BI: CSV sin sesión, con la clave PBI_KEY ----
 const csv = (rows, cols) => '﻿' + cols.join(',') + '\n' + rows.map(r => cols.map(c => { const v = r[c]; if (v == null) return ''; const s = String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(',')).join('\n');

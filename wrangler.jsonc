@@ -17,5 +17,5 @@
   "keep_vars": true,
   "observability": { "enabled": true },
   // Cada hora: flota John Deere; a las 10:00 y 18:00 UTC (6 a. m. y 2 p. m. RD) también el robot NAX. Respaldos del robot a las 11:30 y 19:30 UTC.
-  "triggers": { "crons": ["0 * * * *", "30 11 * * *", "30 19 * * *"] }
+  "triggers": { "crons": ["0 * * * *", "30 11 * * *", "30 19 * * *", "*/5 * * * *"] }
 }

@@ -1,4 +1,5 @@
 // Worker de GeoCR: /api/* va a la API (base de datos D1); todo lo demás es la página en public/.
+import { avanzarHistoria } from './historia.js';
 import { onRequest } from './api.js';
 import { dispararRobot } from './robot.js';
 import { correoSesion, rutaEntrada, paginaEntrada } from './entrada.js';
@@ -42,11 +43,13 @@ export default {
   // Cron de Cloudflare (ver "triggers" en wrangler.jsonc): dispara el robot NAX a la hora exacta.
   //  · "0 * * * *": cada hora sincroniza la flota John Deere; a las 10:00 y 18:00 UTC (6 a. m. y 2 p. m. RD) lanza el robot NAX.
   //  · "30 11 * * *" y "30 19 * * *": respaldo del robot NAX.
+  //  · "*/5 * * * *": carga por partes el historial de la flota (6 meses) y lo mantiene al día.
   async scheduled(event, env, ctx) {
     if (event.cron === '0 * * * *') {
       const H = new Date(event.scheduledTime).getUTCHours();
       if (H === 10 || H === 18) ctx.waitUntil(dispararRobot(env, `0 ${H} * * *`));
       ctx.waitUntil(syncFlota(env).catch(e => console.log('Flota:', e && e.message)));
-    } else ctx.waitUntil(dispararRobot(env, event.cron));
+    } else if (event.cron === '*/5 * * * *') ctx.waitUntil(avanzarHistoria(env).catch(e => console.log('Historial:', e && e.message)));
+    else ctx.waitUntil(dispararRobot(env, event.cron));
   },
 };
