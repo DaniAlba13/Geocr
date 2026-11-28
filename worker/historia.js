@@ -7,7 +7,7 @@
 import { getJD } from './jd.js';
 
 const API = 'https://partnerapi.deere.com/platform/machines/';
-const MESES = 6, POR_CORRIDA = 35, REFRESCO_H = 3;
+const MESES = 6, POR_CORRIDA = 15, REFRESCO_H = 6, CUPO_DIA = 35000;   // CUPO_DIA: filas máximas que escribe el historial por día (plan gratuito de D1: 100 000 escrituras/día en total)
 const iso = d => new Date(d).toISOString().replace(/\.\d{3}Z$/, 'Z');
 const diaRD = t => new Date(Date.parse(t) - 4 * 36e5).toISOString().slice(0, 10);
 const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' } });
@@ -23,7 +23,7 @@ export async function tablasHist(db) {
 }
 
 const url0 = (mid, tipo, desde, hasta) => `${API}${mid}/${tipo}?startDate=${iso(desde)}&endDate=${iso(hasta)}&itemLimit=100`;
-const tipos = ['hoursOfOperation', 'alerts', 'locationHistory'];
+const tipos = ['hoursOfOperation', 'alerts'];   // los recorridos GPS (locationHistory) no se cargan hacia atrás: son demasiadas filas para el plan gratuito
 
 // crea o reactiva los trabajos de cada máquina
 async function planificar(env) {
@@ -80,13 +80,18 @@ export async function avanzarHistoria(env) {
   const db = env.DB; await tablasHist(db); await planificar(env);
   await db.prepare("UPDATE flota_job SET estado='pendiente' WHERE estado='error' AND err LIKE '404%No Equipments%' AND upd < ?1").bind(iso(Date.now() - 6 * 36e5)).run();   // reintento cada 6 h
   const P = (await db.prepare("SELECT * FROM flota_job WHERE estado='pendiente' ORDER BY CASE tipo WHEN 'hoursOfOperation' THEN 0 WHEN 'alerts' THEN 1 ELSE 2 END, k LIMIT 40").all()).results || [];
+  await db.prepare("DELETE FROM flota_job WHERE tipo='locationHistory'").run();
+  const hoy = new Date().toISOString().slice(0, 10), c0 = await db.prepare("SELECT v FROM flota_meta WHERE k='hist_cupo'").first().catch(() => null);
+  let cupo = c0 ? JSON.parse(c0.v) : { d: hoy, n: 0 }; if (cupo.d !== hoy) cupo = { d: hoy, n: 0 };
+  if (cupo.n >= CUPO_DIA) return { llamadas: 0, pausa: 'cupo diario de escritura alcanzado (' + cupo.n + ' filas); sigue mañana' };
+  const guardaCupo = () => db.prepare("INSERT OR REPLACE INTO flota_meta (k,v) VALUES ('hist_cupo',?1)").bind(JSON.stringify(cupo)).run();
   let llamadas = 0;
   for (const j of P) {
     let url = j.url, n = j.n || 0;
-    while (url && llamadas < POR_CORRIDA) {
+    while (url && llamadas < POR_CORRIDA && cupo.n < CUPO_DIA) {
       llamadas++;
       let r; try { r = await getJD(env, url); } catch (e) { await db.prepare("UPDATE flota_job SET err=?2, upd=?3 WHERE k=?1").bind(j.k, String(e.message || e).slice(0, 200), iso(Date.now())).run(); return { llamadas, error: String(e.message || e) }; }
-      if (r.status === 429) return { llamadas, pausa: 'John Deere pidió esperar (429)' };
+      if (r.status === 429) { await guardaCupo(); return { llamadas, pausa: 'John Deere pidió esperar (429)' }; }
       if (r.status === 404 && /No Equipments found/i.test(r.txt || '') && !j._re) {   // id de equipo distinto: buscarlo por número de serie
         j._re = 1; llamadas++;
         const q = await getJD(env, `https://equipmentapi.deere.com/isg/equipment?organizationIds=1750121&serialNumbers=${encodeURIComponent(j.id)}`, 'application/json').catch(() => null);
@@ -94,13 +99,14 @@ export async function avanzarHistoria(env) {
         if (v) { url = url.replace(`/machines/${j.mid}/`, `/machines/${v.id}/`); await db.prepare('UPDATE flota_job SET mid=?2, url=?3 WHERE k=?1').bind(j.k, String(v.id), url).run(); j.mid = String(v.id); continue; }
       }
       if (r.status !== 200) { await db.prepare("UPDATE flota_job SET estado='error', err=?2, upd=?3 WHERE k=?1").bind(j.k, (r.status + ' ' + (r.txt || '')).slice(0, 200), iso(Date.now())).run(); url = null; break; }
-      const V = (r.json && r.json.values) || []; await guardar(env, j, V); n += V.length;
+      const V = (r.json && r.json.values) || []; await guardar(env, j, V); n += V.length; cupo.n += V.length + 4;
       const nx = ((r.json && r.json.links) || []).find(l => l.rel === 'nextPage'); url = nx ? nx.uri : null;
       await db.prepare('UPDATE flota_job SET url=?2, n=?3, estado=?4, err=NULL, upd=?5 WHERE k=?1').bind(j.k, url, n, url ? 'pendiente' : 'ok', iso(Date.now())).run();
     }
-    if (llamadas >= POR_CORRIDA) break;
+    if (llamadas >= POR_CORRIDA || cupo.n >= CUPO_DIA) break;
   }
-  return { llamadas };
+  await guardaCupo();
+  return { llamadas, filas_hoy: cupo.n };
 }
 
 // avance de la carga, para mostrar en el tablero
